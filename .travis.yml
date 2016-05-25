@@ -1,0 +1,17 @@
+sudo: false
+language: node_js
+node_js:
+  - "4"
+  - "5"
+  - "6"
+before_script:
+  - npm install -g grunt-cli
+  - sleep 15
+  - mongo test_db --eval 'db.addUser("travis", "test");'
+notifications:
+  email:
+    - build@mailvelope.com
+services:
+  - mongodb
+env:
+  - MONGO_URI=127.0.0.1:27017/test_db MONGO_USER=travis MONGO_PASS=test
