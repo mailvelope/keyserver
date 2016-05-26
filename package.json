@@ -13,7 +13,11 @@
     "test": "grunt test"
   },
   "dependencies": {
-    "mongodb": "^2.1.20"
+    "co": "^4.6.0",
+    "koa": "^1.2.0",
+    "koa-router": "^5.4.0",
+    "mongodb": "^2.1.20",
+    "npmlog": "^2.0.4"
   },
   "devDependencies": {
     "chai": "^3.5.0",
