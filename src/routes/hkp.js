@@ -96,12 +96,12 @@ class HKP {
 
   /**
    * Checks for a valid key id in the query string. A key must be prepended
-   * with '0x' and can be between 8 and 40 characters long.
+   * with '0x' and can be between 8 and 40 hex characters long.
    * @param  {String} keyid   The key id
    * @return {Boolean}        If the key id is valid
    */
   checkId(keyid) {
-    return /^0x[a-fA-Z0-9]{8,40}/.test(keyid);
+    return /^0x[a-fA-F0-9]{8,40}/.test(keyid);
   }
 
   /**
