@@ -18,6 +18,16 @@
 'use strict';
 
 /**
+ * Database documents have the format:
+ * {
+ *   _id: "02C134D079701934",   // the 16 byte key id
+ *   email: "jon@example.com",  // the primary and verified email address
+ *   publicKeyArmored: "-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----"
+ * }
+ */
+const DB_TYPE = 'publickey';
+
+/**
  * A controller that handlers PGP public keys queries to the database
  */
 class PublicKey {
@@ -28,6 +38,38 @@ class PublicKey {
    */
   constructor(mongo) {
     this._mongo = mongo;
+  }
+
+  //
+  // Create/Update
+  //
+
+  put(options) {
+
+  }
+
+  verify(options) {
+
+  }
+
+  //
+  // Read
+  //
+
+  get(options) {
+
+  }
+
+  //
+  // Delete
+  //
+
+  remove(options) {
+
+  }
+
+  verifyRemove(options) {
+
   }
 
 }

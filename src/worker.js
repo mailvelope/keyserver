@@ -25,18 +25,53 @@ const router = require('koa-router')();
 const Mongo = require('./dao/mongo');
 const PublicKey = require('./ctrl/public-key');
 const HKP = require('./routes/hkp');
+const REST = require('./routes/rest');
 
-let mongo, publicKey, hkp;
+let mongo, publicKey, hkp, rest;
 
 //
-// Configure koa router
+// Configure koa HTTP server
 //
 
-router.get('/pks/lookup', function *() {
+// HKP routes
+router.post('/pks/add', function *() { // no query params
+  yield hkp.add(this);
+});
+router.get('/pks/lookup', function *() { // ?op=get&search=0x1234567890123456
   yield hkp.lookup(this);
 });
-router.post('/pks/add', function *() {
-  yield hkp.add(this);
+
+// REST api routes
+router.post('/api/key', function *() { // no query params
+  yield rest.create(this);
+});
+router.get('/api/key', function *() { // ?id=keyid OR ?email=email
+  yield rest.read(this);
+});
+router.del('/api/key', function *() { // ?id=keyid OR ?email=email
+  yield rest.remove(this);
+});
+
+// links for verification and sharing
+router.get('/api/verify', function *() { // ?id=keyid&nonce=nonce
+  yield rest.verify(this);
+});
+router.get('/api/verifyRemove', function *() { // ?id=keyid&nonce=nonce
+  yield rest.verifyRemove(this);
+});
+router.get('/:email', function *() { // shorthand link for sharing
+  yield rest.read(this);
+});
+
+// Set HTTP response headers
+app.use(function *(next) {
+  this.set('Access-Control-Allow-Origin', '*');
+  this.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  this.set('Access-Control-Allow-Headers', 'Content-Type');
+  this.set('Cache-Control', 'no-cache');
+  this.set('Pragma', 'no-cache');
+  this.set('Connection', 'keep-alive');
+  yield next;
 });
 
 app.use(router.routes());
@@ -56,6 +91,7 @@ function injectDependencies() {
   });
   publicKey = new PublicKey(mongo);
   hkp = new HKP(publicKey);
+  rest = new REST(publicKey);
 }
 
 function readCredentials() {

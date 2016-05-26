@@ -32,29 +32,34 @@ class HKP {
   }
 
   /**
-   * Public key lookup via http GET
-   * @param  {Object} ctx   The koa request/response context
-   */
-  *lookup(ctx) {
-    var params = this.parseQueryString(ctx);
-    if (!params) {
-      return; // invalid request
-    }
-
-    this.setHeaders(ctx);
-    if (params.mr) {
-      this.setGetMRHEaders(ctx);
-    }
-    ctx.body = yield Promise.resolve('----- BEGIN PUBLIC PGP KEY -----');
-  }
-
-  /**
    * Public key upload via http POST
    * @param  {Object} ctx   The koa request/response context
    */
   *add(ctx) {
     ctx.throw(501, 'Not implemented!');
-    return yield Promise.resolve();
+    yield;
+  }
+
+  /**
+   * Public key lookup via http GET
+   * @param  {Object} ctx   The koa request/response context
+   */
+  *lookup(ctx) {
+    let params = this.parseQueryString(ctx);
+    if (!params) {
+      return; // invalid request
+    }
+
+    let key = yield this._publicKey.get(params);
+    if (key) {
+      ctx.body = key.publicKeyArmored;
+      if (params.mr) {
+        this.setGetMRHEaders(ctx);
+      }
+    } else {
+      ctx.status = 404;
+      ctx.body = 'Not found!';
+    }
   }
 
   /**
@@ -64,20 +69,22 @@ class HKP {
    * @return {Object}       The query parameters or undefined for an invalid request
    */
   parseQueryString(ctx) {
-    let q = ctx.query;
     let params = {
-      op: q.op, // operation ... only 'get' is supported
-      mr: q.options === 'mr', // machine readable
-      keyid: this.checkId(q.search) ? q.search.replace('0x', '') : null,
-      email: this.checkEmail(q.search) ? q.search : null,
+      op: ctx.query.op, // operation ... only 'get' is supported
+      mr: ctx.query.options === 'mr' // machine readable
     };
+    if (this.checkId(ctx.query.search)) {
+      params._id = ctx.query.search.replace(/^0x/, '');
+    } else if(this.checkEmail(ctx.query.search)) {
+      params.email = ctx.query.search;
+    }
 
     if (params.op !== 'get') {
       ctx.status = 501;
       ctx.body = 'Not implemented!';
       return;
-    } else if (!params.keyid && !params.email) {
-      ctx.status = 404;
+    } else if (!params._id && !params.email) {
+      ctx.status = 400;
       ctx.body = 'Invalid request!';
       return;
     }
@@ -101,18 +108,7 @@ class HKP {
    * @return {Boolean}        If the key id is valid
    */
   checkId(keyid) {
-    return /^0x[a-fA-F0-9]{8,40}/.test(keyid);
-  }
-
-  /**
-   * Set HTTP headers for the HKP requests.
-   * @param  {Object} ctx   The koa request/response context
-   */
-  setHeaders(ctx) {
-    ctx.set('Access-Control-Allow-Origin', '*');
-    ctx.set('Cache-Control', 'no-cache');
-    ctx.set('Pragma', 'no-cache');
-    ctx.set('Connection', 'keep-alive');
+    return /^0x[a-fA-F0-9]{8,40}$/.test(keyid);
   }
 
   /**
