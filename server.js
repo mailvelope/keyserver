@@ -22,6 +22,23 @@ const numCPUs = require('os').cpus().length;
 const log = require('npmlog');
 
 //
+// Start worker cluster depending on number of CPUs
+//
+
+if (cluster.isMaster) {
+  for (var i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+  cluster.on('fork', worker => log.info('cluster', 'Forked worker #%s [pid:%s]', worker.id, worker.process.pid));
+  cluster.on('exit', worker => {
+    log.warn('cluster', 'Worker #%s [pid:%s] died', worker.id, worker.process.pid);
+    setTimeout(() => cluster.fork(), 5000);
+  });
+} else {
+  require('./src/worker');
+}
+
+//
 // Error handling
 //
 
@@ -36,29 +53,6 @@ process.on('SIGINT', () => {
 });
 
 process.on('uncaughtException', err => {
-  log.error('server', 'Uncaught exception ', err);
+  log.error('server', 'Uncaught exception', err);
   process.exit(1);
 });
-
-//
-// Start worker cluster depending on number of CPUs
-//
-
-if (cluster.isMaster) {
-  for (var i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  cluster.on('fork', worker => {
-    log.info('cluster', 'Forked worker #%s [pid:%s]', worker.id, worker.process.pid);
-  });
-
-  cluster.on('exit', worker => {
-    log.warn('cluster', 'Worker #%s [pid:%s] died', worker.id, worker.process.pid);
-    setTimeout(() => {
-      cluster.fork();
-    }, 5000);
-  });
-} else {
-  require('./src/worker');
-}
