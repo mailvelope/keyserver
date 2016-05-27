@@ -17,11 +17,13 @@
 
 'use strict';
 
+const log = require('npmlog');
+const util = require('./util');
+
 /**
  * Database documents have the format:
  * {
- *   _id: "02C134D079701934",   // the 16 byte key id
- *   email: "jon@example.com",  // the primary and verified email address
+ *   _id: "02C134D079701934", // the 16 byte key id in uppercase hex
  *   publicKeyArmored: "-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----"
  * }
  */
@@ -34,21 +36,73 @@ class PublicKey {
 
   /**
    * Create an instance of the controller
-   * @param  {Object} mongo   An instance of the MongoDB client
+   * @param {Object} openpgp   An instance of OpenPGP.js
+   * @param {Object} mongo     An instance of the MongoDB client
+   * @param {Object} email     An instance of the Email Sender
+   * @param {Object} userid    An instance of the UserId controller
    */
-  constructor(mongo) {
+  constructor(openpgp, mongo, email, userid) {
+    this._openpgp = openpgp;
     this._mongo = mongo;
+    this._email = email;
+    this._userid = userid;
   }
 
   //
   // Create/Update
   //
 
-  put(options) {
-
+  /**
+   * Persist a new public key
+   * @param {String} options.publicKeyArmored   The ascii armored pgp key block
+   * @param {String} options.primaryEmail       (optional) The key's primary email address
+   * @yield {undefined}
+   */
+  *put(options) {
+    // parse key block
+    let publicKeyArmored = options.publicKeyArmored;
+    let params = this.parseKey(publicKeyArmored);
+    // check for existing verfied key by id or email addresses
+    let verified = yield this._userid.getVerfied(params);
+    if (verified) {
+      throw util.error(304, 'Key for this user already exists: ' + verified.stringify());
+    }
+    // delete old/unverified key and user ids with the same key id
+    yield this.remove({ keyid:params.keyid });
+    // persist new key
+    let r = yield this._mongo.create({ _id:params.keyid, publicKeyArmored }, DB_TYPE);
+    if (r.insertedCount !== 1) {
+      throw util.error(500, 'Failed to persist key');
+    }
+    // persist new user ids
+    let userIds = yield this._userid.batch(params);
+    yield this._email.sendVerification({ userIds, primaryEmail:options.primaryEmail });
   }
 
-  verify(options) {
+  /**
+   * Parse an ascii armored pgp key block and get its parameters.
+   * @param  {String} publicKeyArmored   The ascii armored pgp key block
+   * @return {Object}                    The key's id and user ids
+   */
+  parseKey(publicKeyArmored) {
+    let keys, userIds = [];
+    try {
+      keys = this._openpgp.key.readArmored(publicKeyArmored).keys;
+    } catch(e) {
+      log.error('public-key', 'Failed to parse PGP key:\n%s', publicKeyArmored, e);
+      throw util.error(500, 'Failed to parse PGP key');
+    }
+    // get key user ids
+    keys.forEach(key => userIds = userIds.concat(key.getUserIds()));
+    userIds = util.deDup(userIds);
+    // get key id
+    return {
+      keyid: keys[0].primaryKey.getKeyId().toHex().toUpperCase(),
+      userIds: util.parseUserIds(userIds)
+    };
+  }
+
+  verify() {
 
   }
 
@@ -56,20 +110,48 @@ class PublicKey {
   // Read
   //
 
-  get(options) {
-
+  /**
+   * Fetch a verified public key from the database. Either the key id or the
+   * email address muss be provided.
+   * @param {String} options.keyid   (optional) The public key id
+   * @param {String} options.email   (optional) The user's email address
+   * @yield {Object}                 The public key document
+   */
+  *get(options) {
+    let keyid = options.keyid, email = options.email;
+    let verified = yield this._userid.getVerfied({
+      keyid: keyid ? keyid.toUpperCase() : undefined,
+      userIds: email ? [{ email:email.toLowerCase() }] : undefined
+    });
+    if (verified) {
+      return yield this._mongo.get({ _id:verified.keyid }, DB_TYPE);
+    } else {
+      throw util.error(404, 'Key not found');
+    }
   }
 
   //
   // Delete
   //
 
-  remove(options) {
+  flagForRemove() {
 
   }
 
-  verifyRemove(options) {
+  verifyRemove() {
 
+  }
+
+  /**
+   * Delete a public key document and its corresponding user id documents.
+   * @param {String} options.keyid   The key id
+   * @yield {undefined}
+   */
+  *remove(options) {
+    // remove key document
+    yield this._mongo.remove({ _id:options.keyid }, DB_TYPE);
+    // remove matching user id documents
+    yield this._userid.remove({ keyid:options.keyid });
   }
 
 }

@@ -22,8 +22,31 @@
  */
 class Email {
 
-  send(options) {
+  /**
+   * Create an instance of the email object.
+   * @param  {Object} mailer   An instance of nodemailer
+   */
+  constructor(mailer) {
+    this._mailer = mailer;
+  }
+
+  /**
+   * Send the verification email to the user to verify email address
+   * ownership. If the primary email address is provided, only one email
+   * will be sent out. Otherwise all of the PGP key's user IDs will be
+   * verified, resulting in an email sent per user ID.
+   * @param {Array} options.userIds        The user id documents containing the nonces
+   * @param {Array} options.primaryEmail   (optional) The user's primary email address
+   * @yield {undefined}
+   */
+  sendVerification() {
+    return Promise.resolve();
+  }
+
+  send() {
 
   }
 
 }
+
+module.exports = Email;

@@ -19,7 +19,10 @@
 
 const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
+const config = require('config');
 const log = require('npmlog');
+
+log.level = config.log.level; // set log level depending on process.env.NODE_ENV
 
 //
 // Start worker cluster depending on number of CPUs

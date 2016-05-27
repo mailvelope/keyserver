@@ -13,11 +13,15 @@
     "test": "grunt test"
   },
   "dependencies": {
+    "addressparser": "^1.0.1",
     "co": "^4.6.0",
+    "co-body": "^4.2.0",
     "koa": "^1.2.0",
     "koa-router": "^5.4.0",
     "mongodb": "^2.1.20",
-    "npmlog": "^2.0.4"
+    "nodemailer": "^2.4.2",
+    "npmlog": "^2.0.4",
+    "openpgp": "^2.3.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
@@ -27,6 +31,7 @@
     "grunt-jscs": "^2.8.0",
     "grunt-mocha-test": "^0.12.7",
     "mocha": "^2.5.3",
-    "sinon": "^1.17.4"
+    "sinon": "^1.17.4",
+    "supertest": "^1.2.0"
   }
 }

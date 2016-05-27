@@ -17,6 +17,9 @@
 
 'use strict';
 
+const parse = require('co-body');
+const util = require('../ctrl/util');
+
 /**
  * An implementation of the OpenPGP HTTP Keyserver Protocol (HKP)
  * See https://tools.ietf.org/html/draft-shaw-openpgp-hkp-00
@@ -36,8 +39,11 @@ class HKP {
    * @param  {Object} ctx   The koa request/response context
    */
   *add(ctx) {
-    ctx.throw(501, 'Not implemented!');
-    yield;
+    let body = yield parse.form(ctx, { limit: '1mb' });
+    if (!util.validatePublicKey(body.keytext)) {
+      ctx.throw(400, 'Invalid request!');
+    }
+    yield this._publicKey.put({ publicKeyArmored:body.keytext });
   }
 
   /**
@@ -46,20 +52,9 @@ class HKP {
    */
   *lookup(ctx) {
     let params = this.parseQueryString(ctx);
-    if (!params) {
-      return; // invalid request
-    }
-
     let key = yield this._publicKey.get(params);
-    if (key) {
-      ctx.body = key.publicKeyArmored;
-      if (params.mr) {
-        this.setGetMRHEaders(ctx);
-      }
-    } else {
-      ctx.status = 404;
-      ctx.body = 'Not found!';
-    }
+    this.setGetHeaders(ctx, params);
+    ctx.body = key.publicKeyArmored;
   }
 
   /**
@@ -74,31 +69,18 @@ class HKP {
       mr: ctx.query.options === 'mr' // machine readable
     };
     if (this.checkId(ctx.query.search)) {
-      params._id = ctx.query.search.replace(/^0x/, '');
-    } else if(this.checkEmail(ctx.query.search)) {
+      params.keyid = ctx.query.search.replace(/^0x/, '');
+    } else if(util.validateAddress(ctx.query.search)) {
       params.email = ctx.query.search;
     }
 
     if (params.op !== 'get') {
-      ctx.status = 501;
-      ctx.body = 'Not implemented!';
-      return;
-    } else if (!params._id && !params.email) {
-      ctx.status = 400;
-      ctx.body = 'Invalid request!';
-      return;
+      ctx.throw(501, 'Not implemented!');
+    } else if (!params.keyid && !params.email) {
+      ctx.throw(400, 'Invalid request!');
     }
 
     return params;
-  }
-
-  /**
-   * Checks for a valid email address.
-   * @param  {String} address   The email address
-   * @return {Boolean}          If the email address if valid
-   */
-  checkEmail(address) {
-    return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$/.test(address);
   }
 
   /**
@@ -108,16 +90,22 @@ class HKP {
    * @return {Boolean}        If the key id is valid
    */
   checkId(keyid) {
+    if (!util.isString(keyid)) {
+      return false;
+    }
     return /^0x[a-fA-F0-9]{8,40}$/.test(keyid);
   }
 
   /**
    * Set HTTP headers for a GET requests with 'mr' (machine readable) options.
-   * @param  {Object} ctx   The koa request/response context
+   * @param  {Object} ctx      The koa request/response context
+   * @param  {Object} params   The parsed query string parameters
    */
-  setGetMRHEaders(ctx) {
-    ctx.set('Content-Type', 'application/pgp-keys; charset=UTF-8');
-    ctx.set('Content-Disposition', 'attachment; filename=openpgpkey.asc');
+  setGetHeaders(ctx, params) {
+    if (params.mr) {
+      ctx.set('Content-Type', 'application/pgp-keys; charset=UTF-8');
+      ctx.set('Content-Disposition', 'attachment; filename=openpgpkey.asc');
+    }
   }
 
 }

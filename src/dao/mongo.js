@@ -26,20 +26,17 @@ class Mongo {
 
   /**
    * Create an instance of the MongoDB client.
-   * @param  {String} options.uri        The mongodb uri
-   * @param  {String} options.user       The databse user
-   * @param  {String} options.password   The database user's password
-   * @param  {String} options.type       (optional) The default collection type to use e.g. 'publickey'
-   * @return {undefined}
+   * @param {String} options.uri        The mongodb uri
+   * @param {String} options.user       The databse user
+   * @param {String} options.password   The database user's password
    */
   constructor(options) {
     this._uri = 'mongodb://' + options.user + ':' + options.password + '@' + options.uri;
-    this._type = options.type;
   }
 
   /**
    * Initializes the database client by connecting to the MongoDB.
-   * @return {undefined}
+   * @yield {undefined}
    */
   *connect() {
     this._db = yield MongoClient.connect(this._uri);
@@ -47,7 +44,7 @@ class Mongo {
 
   /**
    * Cleanup by closing the connection to the database.
-   * @return {undefined}
+   * @yield {undefined}
    */
   disconnect() {
     return this._db.close();
@@ -55,67 +52,78 @@ class Mongo {
 
   /**
    * Inserts a single document.
-   * @param  {Object} document   Inserts a single documents
-   * @param  {String} type       (optional) The collection to use e.g. 'publickey'
-   * @return {Object}            The operation result
+   * @param {Object} document   Inserts a single document
+   * @param {String} type       The collection to use e.g. 'publickey'
+   * @yield {Object}            The operation result
    */
   create(document, type) {
-    let col = this._db.collection(type || this._type);
+    let col = this._db.collection(type);
     return col.insertOne(document);
   }
 
   /**
+   * Inserts a list of documents.
+   * @param {Array}  documents   Inserts a list of documents
+   * @param {String} type        The collection to use e.g. 'publickey'
+   * @yield {Object}             The operation result
+   */
+  batch(documents, type) {
+    let col = this._db.collection(type);
+    return col.insertMany(documents);
+  }
+
+  /**
    * Update a single document.
-   * @param  {Object} query   The query e.g. { _id:'0' }
-   * @param  {Object} diff    The attributes to change/set e.g. { foo:'bar' }
-   * @param  {String} type    (optional) The collection to use e.g. 'publickey'
-   * @return {Object}         The operation result
+   * @param {Object} query   The query e.g. { _id:'0' }
+   * @param {Object} diff    The attributes to change/set e.g. { foo:'bar' }
+   * @param {String} type    The collection to use e.g. 'publickey'
+   * @yield {Object}         The operation result
    */
   update(query, diff, type) {
-    let col = this._db.collection(type || this._type);
+    let col = this._db.collection(type);
     return col.updateOne(query, { $set:diff });
   }
 
   /**
    * Read a single document.
-   * @param  {Object} query   The query e.g. { _id:'0' }
-   * @param  {String} type    (optional) The collection to use e.g. 'publickey'
-   * @return {Object}         The document object
+   * @param {Object} query   The query e.g. { _id:'0' }
+   * @param {String} type    The collection to use e.g. 'publickey'
+   * @yield {Object}         The document object
    */
   get(query, type) {
-    let col = this._db.collection(type || this._type);
+    let col = this._db.collection(type);
     return col.findOne(query);
   }
 
   /**
    * Read multiple documents at once.
-   * @param  {Object} query   The query e.g. { foo:'bar' }
-   * @param  {String} type    (optional) The collection to use e.g. 'publickey'
-   * @return {Array}          An array of document objects
+   * @param {Object} query   The query e.g. { foo:'bar' }
+   * @param {String} type    The collection to use e.g. 'publickey'
+   * @yield {Array}          An array of document objects
    */
   list(query, type) {
-    let col = this._db.collection(type || this._type);
+    let col = this._db.collection(type);
     return col.find(query).toArray();
   }
 
   /**
-   * Delete a single document.
-   * @param  {Object} query   The query e.g. { _id:'0' }
-   * @param  {String} type    (optional) The collection to use e.g. 'publickey'
-   * @return {Object}         The document object
+   * Delete all documents matching a query.
+   * @param {Object} query   The query e.g. { _id:'0' }
+   * @param {String} type    The collection to use e.g. 'publickey'
+   * @yield {Object}         The operation result
    */
   remove(query, type) {
-    let col = this._db.collection(type || this._type);
-    return col.deleteOne(query);
+    let col = this._db.collection(type);
+    return col.deleteMany(query);
   }
 
   /**
    * Clear all documents of a collection.
-   * @param  {String} type   (optional) The collection to use e.g. 'publickey'
-   * @return {Object}        The operation result
+   * @param {String} type   The collection to use e.g. 'publickey'
+   * @yield {Object}        The operation result
    */
   clear(type) {
-    let col = this._db.collection(type || this._type);
+    let col = this._db.collection(type);
     return col.deleteMany({});
   }
 

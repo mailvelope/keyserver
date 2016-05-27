@@ -17,18 +17,37 @@
 
 'use strict';
 
+const parse = require('co-body');
+const util = require('../ctrl/util');
+
 /**
  * The REST api to provide additional functionality on top of HKP
  */
 class REST {
 
+  /**
+   * Create an instance of the REST server
+   * @param  {Object} publicKey   An instance of the public key controller
+   */
   constructor(publicKey) {
     this._publicKey = publicKey;
   }
 
+  //
+  // Create/Update
+  //
+
+  /**
+   * Public key upload via http POST
+   * @param  {Object} ctx   The koa request/response context
+   */
   *create(ctx) {
-    ctx.throw(501, 'Not implemented!');
-    yield;
+    let pk = yield parse.json(ctx, { limit: '1mb' });
+    if ((pk.primaryEmail && !util.validateAddress(pk.primaryEmail)) ||
+      !util.validatePublicKey(pk.publicKeyArmored)) {
+      ctx.throw(400, 'Invalid request!');
+    }
+    yield this._publicKey(pk);
   }
 
   *verify(ctx) {
@@ -36,10 +55,37 @@ class REST {
     yield;
   }
 
+  //
+  // Read
+  //
+
+  /**
+   * Public key fetch via http GET
+   * @param  {Object} ctx   The koa request/response context
+   */
   *read(ctx) {
-    ctx.throw(501, 'Not implemented!');
-    yield;
+    let q = { keyid:ctx.query.keyid, email:ctx.query.email };
+    if (!util.validateKeyId(q.keyid) && !util.validateAddress(q.email)) {
+      ctx.throw(400, 'Invalid request!');
+    }
+    ctx.body = yield this._publicKey.get(q);
   }
+
+  /**
+   * Public key fetch via http GET (shorthand link for sharing)
+   * @param  {Object} ctx   The koa request/response context
+   */
+  *share(ctx) {
+    let q = { email:ctx.params.email };
+    if (!util.validateAddress(q.email)) {
+      ctx.throw(400, 'Invalid request!');
+    }
+    ctx.body = (yield this._publicKey.get(q)).publicKeyArmored;
+  }
+
+  //
+  // Delete
+  //
 
   *remove(ctx) {
     ctx.throw(501, 'Not implemented!');

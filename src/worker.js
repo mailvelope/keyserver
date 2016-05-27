@@ -18,16 +18,20 @@
 'use strict';
 
 const co = require('co');
-const fs = require('fs');
 const app = require('koa')();
 const log = require('npmlog');
+const config = require('config');
 const router = require('koa-router')();
+const openpgp = require('openpgp');
+const nodemailer = require('nodemailer');
 const Mongo = require('./dao/mongo');
+const Email = require('./dao/email');
+const UserId = require('./ctrl/user-id');
 const PublicKey = require('./ctrl/public-key');
 const HKP = require('./routes/hkp');
 const REST = require('./routes/rest');
 
-let mongo, publicKey, hkp, rest;
+let mongo, email, userId, publicKey, hkp, rest;
 
 //
 // Configure koa HTTP server
@@ -42,25 +46,25 @@ router.get('/pks/lookup', function *() { // ?op=get&search=0x1234567890123456
 });
 
 // REST api routes
-router.post('/api/key', function *() { // no query params
+router.post('/api/v1/key', function *() { // { publicKeyArmored, primaryEmail } hint the primary email address
   yield rest.create(this);
 });
-router.get('/api/key', function *() { // ?id=keyid OR ?email=email
+router.get('/api/v1/key', function *() { // ?id=keyid OR ?email=email
   yield rest.read(this);
 });
-router.del('/api/key', function *() { // ?id=keyid OR ?email=email
+router.del('/api/v1/key', function *() { // ?id=keyid OR ?email=email
   yield rest.remove(this);
 });
 
 // links for verification and sharing
-router.get('/api/verify', function *() { // ?id=keyid&nonce=nonce
+router.get('/api/v1/verify', function *() { // ?id=keyid&nonce=nonce
   yield rest.verify(this);
 });
-router.get('/api/verifyRemove', function *() { // ?id=keyid&nonce=nonce
+router.get('/api/v1/verifyRemove', function *() { // ?id=keyid&nonce=nonce
   yield rest.verifyRemove(this);
 });
 router.get('/:email', function *() { // shorthand link for sharing
-  yield rest.read(this);
+  yield rest.share(this);
 });
 
 // Set HTTP response headers
@@ -76,7 +80,16 @@ app.use(function *(next) {
 
 app.use(router.routes());
 app.use(router.allowedMethods());
-app.on('error', (err, ctx) => log.error('worker', 'Unknown server error', err, ctx));
+
+app.on('error', (error, ctx) => {
+  if (error.status) {
+    ctx.status = error.status;
+    ctx.body = error.message;
+    log.verbose('worker', 'Request faild: %s, %s', error.status, error.message);
+  } else {
+    log.error('worker', 'Unknown error', error, ctx);
+  }
+});
 
 //
 // Module initialization
@@ -89,14 +102,16 @@ function injectDependencies() {
     user: process.env.MONGO_USER || credentials.mongoUser,
     password: process.env.MONGO_PASS || credentials.mongoPass
   });
-  publicKey = new PublicKey(mongo);
+  email = new Email(nodemailer);
+  userId = new UserId(mongo);
+  publicKey = new PublicKey(openpgp, mongo, email, userId);
   hkp = new HKP(publicKey);
   rest = new REST(publicKey);
 }
 
 function readCredentials() {
   try {
-    return JSON.parse(fs.readFileSync(__dirname + '/../credentials.json'));
+    return require('../credentials.json');
   } catch(e) {
     log.info('worker', 'No credentials.json found ... using environment vars.');
   }
@@ -106,10 +121,17 @@ function readCredentials() {
 // Start app ... connect to the database and start listening
 //
 
-co(function *() {
+if (!global.testing) { // don't automatically start server in tests
+  co(function *() {
+    let app = yield init();
+    app.listen(config.server.port);
+  }).catch(err => log.error('worker', 'Initialization failed!', err));
+}
 
+function *init() {
   injectDependencies();
   yield mongo.connect();
-  app.listen(process.env.PORT || 8888);
+  return app;
+}
 
-}).catch(err => log.error('worker', 'Initialization failed!', err));
+module.exports = init;
