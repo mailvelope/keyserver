@@ -33,10 +33,6 @@ class REST {
     this._publicKey = publicKey;
   }
 
-  //
-  // Create/Update
-  //
-
   /**
    * Public key upload via http POST
    * @param  {Object} ctx   The koa request/response context
@@ -54,10 +50,6 @@ class REST {
     ctx.throw(501, 'Not implemented!');
     yield;
   }
-
-  //
-  // Read
-  //
 
   /**
    * Public key fetch via http GET
@@ -82,10 +74,6 @@ class REST {
     }
     ctx.body = (yield this._publicKey.get(q)).publicKeyArmored;
   }
-
-  //
-  // Delete
-  //
 
   *remove(ctx) {
     ctx.throw(501, 'Not implemented!');

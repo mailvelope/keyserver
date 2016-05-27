@@ -48,10 +48,6 @@ class PublicKey {
     this._userid = userid;
   }
 
-  //
-  // Create/Update
-  //
-
   /**
    * Persist a new public key
    * @param {String} options.publicKeyArmored   The ascii armored pgp key block
@@ -106,10 +102,6 @@ class PublicKey {
 
   }
 
-  //
-  // Read
-  //
-
   /**
    * Fetch a verified public key from the database. Either the key id or the
    * email address muss be provided.
@@ -129,10 +121,6 @@ class PublicKey {
       throw util.error(404, 'Key not found');
     }
   }
-
-  //
-  // Delete
-  //
 
   flagForRemove() {
 

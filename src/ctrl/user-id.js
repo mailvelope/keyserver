@@ -43,10 +43,6 @@ class UserId {
     this._mongo = mongo;
   }
 
-  //
-  // Create/Update
-  //
-
   /**
    * Store a list of user ids. There can only be one verified user ID for
    * an email address at any given time.
@@ -61,10 +57,6 @@ class UserId {
       throw new Error('Failed to persist user ids');
     }
   }
-
-  //
-  // Read
-  //
 
   /**
    * Get a verified user IDs either by key id or email address.
@@ -95,10 +87,6 @@ class UserId {
       }
     }
   }
-
-  //
-  // Delete
-  //
 
   /**
    * Remove all user ids matching a certain query
