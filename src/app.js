@@ -83,8 +83,6 @@ app.use(router.allowedMethods());
 
 app.on('error', (error, ctx) => {
   if (error.status) {
-    ctx.status = error.status;
-    ctx.body = error.message;
     log.verbose('app', 'Request faild: %s, %s', error.status, error.message);
   } else {
     log.error('app', 'Unknown error', error, ctx);
@@ -125,11 +123,14 @@ if (!global.testing) { // don't automatically start server in tests
   co(function *() {
     let app = yield init();
     app.listen(config.server.port);
+    log.verbose('app', 'Ready to rock! Listening on http://localhost:' + config.server.port);
   }).catch(err => log.error('app', 'Initialization failed!', err));
 }
 
 function *init() {
+  log.level = config.log.level; // set log level depending on process.env.NODE_ENV
   injectDependencies();
+  log.verbose('app', 'Connecting to MongoDB ...');
   yield mongo.connect();
   return app;
 }

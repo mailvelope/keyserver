@@ -102,8 +102,9 @@ exports.deDup = function(list) {
  * @param  {string} message   The error message
  * @return {Error}            The resulting error object
  */
-exports.error = function(status, message) {
+exports.throw = function(status, message) {
   let err = new Error(message);
   err.status = status;
-  return err;
+  err.expose = true; // display message to the client
+  throw err;
 };

@@ -61,14 +61,14 @@ class PublicKey {
     // check for existing verfied key by id or email addresses
     let verified = yield this._userid.getVerfied(params);
     if (verified) {
-      throw util.error(304, 'Key for this user already exists: ' + verified.stringify());
+      util.throw(304, 'Key for this user already exists: ' + verified.stringify());
     }
     // delete old/unverified key and user ids with the same key id
     yield this.remove({ keyid:params.keyid });
     // persist new key
     let r = yield this._mongo.create({ _id:params.keyid, publicKeyArmored }, DB_TYPE);
     if (r.insertedCount !== 1) {
-      throw util.error(500, 'Failed to persist key');
+      util.throw(500, 'Failed to persist key');
     }
     // persist new user ids
     let userIds = yield this._userid.batch(params);
@@ -87,7 +87,7 @@ class PublicKey {
       keys = this._openpgp.key.readArmored(publicKeyArmored).keys;
     } catch(e) {
       log.error('public-key', 'Failed to parse PGP key:\n%s', publicKeyArmored, e);
-      throw util.error(500, 'Failed to parse PGP key');
+      util.throw(500, 'Failed to parse PGP key');
     }
     // get key user ids
     keys.forEach(key => userIds = userIds.concat(key.getUserIds()));
@@ -117,7 +117,7 @@ class PublicKey {
       userIds: email ? [{ email:email.toLowerCase() }] : undefined
     });
     if (!verified) {
-      throw util.error(404, 'Key not found');
+      util.throw(404, 'Key not found');
     }
     return yield this._mongo.get({ _id:verified.keyid }, DB_TYPE);
   }
