@@ -85,9 +85,9 @@ app.on('error', (error, ctx) => {
   if (error.status) {
     ctx.status = error.status;
     ctx.body = error.message;
-    log.verbose('worker', 'Request faild: %s, %s', error.status, error.message);
+    log.verbose('app', 'Request faild: %s, %s', error.status, error.message);
   } else {
-    log.error('worker', 'Unknown error', error, ctx);
+    log.error('app', 'Unknown error', error, ctx);
   }
 });
 
@@ -113,7 +113,7 @@ function readCredentials() {
   try {
     return require('../credentials.json');
   } catch(e) {
-    log.info('worker', 'No credentials.json found ... using environment vars.');
+    log.info('app', 'No credentials.json found ... using environment vars.');
   }
 }
 
@@ -125,7 +125,7 @@ if (!global.testing) { // don't automatically start server in tests
   co(function *() {
     let app = yield init();
     app.listen(config.server.port);
-  }).catch(err => log.error('worker', 'Initialization failed!', err));
+  }).catch(err => log.error('app', 'Initialization failed!', err));
 }
 
 function *init() {

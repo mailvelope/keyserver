@@ -56,6 +56,6 @@ process.on('SIGINT', () => {
 });
 
 process.on('uncaughtException', err => {
-  log.error('server', 'Uncaught exception', err);
+  log.error('index', 'Uncaught exception', err);
   process.exit(1);
 });
