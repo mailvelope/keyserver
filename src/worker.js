@@ -49,18 +49,18 @@ router.get('/pks/lookup', function *() { // ?op=get&search=0x1234567890123456
 router.post('/api/v1/key', function *() { // { publicKeyArmored, primaryEmail } hint the primary email address
   yield rest.create(this);
 });
-router.get('/api/v1/key', function *() { // ?id=keyid OR ?email=email
+router.get('/api/v1/key', function *() { // ?keyid=keyid OR ?email=email
   yield rest.read(this);
 });
-router.del('/api/v1/key', function *() { // ?id=keyid OR ?email=email
+router.del('/api/v1/key', function *() { // ?keyid=keyid OR ?email=email
   yield rest.remove(this);
 });
 
 // links for verification and sharing
-router.get('/api/v1/verify', function *() { // ?id=keyid&nonce=nonce
+router.get('/api/v1/verify', function *() { // ?keyid=keyid&nonce=nonce
   yield rest.verify(this);
 });
-router.get('/api/v1/verifyRemove', function *() { // ?id=keyid&nonce=nonce
+router.get('/api/v1/verifyRemove', function *() { // ?keyid=keyid&nonce=nonce
   yield rest.verifyRemove(this);
 });
 router.get('/:email', function *() { // shorthand link for sharing

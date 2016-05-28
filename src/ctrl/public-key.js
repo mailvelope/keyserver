@@ -72,6 +72,7 @@ class PublicKey {
     }
     // persist new user ids
     let userIds = yield this._userid.batch(params);
+    // send mails to verify user ids (send only one if primary email is provided)
     yield this._email.sendVerification({ userIds, primaryEmail:options.primaryEmail });
   }
 
@@ -115,11 +116,10 @@ class PublicKey {
       keyid: keyid ? keyid.toUpperCase() : undefined,
       userIds: email ? [{ email:email.toLowerCase() }] : undefined
     });
-    if (verified) {
-      return yield this._mongo.get({ _id:verified.keyid }, DB_TYPE);
-    } else {
+    if (!verified) {
       throw util.error(404, 'Key not found');
     }
+    return yield this._mongo.get({ _id:verified.keyid }, DB_TYPE);
   }
 
   flagForRemove() {
