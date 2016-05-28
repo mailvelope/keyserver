@@ -31,12 +31,12 @@
 const DB_TYPE = 'userid';
 
 /**
- * A controller that handles User ID queries to the database
+ * A service that handles User ID queries to the database
  */
 class UserId {
 
   /**
-   * Create an instance of the controller
+   * Create an instance of the service
    * @param {Object} mongo   An instance of the MongoDB client
    */
   constructor(mongo) {

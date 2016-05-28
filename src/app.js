@@ -26,10 +26,10 @@ const openpgp = require('openpgp');
 const nodemailer = require('nodemailer');
 const Mongo = require('./dao/mongo');
 const Email = require('./dao/email');
-const UserId = require('./ctrl/user-id');
-const PublicKey = require('./ctrl/public-key');
-const HKP = require('./routes/hkp');
-const REST = require('./routes/rest');
+const UserId = require('./service/user-id');
+const PublicKey = require('./service/public-key');
+const HKP = require('./route/hkp');
+const REST = require('./route/rest');
 
 let mongo, email, userId, publicKey, hkp, rest;
 

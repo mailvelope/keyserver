@@ -38,7 +38,7 @@ if (cluster.isMaster) {
     setTimeout(() => cluster.fork(), 5000);
   });
 } else {
-  require('./src/worker');
+  require('./src/app');
 }
 
 //

@@ -30,16 +30,16 @@ const util = require('./util');
 const DB_TYPE = 'publickey';
 
 /**
- * A controller that handlers PGP public keys queries to the database
+ * A service that handlers PGP public keys queries to the database
  */
 class PublicKey {
 
   /**
-   * Create an instance of the controller
+   * Create an instance of the service
    * @param {Object} openpgp   An instance of OpenPGP.js
    * @param {Object} mongo     An instance of the MongoDB client
    * @param {Object} email     An instance of the Email Sender
-   * @param {Object} userid    An instance of the UserId controller
+   * @param {Object} userid    An instance of the UserId service
    */
   constructor(openpgp, mongo, email, userid) {
     this._openpgp = openpgp;

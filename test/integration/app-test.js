@@ -5,7 +5,7 @@ require('co-mocha')(require('mocha')); // monkey patch mocha for generators
 const request = require('supertest');
 const fs = require('fs');
 
-describe.skip('Koa HTTP Server (worker) Integration Tests', function() {
+describe.skip('Koa App (HTTP Server) Integration Tests', function() {
   this.timeout(20000);
 
   let app, pgpKey1;
@@ -13,7 +13,7 @@ describe.skip('Koa HTTP Server (worker) Integration Tests', function() {
   before(function *() {
     pgpKey1 = fs.readFileSync(__dirname + '/../key1.asc', 'utf8');
     global.testing = true;
-    let init = require('../../src/worker');
+    let init = require('../../src/app');
     app = yield init();
   });
 

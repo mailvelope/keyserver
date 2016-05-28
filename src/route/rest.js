@@ -18,7 +18,7 @@
 'use strict';
 
 const parse = require('co-body');
-const util = require('../ctrl/util');
+const util = require('../service/util');
 
 /**
  * The REST api to provide additional functionality on top of HKP

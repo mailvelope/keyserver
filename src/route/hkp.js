@@ -18,7 +18,7 @@
 'use strict';
 
 const parse = require('co-body');
-const util = require('../ctrl/util');
+const util = require('../service/util');
 
 /**
  * An implementation of the OpenPGP HTTP Keyserver Protocol (HKP)
