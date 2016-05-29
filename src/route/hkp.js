@@ -46,6 +46,7 @@ class HKP {
     }
     let origin = util.getOrigin(ctx);
     yield this._publicKey.put({ publicKeyArmored, origin });
+    ctx.status = 201;
   }
 
   /**

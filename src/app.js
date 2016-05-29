@@ -101,6 +101,17 @@ function injectDependencies() {
     password: process.env.MONGO_PASS || credentials.mongo.pass
   });
   email = new Email(nodemailer);
+  email.init({
+    host: process.env.SMTP_HOST || credentials.smtp.host,
+    auth: {
+      user: process.env.SMTP_USER || credentials.smtp.user,
+      pass: process.env.SMTP_PASS || credentials.smtp.pass
+    },
+    sender: {
+      name: process.env.SENDER_NAME || credentials.sender.name,
+      email: process.env.SENDER_EMAIL || credentials.sender.email
+    }
+  });
   userId = new UserId(mongo);
   publicKey = new PublicKey(openpgp, mongo, email, userId);
   hkp = new HKP(publicKey);

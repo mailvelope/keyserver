@@ -25,12 +25,15 @@ describe('Email Integration Tests', function() {
     }
     email = new Email(nodemailer);
     email.init({
-      host: credentials.smtp.host,
+      host: process.env.SMTP_HOST || credentials.smtp.host,
       auth: {
-        user: credentials.smtp.user,
-        pass: credentials.smtp.pass
+        user: process.env.SMTP_USER || credentials.smtp.user,
+        pass: process.env.SMTP_PASS || credentials.smtp.pass
       },
-      sender: credentials.sender
+      sender: {
+        name: process.env.SENDER_NAME || credentials.sender.name,
+        email: process.env.SENDER_EMAIL || credentials.sender.email
+      }
     });
   });
 

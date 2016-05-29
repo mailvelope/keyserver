@@ -37,10 +37,17 @@ describe.skip('Koa App (HTTP Server) Integration Tests', function() {
 
   describe('HKP api', function() {
     describe('GET /pks/add', function() {
-      it('should return 200 for a valid request', function (done) {
+      it.skip('should return 200 for a valid request', function (done) {
         request(app.listen())
         .get('/pks/lookup?op=get&search=0xDBC0B3D92B1B86E9')
         .expect(200)
+        .end(done);
+      });
+
+      it('should return 404 if not found', function (done) {
+        request(app.listen())
+        .get('/pks/lookup?op=get&search=0xDBC0B3D92A1B86E9')
+        .expect(404)
         .end(done);
       });
     });
@@ -55,12 +62,12 @@ describe.skip('Koa App (HTTP Server) Integration Tests', function() {
         .end(done);
       });
 
-      it('should return 200 for a valid PGP key', function (done) {
+      it('should return 201 for a valid PGP key', function (done) {
         request(app.listen())
         .post('/pks/add')
         .type('form')
         .send('keytext=' + encodeURIComponent(pgpKey1))
-        .expect(200)
+        .expect(201)
         .end(done);
       });
     });

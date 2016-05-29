@@ -62,7 +62,7 @@ class PublicKey {
     // check for existing verfied key by id or email addresses
     let verified = yield this._userid.getVerfied(params);
     if (verified) {
-      util.throw(304, 'Key for this user already exists: ' + verified.stringify());
+      util.throw(304, 'Key for this user already exists: ' + JSON.stringify(verified));
     }
     // delete old/unverified key and user ids with the same key id
     yield this.remove({ keyid:params.keyid });
@@ -74,7 +74,7 @@ class PublicKey {
     // persist new user ids
     let userIds = yield this._userid.batch(params);
     // send mails to verify user ids (send only one if primary email is provided)
-    yield this._email.sendVerification({ userIds, primaryEmail, origin });
+    yield this._email.sendVerifyKey({ userIds, primaryEmail, origin });
   }
 
   /**

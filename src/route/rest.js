@@ -47,6 +47,7 @@ class REST {
     }
     let origin = util.getOrigin(ctx);
     yield this._publicKey({ publicKeyArmored, primaryEmail, origin });
+    ctx.status = 201;
   }
 
   *verify(ctx) {

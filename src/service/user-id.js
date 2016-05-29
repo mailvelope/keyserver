@@ -17,6 +17,8 @@
 
 'use strict';
 
+const uuid = require('node-uuid');
+
 /**
  * Database documents have the format:
  * {
@@ -51,11 +53,16 @@ class UserId {
    * @yield {Array}                    A list of user ids with generated nonces
    */
   *batch(options) {
-    options.userIds.forEach(u => u.keyid = options.keyid); // set keyid on docs
-    let r = yield this._mongo.batch(options.userIds, DB_TYPE);
-    if (r.insertedCount !== options.userIds.length) {
+    let userIds = options.userIds, keyid = options.keyid;
+    userIds.forEach(u => {
+      u.keyid = keyid;     // set keyid on docs
+      u.nonce = uuid.v4(); // generate nonce for verification
+    });
+    let r = yield this._mongo.batch(userIds, DB_TYPE);
+    if (r.insertedCount !== userIds.length) {
       throw new Error('Failed to persist user ids');
     }
+    return userIds;
   }
 
   /**
