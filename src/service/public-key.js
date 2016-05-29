@@ -66,13 +66,15 @@ class PublicKey {
     }
     // delete old/unverified key and user ids with the same key id
     yield this.remove({ keyid:params.keyid });
+    // persist new user ids
+    let userIds = yield this._userid.batch(params);
     // persist new key
     let r = yield this._mongo.create({ _id:params.keyid, publicKeyArmored }, DB_TYPE);
     if (r.insertedCount !== 1) {
+      // rollback user ids
+      yield this.remove({ keyid:params.keyid });
       util.throw(500, 'Failed to persist key');
     }
-    // persist new user ids
-    let userIds = yield this._userid.batch(params);
     // send mails to verify user ids (send only one if primary email is provided)
     yield this._email.sendVerifyKey({ userIds, primaryEmail, origin });
   }
