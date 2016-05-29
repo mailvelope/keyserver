@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "grunt test"
+    "test": "export NODE_ENV=integration && grunt test"
   },
   "dependencies": {
     "addressparser": "^1.0.1",

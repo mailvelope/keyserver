@@ -38,12 +38,15 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *create(ctx) {
-    let pk = yield parse.json(ctx, { limit: '1mb' });
-    if ((pk.primaryEmail && !util.validateAddress(pk.primaryEmail)) ||
-      !util.validatePublicKey(pk.publicKeyArmored)) {
+    let body = yield parse.json(ctx, { limit: '1mb' });
+    let primaryEmail = body.primaryEmail;
+    let publicKeyArmored = body.publicKeyArmored;
+    if ((primaryEmail && !util.validateAddress(primaryEmail)) ||
+      !util.validatePublicKey(publicKeyArmored)) {
       ctx.throw(400, 'Invalid request!');
     }
-    yield this._publicKey(pk);
+    let origin = util.getOrigin(ctx);
+    yield this._publicKey({ publicKeyArmored, primaryEmail, origin });
   }
 
   *verify(ctx) {

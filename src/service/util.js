@@ -108,3 +108,18 @@ exports.throw = function(status, message) {
   err.expose = true; // display message to the client
   throw err;
 };
+
+/**
+ * Get the server's own origin host and protocol. Required for sending
+ * verification links via email. If the PORT environmane variable
+ * is set, we assume the protocol to be 'https', since the AWS loadbalancer
+ * speaks 'https' externally but 'http' between the LB and the server.
+ * @param  {Object} ctx   The koa request/repsonse context
+ * @return {Object}       The server origin
+ */
+exports.getOrigin = function(ctx) {
+  return {
+    protocol: process.env.PORT ? 'https' : ctx.protocol,
+    host: ctx.host
+  };
+};

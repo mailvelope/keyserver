@@ -20,9 +20,9 @@ describe('Mongo Integration Tests', function() {
       log.info('mongo-test', 'No credentials.json found ... using environment vars.');
     }
     mongo = new Mongo({
-      uri: process.env.MONGO_URI || credentials.mongoUri,
-      user: process.env.MONGO_USER || credentials.mongoUser,
-      password: process.env.MONGO_PASS || credentials.mongoPass
+      uri: process.env.MONGO_URI || credentials.mongo.uri,
+      user: process.env.MONGO_USER || credentials.mongo.user,
+      password: process.env.MONGO_PASS || credentials.mongo.pass
     });
     yield mongo.connect();
   });

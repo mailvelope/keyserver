@@ -50,13 +50,14 @@ class PublicKey {
 
   /**
    * Persist a new public key
-   * @param {String} options.publicKeyArmored   The ascii armored pgp key block
-   * @param {String} options.primaryEmail       (optional) The key's primary email address
+   * @param {String} publicKeyArmored   The ascii armored pgp key block
+   * @param {String} primaryEmail       (optional) The key's primary email address
+   * @param {Object} origin             Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
    * @yield {undefined}
    */
   *put(options) {
     // parse key block
-    let publicKeyArmored = options.publicKeyArmored;
+    let publicKeyArmored = options.publicKeyArmored, primaryEmail = options.primaryEmail, origin = options.origin;
     let params = this.parseKey(publicKeyArmored);
     // check for existing verfied key by id or email addresses
     let verified = yield this._userid.getVerfied(params);
@@ -73,7 +74,7 @@ class PublicKey {
     // persist new user ids
     let userIds = yield this._userid.batch(params);
     // send mails to verify user ids (send only one if primary email is provided)
-    yield this._email.sendVerification({ userIds, primaryEmail:options.primaryEmail });
+    yield this._email.sendVerification({ userIds, primaryEmail, origin });
   }
 
   /**

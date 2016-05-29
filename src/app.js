@@ -96,9 +96,9 @@ app.on('error', (error, ctx) => {
 function injectDependencies() {
   let credentials = readCredentials();
   mongo = new Mongo({
-    uri: process.env.MONGO_URI || credentials.mongoUri,
-    user: process.env.MONGO_USER || credentials.mongoUser,
-    password: process.env.MONGO_PASS || credentials.mongoPass
+    uri: process.env.MONGO_URI || credentials.mongo.uri,
+    user: process.env.MONGO_USER || credentials.mongo.user,
+    password: process.env.MONGO_PASS || credentials.mongo.pass
   });
   email = new Email(nodemailer);
   userId = new UserId(mongo);
@@ -123,14 +123,14 @@ if (!global.testing) { // don't automatically start server in tests
   co(function *() {
     let app = yield init();
     app.listen(config.server.port);
-    log.verbose('app', 'Ready to rock! Listening on http://localhost:' + config.server.port);
+    log.info('app', 'Ready to rock! Listening on http://localhost:' + config.server.port);
   }).catch(err => log.error('app', 'Initialization failed!', err));
 }
 
 function *init() {
   log.level = config.log.level; // set log level depending on process.env.NODE_ENV
   injectDependencies();
-  log.verbose('app', 'Connecting to MongoDB ...');
+  log.info('app', 'Connecting to MongoDB ...');
   yield mongo.connect();
   return app;
 }

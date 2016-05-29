@@ -40,10 +40,12 @@ class HKP {
    */
   *add(ctx) {
     let body = yield parse.form(ctx, { limit: '1mb' });
-    if (!util.validatePublicKey(body.keytext)) {
+    let publicKeyArmored = body.keytext;
+    if (!util.validatePublicKey(publicKeyArmored)) {
       ctx.throw(400, 'Invalid request!');
     }
-    yield this._publicKey.put({ publicKeyArmored:body.keytext });
+    let origin = util.getOrigin(ctx);
+    yield this._publicKey.put({ publicKeyArmored, origin });
   }
 
   /**
