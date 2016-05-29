@@ -48,7 +48,7 @@ describe('Email Integration Tests', function() {
     });
   });
 
-  describe("sendVerification", function() {
+  describe("sendVerifyKey", function() {
     it('should work', function *() {
       let options = {
         userIds: [{
@@ -63,7 +63,7 @@ describe('Email Integration Tests', function() {
           host: 'localhost:' + config.server.port
         }
       };
-      yield email.sendVerification(options);
+      yield email.sendVerifyKey(options);
     });
   });
 
