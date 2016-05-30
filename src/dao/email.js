@@ -99,6 +99,32 @@ class Email {
   }
 
   /**
+   * Send the verification email to the user to verify key removal. Only one email
+   * needs to sent to a single user id to authenticate removal of all user ids
+   * that belong the a certain key id.
+   * @param {Object} userId   user id document
+   * @param {Object} origin   origin of the server
+   * @yield {Object}          send response from the SMTP server
+   */
+  *sendVerifyRemove(options) {
+    let userId = options.userId, origin = options.origin;
+    let msg = {
+      from: this._sender,
+      to: userId,
+      subject: message.verifyRemove.subject,
+      text: message.verifyRemove.text,
+      html: message.verifyRemove.html,
+      params: {
+        name: userId.name,
+        baseUrl: origin.protocol + '://' + origin.host,
+        keyid: encodeURIComponent(userId.keyid),
+        nonce: encodeURIComponent(userId.nonce)
+      }
+    };
+    return yield this.send(msg);
+  }
+
+  /**
    * A generic method to send an email message via nodemailer.
    * @param {Object} from      sender user id object: { name:'Jon Smith', email:'j@smith.com' }
    * @param {Object} to        recipient user id object: { name:'Jon Smith', email:'j@smith.com' }

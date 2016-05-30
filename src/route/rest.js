@@ -46,7 +46,7 @@ class REST {
       ctx.throw(400, 'Invalid request!');
     }
     let origin = util.getOrigin(ctx);
-    yield this._publicKey({ publicKeyArmored, primaryEmail, origin });
+    yield this._publicKey.put({ publicKeyArmored, primaryEmail, origin });
     ctx.status = 201;
   }
 
