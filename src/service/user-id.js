@@ -18,6 +18,7 @@
 'use strict';
 
 const uuid = require('node-uuid');
+const util = require('./util');
 
 /**
  * Database documents have the format:
@@ -60,9 +61,23 @@ class UserId {
     });
     let r = yield this._mongo.batch(userIds, DB_TYPE);
     if (r.insertedCount !== userIds.length) {
-      throw new Error('Failed to persist user ids');
+      util.throw(500, 'Failed to persist user ids');
     }
     return userIds;
+  }
+
+  /**
+   * Verify a user id by proving knowledge of the nonce.
+   * @param {string} keyid   Correspronding public key id
+   * @param {string} nonce   The verification nonce proving email address ownership
+   * @yield {undefined}
+   */
+  *verify(options) {
+    let uid = this._mongo.get(options, DB_TYPE);
+    if (!uid) {
+      util.throw(404, 'User id not found');
+    }
+    yield this._mongo.update(uid, { verified:true, nonce:null }, DB_TYPE);
   }
 
   /**

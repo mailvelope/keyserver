@@ -115,7 +115,7 @@ function injectDependencies() {
   userId = new UserId(mongo);
   publicKey = new PublicKey(openpgp, mongo, email, userId);
   hkp = new HKP(publicKey);
-  rest = new REST(publicKey);
+  rest = new REST(publicKey, userId);
 }
 
 function readCredentials() {

@@ -28,7 +28,7 @@ class HKP {
 
   /**
    * Create an instance of the HKP server
-   * @param  {Object} publicKey   An instance of the public key controller
+   * @param  {Object} publicKey   An instance of the public key service
    */
   constructor(publicKey) {
     this._publicKey = publicKey;

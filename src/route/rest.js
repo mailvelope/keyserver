@@ -27,10 +27,12 @@ class REST {
 
   /**
    * Create an instance of the REST server
-   * @param  {Object} publicKey   An instance of the public key controller
+   * @param  {Object} publicKey   An instance of the public key service
+   * @param  {Object} userId      An instance of the user id service
    */
-  constructor(publicKey) {
+  constructor(publicKey, userId) {
     this._publicKey = publicKey;
+    this._userId = userId;
   }
 
   /**
@@ -50,9 +52,16 @@ class REST {
     ctx.status = 201;
   }
 
+  /**
+   * Verify a public key's user id via http GET
+   * @param  {Object} ctx   The koa request/response context
+   */
   *verify(ctx) {
-    ctx.throw(501, 'Not implemented!');
-    yield;
+    let q = { keyid:ctx.query.keyid, nonce:ctx.query.nonce };
+    if (!util.validateKeyId(q.keyid) && !util.isString(q.nonce)) {
+      ctx.throw(400, 'Invalid request!');
+    }
+    yield this._userId.verify(q);
   }
 
   /**
