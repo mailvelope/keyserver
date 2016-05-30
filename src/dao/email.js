@@ -55,47 +55,6 @@ class Email {
   }
 
   /**
-   * A generic method to send an email message via nodemailer.
-   * @param {Object} from      sender user id object: { name:'Jon Smith', email:'j@smith.com' }
-   * @param {Object} to        recipient user id object: { name:'Jon Smith', email:'j@smith.com' }
-   * @param {string} subject   message subject
-   * @param {string} text      message plaintext body template
-   * @param {string} html      message html body template
-   * @param {Object} params    (optional) nodermailer template parameters
-   * @yield {Object}           reponse object containing SMTP info
-   */
-  *send(options) {
-    let template = {
-      subject: options.subject,
-      text: options.text,
-      html: options.html
-    };
-    let sender = {
-      from: {
-        name: options.from.name,
-        address: options.from.email
-      }
-    };
-    let recipient = {
-      to: {
-        name: options.to.name,
-        address: options.to.email
-      }
-    };
-    let params = options.params || {};
-
-    try {
-      let sendFn = this._transport.templateSender(template, sender);
-      let info = yield sendFn(recipient, params);
-      log.silly('email', 'Email sent.', info);
-      return info;
-    } catch(error) {
-      log.error('email', 'Sending email failed.', error, options);
-      throw error;
-    }
-  }
-
-  /**
    * Send the verification email to the user to verify email address
    * ownership. If the primary email address is provided, only one email
    * will be sent out. Otherwise all of the PGP key's user IDs will be
@@ -131,20 +90,54 @@ class Email {
       html: message.verifyKey.html,
       params: {
         name: userId.name,
-        protocol: origin.protocol,
-        host: origin.host,
+        baseUrl: origin.protocol + '://' + origin.host,
         keyid: encodeURIComponent(userId.keyid),
         nonce: encodeURIComponent(userId.nonce)
       }
     };
+    return yield this.send(msg);
+  }
+
+  /**
+   * A generic method to send an email message via nodemailer.
+   * @param {Object} from      sender user id object: { name:'Jon Smith', email:'j@smith.com' }
+   * @param {Object} to        recipient user id object: { name:'Jon Smith', email:'j@smith.com' }
+   * @param {string} subject   message subject
+   * @param {string} text      message plaintext body template
+   * @param {string} html      message html body template
+   * @param {Object} params    (optional) nodermailer template parameters
+   * @yield {Object}           reponse object containing SMTP info
+   */
+  *send(options) {
+    let template = {
+      subject: options.subject,
+      text: options.text,
+      html: options.html
+    };
+    let sender = {
+      from: {
+        name: options.from.name,
+        address: options.from.email
+      }
+    };
+    let recipient = {
+      to: {
+        name: options.to.name,
+        address: options.to.email
+      }
+    };
+    let params = options.params || {};
+
     try {
-      let info = yield this.send(msg);
+      let sendFn = this._transport.templateSender(template, sender);
+      let info = yield sendFn(recipient, params);
       if (!this._checkResponse(info)) {
-        log.warn('email', 'Verification mail may not have been received.', info);
+        log.warn('email', 'Message may not have been received.', info);
       }
       return info;
-    } catch(e) {
-      util.throw(500, 'Sending verification email failed');
+    } catch(error) {
+      log.error('email', 'Sending message failed.', error, options);
+      util.throw(500, 'Sending email to user failed');
     }
   }
 

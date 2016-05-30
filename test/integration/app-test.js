@@ -17,12 +17,6 @@ describe.skip('Koa App (HTTP Server) Integration Tests', function() {
     app = yield init();
   });
 
-  beforeEach(function () {});
-
-  afterEach(function() {});
-
-  after(function () {});
-
   describe('REST api', function() {
     describe('POST /api/v1/key', function() {
       it('should return 400 for an invalid body', function (done) {

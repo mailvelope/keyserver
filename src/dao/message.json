@@ -1,7 +1,7 @@
 {
   "verifyKey": {
     "subject": "Verify Your Key",
-    "text": "Hello {{name}},\n\nplease click here to verify your key: {{protocol}}://{{host}}/api/v1/verify/?keyid={{keyid}}&nonce={{nonce}}",
+    "text": "Hello {{name}},\n\nplease click here to verify your key: {{baseUrl}}/api/v1/verify/?keyid={{keyid}}&nonce={{nonce}}",
     "html": ""
   }
 }
