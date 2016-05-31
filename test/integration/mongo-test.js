@@ -31,14 +31,12 @@ describe('Mongo Integration Tests', function() {
     yield mongo.clear(DB_TYPE);
   });
 
-  afterEach(function() {});
-
   after(function *() {
     yield mongo.clear(DB_TYPE);
     yield mongo.disconnect();
   });
 
-  describe("create", function() {
+  describe("create", () => {
     it('should insert a document', function *() {
       let r = yield mongo.create({ _id:'0' }, DB_TYPE);
       expect(r.insertedCount).to.equal(1);
@@ -55,7 +53,7 @@ describe('Mongo Integration Tests', function() {
     });
   });
 
-  describe("batch", function() {
+  describe("batch", () => {
     it('should insert a document', function *() {
       let r = yield mongo.batch([{ _id:'0' }, { _id:'1' }], DB_TYPE);
       expect(r.insertedCount).to.equal(2);
@@ -72,7 +70,7 @@ describe('Mongo Integration Tests', function() {
     });
   });
 
-  describe("update", function() {
+  describe("update", () => {
     it('should update a document', function *() {
       let r = yield mongo.create({ _id:'0' }, DB_TYPE);
       r = yield mongo.update({ _id:'0' }, { foo:'bar' }, DB_TYPE);
@@ -82,7 +80,7 @@ describe('Mongo Integration Tests', function() {
     });
   });
 
-  describe("get", function() {
+  describe("get", () => {
     it('should get a document', function *() {
       let r = yield mongo.create({ _id:'0' }, DB_TYPE);
       r = yield mongo.get({ _id:'0' }, DB_TYPE);
@@ -90,7 +88,7 @@ describe('Mongo Integration Tests', function() {
     });
   });
 
-  describe("list", function() {
+  describe("list", () => {
     it('should list documents', function *() {
       let r = yield mongo.batch([{ _id:'0', foo:'bar' }, { _id:'1', foo:'bar' }], DB_TYPE);
       r = yield mongo.list({ foo:'bar' }, DB_TYPE);
@@ -98,7 +96,7 @@ describe('Mongo Integration Tests', function() {
     });
   });
 
-  describe("remove", function() {
+  describe("remove", () => {
     it('should remove a document', function *() {
       let r = yield mongo.create({ _id:'0' }, DB_TYPE);
       r = yield mongo.remove({ _id:'0' }, DB_TYPE);

@@ -42,14 +42,12 @@ describe('User ID Integration Tests', function() {
     yield mongo.clear(DB_TYPE);
   });
 
-  afterEach(function() {});
-
   after(function *() {
     yield mongo.clear(DB_TYPE);
     yield mongo.disconnect();
   });
 
-  describe("batch", function() {
+  describe("batch", () => {
     it('should persist all the things', function *() {
       let uids = yield userId.batch({ userIds:[uid1, uid2], keyid });
       expect(uids[0].keyid).to.equal(keyid);
@@ -63,7 +61,7 @@ describe('User ID Integration Tests', function() {
     });
   });
 
-  describe("verify", function() {
+  describe("verify", () => {
     it('should update the document', function *() {
       let uids = yield userId.batch({ userIds:[uid1], keyid });
       yield userId.verify({ keyid, nonce:uids[0].nonce });
@@ -85,7 +83,7 @@ describe('User ID Integration Tests', function() {
     });
   });
 
-  describe("getVerfied", function() {
+  describe("getVerfied", () => {
     beforeEach(function *() {
       let uids = yield userId.batch({ userIds:[uid1], keyid });
       yield userId.verify({ keyid, nonce:uids[0].nonce });
@@ -102,7 +100,7 @@ describe('User ID Integration Tests', function() {
     });
   });
 
-  describe("flagForRemove", function() {
+  describe("flagForRemove", () => {
     it('should flag all documents', function *() {
       let stored = yield userId.batch({ userIds:[uid1, uid2], keyid });
       let flagged = yield userId.flagForRemove({ keyid });
@@ -113,7 +111,7 @@ describe('User ID Integration Tests', function() {
     });
   });
 
-  describe("remove", function() {
+  describe("remove", () => {
     it('should delete all documents', function *() {
       yield userId.batch({ userIds:[uid1, uid2], keyid });
       yield userId.remove({ keyid });

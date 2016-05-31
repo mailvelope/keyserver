@@ -9,7 +9,7 @@ const nodemailer = require('nodemailer');
 const sinon = require('sinon');
 
 
-describe('Email Unit Tests', function() {
+describe('Email Unit Tests', () => {
   let email, sendFnStub;
 
   let sender = {
@@ -40,10 +40,10 @@ describe('Email Unit Tests', function() {
     html: '<b>Hello world 🐴</b>' // html body
   };
 
-  beforeEach(function() {
+  beforeEach(() => {
     sendFnStub = sinon.stub();
     sinon.stub(nodemailer, 'createTransport').returns({
-      templateSender: function() { return sendFnStub; }
+      templateSender: () => { return sendFnStub; }
     });
 
     sinon.stub(log, 'warn');
@@ -58,19 +58,19 @@ describe('Email Unit Tests', function() {
     expect(email._sender).to.equal(sender);
   });
 
-  afterEach(function() {
+  afterEach(() => {
     nodemailer.createTransport.restore();
     log.warn.restore();
     log.error.restore();
   });
 
-  describe("sendVerifyKey", function() {
+  describe("sendVerifyKey", () => {
 
-    beforeEach(function() {
+    beforeEach(() => {
       sinon.stub(email, '_sendVerifyKeyHelper').returns(Promise.resolve({ response:'250' }));
     });
 
-    afterEach(function() {
+    afterEach(() => {
       email._sendVerifyKeyHelper.restore();
     });
 
@@ -107,12 +107,12 @@ describe('Email Unit Tests', function() {
     });
   });
 
-  describe("_sendVerifyKeyHelper", function() {
-    beforeEach(function() {
+  describe("_sendVerifyKeyHelper", () => {
+    beforeEach(() => {
       sinon.stub(email, 'send').returns(Promise.resolve({ response:'250' }));
     });
 
-    afterEach(function() {
+    afterEach(() => {
       email.send.restore();
     });
 
@@ -123,12 +123,12 @@ describe('Email Unit Tests', function() {
     });
   });
 
-  describe("sendVerifyRemove", function() {
-    beforeEach(function() {
+  describe("sendVerifyRemove", () => {
+    beforeEach(() => {
       sinon.stub(email, 'send').returns(Promise.resolve({ response:'250' }));
     });
 
-    afterEach(function() {
+    afterEach(() => {
       email.send.restore();
     });
 
@@ -139,7 +139,7 @@ describe('Email Unit Tests', function() {
     });
   });
 
-  describe("send", function() {
+  describe("send", () => {
     it('should work', function *() {
       sendFnStub.returns(Promise.resolve({ response:'250' }));
 

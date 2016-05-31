@@ -15,7 +15,7 @@ describe('Email Integration Tests', function() {
 
   let email, credentials;
 
-  before(function() {
+  before(() => {
     try {
       credentials = require('../../credentials.json');
     } catch(e) {
@@ -37,7 +37,7 @@ describe('Email Integration Tests', function() {
     });
   });
 
-  describe("send", function() {
+  describe("send", () => {
     it('should work', function *() {
       let mailOptions = {
         from: credentials.sender,
@@ -51,7 +51,7 @@ describe('Email Integration Tests', function() {
     });
   });
 
-  describe("sendVerifyKey", function() {
+  describe("sendVerifyKey", () => {
     it('should work', function *() {
       let options = {
         userIds: [{

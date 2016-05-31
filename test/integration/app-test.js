@@ -17,9 +17,9 @@ describe.skip('Koa App (HTTP Server) Integration Tests', function() {
     app = yield init();
   });
 
-  describe('REST api', function() {
-    describe('POST /api/v1/key', function() {
-      it('should return 400 for an invalid body', function (done) {
+  describe('REST api', () => {
+    describe('POST /api/v1/key', () => {
+      it('should return 400 for an invalid body', done => {
         request(app.listen())
         .post('/api/v1/key')
         .send({ foo: 'bar' })
@@ -29,16 +29,16 @@ describe.skip('Koa App (HTTP Server) Integration Tests', function() {
     });
   });
 
-  describe('HKP api', function() {
-    describe('GET /pks/add', function() {
-      it.skip('should return 200 for a valid request', function (done) {
+  describe('HKP api', () => {
+    describe('GET /pks/add', () => {
+      it.skip('should return 200 for a valid request', done => {
         request(app.listen())
         .get('/pks/lookup?op=get&search=0xDBC0B3D92B1B86E9')
         .expect(200)
         .end(done);
       });
 
-      it('should return 404 if not found', function (done) {
+      it('should return 404 if not found', done => {
         request(app.listen())
         .get('/pks/lookup?op=get&search=0xDBC0B3D92A1B86E9')
         .expect(404)
@@ -46,8 +46,8 @@ describe.skip('Koa App (HTTP Server) Integration Tests', function() {
       });
     });
 
-    describe('POST /pks/add', function() {
-      it('should return 400 for an invalid body', function (done) {
+    describe('POST /pks/add', () => {
+      it('should return 400 for an invalid body', done => {
         request(app.listen())
         .post('/pks/add')
         .type('form')
@@ -56,7 +56,7 @@ describe.skip('Koa App (HTTP Server) Integration Tests', function() {
         .end(done);
       });
 
-      it('should return 201 for a valid PGP key', function (done) {
+      it('should return 201 for a valid PGP key', done => {
         request(app.listen())
         .post('/pks/add')
         .type('form')
