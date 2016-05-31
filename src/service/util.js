@@ -56,7 +56,7 @@ exports.validateAddress = function(data) {
 /**
  * Validate an ascii armored public PGP key block.
  * @param  {string} data   The armored key block
- * @return {boolean}      If the key is valid
+ * @return {boolean}       If the key is valid
  */
 exports.validatePublicKey = function(data) {
   if (!this.isString(data)) {
@@ -88,11 +88,11 @@ exports.parseUserIds = function(userIds) {
  */
 exports.deDup = function(list) {
   var result = [];
-  (list || []).forEach(function(i) {
+  for (let i of list) {
     if (result.indexOf(i) === -1) {
       result.push(i);
     }
-  });
+  }
   return result;
 };
 
