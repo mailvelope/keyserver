@@ -109,19 +109,44 @@ class UserId {
 
   /**
    * Flag all user IDs of a key for removal by generating a new nonce and
-   * saving it.
-   * @param {String} keyid   The public key id
+   * saving it. Either a key id or email address must be provided
+   * @param {String} keyid   (optional) The public key id
+   * @param {String} email   (optional) The user's email address
    * @yield {Array}          A list of user ids with nonces
    */
   *flagForRemove(options) {
-    let keyid = options.keyid;
-    let uids = yield this._mongo.list({ keyid }, DB_TYPE);
-    for (let uid of uids) {
-      let nonce = uuid.v4();
-      yield this._mongo.update(uid, { nonce }, DB_TYPE);
-      uid.nonce = nonce;
+    let keyid = options.keyid, email = options.email;
+    if (email) {
+      let uid = yield this._mongo.get({ email }, DB_TYPE);
+      if (uid) {
+        let nonce = uuid.v4();
+        yield this._mongo.update(uid, { nonce }, DB_TYPE);
+        uid.nonce = nonce;
+        return [uid];
+      }
     }
-    return uids;
+    if (keyid) {
+      let uids = yield this._mongo.list({ keyid }, DB_TYPE);
+      for (let uid of uids) {
+        let nonce = uuid.v4();
+        yield this._mongo.update(uid, { nonce }, DB_TYPE);
+        uid.nonce = nonce;
+      }
+      return uids;
+    }
+    return [];
+  }
+
+  /**
+   * get user id which has been flagged for removal by proving knowledge of
+   * the nonce.
+   * @param {string} keyid   public key id
+   * @param {string} nonce   The verification nonce proving email address ownership
+   * @yield {Object}         The matching user id document
+   */
+  *getFlaggedForRemove(options) {
+    let keyid = options.keyid, nonce = options.nonce;
+    return yield this._mongo.get({ keyid, nonce }, DB_TYPE);
   }
 
   /**

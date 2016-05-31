@@ -101,13 +101,43 @@ describe('User ID Integration Tests', function() {
   });
 
   describe("flagForRemove", () => {
-    it('should flag all documents', function *() {
-      let stored = yield userId.batch({ userIds:[uid1, uid2], keyid });
+    let stored;
+    beforeEach(function *() {
+      stored = yield userId.batch({ userIds:[uid1, uid2], keyid });
+    });
+
+    it('should flag one documents for email param', function *() {
+      let flagged = yield userId.flagForRemove({ email:uid1.email });
+      expect(flagged.length).to.equal(1);
+      expect(flagged[0]._id.toHexString()).to.equal(stored[0]._id.toHexString());
+      expect(flagged[0].nonce).to.not.equal(stored[0].nonce);
+      let gotten = yield mongo.list({ email:uid1.email }, DB_TYPE);
+      expect(gotten).to.deep.equal(flagged);
+    });
+
+    it('should flag all documents for key id param', function *() {
       let flagged = yield userId.flagForRemove({ keyid });
+      expect(flagged.length).to.equal(2);
       expect(flagged[0]._id.toHexString()).to.equal(stored[0]._id.toHexString());
       expect(flagged[0].nonce).to.not.equal(stored[0].nonce);
       let gotten = yield mongo.list({ keyid }, DB_TYPE);
       expect(gotten).to.deep.equal(flagged);
+    });
+
+    it('should flag no documents no param', function *() {
+      let flagged = yield userId.flagForRemove({});
+      expect(flagged.length).to.equal(0);
+      let gotten = yield mongo.list({ keyid }, DB_TYPE);
+      expect(gotten).to.deep.equal(stored);
+    });
+  });
+
+  describe("getFlaggedForRemove", () => {
+    it('should find flagged document', function *() {
+      yield userId.batch({ userIds:[uid1, uid2], keyid });
+      let flagged = yield userId.flagForRemove({ keyid });
+      let gotten = yield userId.getFlaggedForRemove({ keyid, nonce:flagged[0].nonce });
+      expect(gotten).to.exist;
     });
   });
 
