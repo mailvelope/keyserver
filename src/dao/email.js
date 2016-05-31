@@ -19,7 +19,6 @@
 
 const log = require('npmlog');
 const util = require('../service/util');
-const message = require('./message.json');
 
 /**
  * A simple wrapper around Nodemailer to send verification emails
@@ -55,39 +54,20 @@ class Email {
   }
 
   /**
-   * Send the verification email to the user to verify email address
-   * ownership. If the primary email address is provided, only one email
-   * will be sent out. Otherwise all of the PGP key's user IDs will be
-   * verified, resulting in an email sent per user ID.
-   * @param {Array}  userIds        user id documents containing the nonces
-   * @param {Array}  primaryEmail   (optional) user's primary email address
-   * @param {Object} origin         Required for links to the keyserver: { protocol:'https', host:'openpgpkeys@example.com' }
-   * @yield {undefined}
+   * Send the verification email to the user using a template.
+   * @param {Object} template   the email template to use
+   * @param {Object} userId     user id document
+   * @param {Object} origin     origin of the server
+   * @yield {Object}            send response from the SMTP server
    */
-  *sendVerifyKey(options) {
-    let primaryEmail = options.primaryEmail, userIds = options.userIds, origin = options.origin;
-    let primaryUserId = userIds.find(uid => uid.email === primaryEmail);
-    if (primaryUserId) { // send only one email to the primary user id
-      return yield this._sendVerifyKeyHelper(primaryUserId, origin);
-    }
-    for (let uid of userIds) {
-      yield this._sendVerifyKeyHelper(uid, origin);
-    }
-  }
-
-  /**
-   * Helper function to send a verification message
-   * @param {Object} userId   user id document
-   * @param {Object} origin   origin of the server
-   * @yield {Object}          send response from the SMTP server
-   */
-  *_sendVerifyKeyHelper(userId, origin) {
-    let msg = {
+  *send(options) {
+    let template = options.template, userId = options.userId, origin = options.origin;
+    let message = {
       from: this._sender,
       to: userId,
-      subject: message.verifyKey.subject,
-      text: message.verifyKey.text,
-      html: message.verifyKey.html,
+      subject: template.subject,
+      text: template.text,
+      html: template.html,
       params: {
         name: userId.name,
         baseUrl: origin.protocol + '://' + origin.host,
@@ -95,33 +75,7 @@ class Email {
         nonce: encodeURIComponent(userId.nonce)
       }
     };
-    return yield this.send(msg);
-  }
-
-  /**
-   * Send the verification email to the user to verify key removal. Only one email
-   * needs to sent to a single user id to authenticate removal of all user ids
-   * that belong the a certain key id.
-   * @param {Object} userId   user id document
-   * @param {Object} origin   origin of the server
-   * @yield {Object}          send response from the SMTP server
-   */
-  *sendVerifyRemove(options) {
-    let userId = options.userId, origin = options.origin;
-    let msg = {
-      from: this._sender,
-      to: userId,
-      subject: message.verifyRemove.subject,
-      text: message.verifyRemove.text,
-      html: message.verifyRemove.html,
-      params: {
-        name: userId.name,
-        baseUrl: origin.protocol + '://' + origin.host,
-        keyid: encodeURIComponent(userId.keyid),
-        nonce: encodeURIComponent(userId.nonce)
-      }
-    };
-    return yield this.send(msg);
+    return yield this._sendHelper(message);
   }
 
   /**
@@ -134,7 +88,7 @@ class Email {
    * @param {Object} params    (optional) nodermailer template parameters
    * @yield {Object}           reponse object containing SMTP info
    */
-  *send(options) {
+  *_sendHelper(options) {
     let template = {
       subject: options.subject,
       text: options.text,
