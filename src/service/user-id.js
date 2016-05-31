@@ -55,10 +55,10 @@ class UserId {
    */
   *batch(options) {
     let userIds = options.userIds, keyid = options.keyid;
-    userIds.forEach(u => {
-      u.keyid = keyid;     // set keyid on docs
-      u.nonce = uuid.v4(); // generate nonce for verification
-    });
+    for (let uid of userIds) {
+      uid.keyid = keyid;     // set keyid on docs
+      uid.nonce = uuid.v4(); // generate nonce for verification
+    }
     let r = yield this._mongo.batch(userIds, DB_TYPE);
     if (r.insertedCount !== userIds.length) {
       util.throw(500, 'Failed to persist user ids');
@@ -73,7 +73,8 @@ class UserId {
    * @yield {undefined}
    */
   *verify(options) {
-    let uid = yield this._mongo.get(options, DB_TYPE);
+    let keyid = options.keyid, nonce = options.nonce;
+    let uid = yield this._mongo.get({ keyid, nonce }, DB_TYPE);
     if (!uid) {
       util.throw(404, 'User id not found');
     }
@@ -107,12 +108,30 @@ class UserId {
   }
 
   /**
-   * Remove all user ids matching a certain query
+   * Flag all user IDs of a key for removal by generating a new nonce and
+   * saving it.
+   * @param {String} keyid   The public key id
+   * @yield {Array}          A list of user ids with nonces
+   */
+  *flagForRemove(options) {
+    let keyid = options.keyid;
+    let uids = yield this._mongo.list({ keyid }, DB_TYPE);
+    for (let uid of uids) {
+      let nonce = uuid.v4();
+      yield this._mongo.update(uid, { nonce }, DB_TYPE);
+      uid.nonce = nonce;
+    }
+    return uids;
+  }
+
+  /**
+   * Remove all user ids for a public key.
    * @param {String} keyid   The public key id
    * @yield {undefined}
    */
   *remove(options) {
-    yield this._mongo.remove({ keyid:options.keyid }, DB_TYPE);
+    let keyid = options.keyid;
+    yield this._mongo.remove({ keyid }, DB_TYPE);
   }
 
 }

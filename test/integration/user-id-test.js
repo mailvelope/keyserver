@@ -11,6 +11,7 @@ describe('User ID Integration Tests', function() {
   this.timeout(20000);
 
   const DB_TYPE = 'userid';
+  const keyid = '0123456789ABCDEF';
   let mongo, userId, uid1, uid2;
 
   before(function *() {
@@ -50,31 +51,31 @@ describe('User ID Integration Tests', function() {
 
   describe("batch", function() {
     it('should persist all the things', function *() {
-      let uids = yield userId.batch({ userIds:[uid1, uid2], keyid:'0123456789ABCDEF' });
-      expect(uids[0].keyid).to.equal('0123456789ABCDEF');
-      expect(uids[1].keyid).to.equal('0123456789ABCDEF');
+      let uids = yield userId.batch({ userIds:[uid1, uid2], keyid });
+      expect(uids[0].keyid).to.equal(keyid);
+      expect(uids[1].keyid).to.equal(keyid);
       expect(uids[0].nonce).to.exist;
       expect(uids[1].nonce).to.exist;
       expect(uids[0]._id).to.exist;
       expect(uids[1]._id).to.exist;
-      let gotten = yield mongo.list({ keyid:'0123456789ABCDEF' }, DB_TYPE);
+      let gotten = yield mongo.list({ keyid }, DB_TYPE);
       expect(gotten).to.deep.equal(uids);
     });
   });
 
   describe("verify", function() {
     it('should update the document', function *() {
-      let uids = yield userId.batch({ userIds:[uid1], keyid:'0123456789ABCDEF' });
-      yield userId.verify({ keyid:'0123456789ABCDEF', nonce:uids[0].nonce });
+      let uids = yield userId.batch({ userIds:[uid1], keyid });
+      yield userId.verify({ keyid, nonce:uids[0].nonce });
       let gotten = yield mongo.get({ _id:uid1._id }, DB_TYPE);
       expect(gotten.verified).to.be.true;
       expect(gotten.nonce).to.be.null;
     });
 
     it('should not find the document', function *() {
-      yield userId.batch({ userIds:[uid1], keyid:'0123456789ABCDEF' });
+      yield userId.batch({ userIds:[uid1], keyid });
       try {
-        yield userId.verify({ keyid:'0123456789ABCDEF', nonce:'fake_nonce' });
+        yield userId.verify({ keyid, nonce:'fake_nonce' });
       } catch(e) {
         expect(e.status).to.equal(404);
       }
@@ -86,12 +87,12 @@ describe('User ID Integration Tests', function() {
 
   describe("getVerfied", function() {
     beforeEach(function *() {
-      let uids = yield userId.batch({ userIds:[uid1], keyid:'0123456789ABCDEF' });
-      yield userId.verify({ keyid:'0123456789ABCDEF', nonce:uids[0].nonce });
+      let uids = yield userId.batch({ userIds:[uid1], keyid });
+      yield userId.verify({ keyid, nonce:uids[0].nonce });
     });
 
     it('should find verified by key id', function *() {
-      let gotten = yield userId.getVerfied({ keyid:uid1.keyid });
+      let gotten = yield userId.getVerfied({ keyid });
       expect(gotten).to.exist;
     });
 
@@ -101,11 +102,22 @@ describe('User ID Integration Tests', function() {
     });
   });
 
+  describe("flagForRemove", function() {
+    it('should flag all documents', function *() {
+      let stored = yield userId.batch({ userIds:[uid1, uid2], keyid });
+      let flagged = yield userId.flagForRemove({ keyid });
+      expect(flagged[0]._id.toHexString()).to.equal(stored[0]._id.toHexString());
+      expect(flagged[0].nonce).to.not.equal(stored[0].nonce);
+      let gotten = yield mongo.list({ keyid }, DB_TYPE);
+      expect(gotten).to.deep.equal(flagged);
+    });
+  });
+
   describe("remove", function() {
     it('should delete all documents', function *() {
-      yield userId.batch({ userIds:[uid1, uid2], keyid:'0123456789ABCDEF' });
-      yield userId.remove({ keyid:uid1.keyid });
-      let gotten = yield mongo.get({ keyid:'0123456789ABCDEF' }, DB_TYPE);
+      yield userId.batch({ userIds:[uid1, uid2], keyid });
+      yield userId.remove({ keyid });
+      let gotten = yield mongo.get({ keyid }, DB_TYPE);
       expect(gotten).to.not.exist;
     });
   });
