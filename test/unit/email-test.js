@@ -4,7 +4,7 @@ require('co-mocha')(require('mocha')); // monkey patch mocha for generators
 
 const expect = require('chai').expect;
 const log = require('npmlog');
-const Email = require('../../src/dao/email');
+const Email = require('../../src/email/email');
 const nodemailer = require('nodemailer');
 const sinon = require('sinon');
 
@@ -12,6 +12,11 @@ const sinon = require('sinon');
 describe('Email Unit Tests', () => {
   let email, sendFnStub;
 
+  let template = {
+    subject: 'foo',
+    text: 'bar',
+    html: '<strong>bar</strong>'
+  };
   let sender = {
     name: 'Foo Bar',
     email: 'foo@bar.com'
@@ -19,12 +24,6 @@ describe('Email Unit Tests', () => {
   let userId1 = {
     name: 'name1',
     email: 'email1',
-    keyid: '0123456789ABCDF0',
-    nonce: 'qwertzuioasdfghjkqwertzuio'
-  };
-  let userId2 = {
-    name: 'name2',
-    email: 'email2',
     keyid: '0123456789ABCDF0',
     nonce: 'qwertzuioasdfghjkqwertzuio'
   };
@@ -64,86 +63,27 @@ describe('Email Unit Tests', () => {
     log.error.restore();
   });
 
-  describe("sendVerifyKey", () => {
-
-    beforeEach(() => {
-      sinon.stub(email, '_sendVerifyKeyHelper').returns(Promise.resolve({ response:'250' }));
-    });
-
-    afterEach(() => {
-      email._sendVerifyKeyHelper.restore();
-    });
-
-    it('should send one email if primary email is given', function *() {
-      let options = {
-        userIds: [userId1, userId2],
-        primaryEmail: userId1.email,
-        origin: origin
-      };
-      yield email.sendVerifyKey(options);
-
-      expect(email._sendVerifyKeyHelper.withArgs(userId1, origin).calledOnce).to.be.true;
-    });
-
-    it('should send two emails if primary email is not given', function *() {
-      let options = {
-        userIds: [userId1, userId2],
-        origin: origin
-      };
-      yield email.sendVerifyKey(options);
-
-      expect(email._sendVerifyKeyHelper.calledTwice).to.be.true;
-    });
-
-    it('should send two emails if primary email does not match', function *() {
-      let options = {
-        userIds: [userId1, userId2],
-        primaryEmail: 'other',
-        origin: origin
-      };
-      yield email.sendVerifyKey(options);
-
-      expect(email._sendVerifyKeyHelper.calledTwice).to.be.true;
-    });
-  });
-
-  describe("_sendVerifyKeyHelper", () => {
-    beforeEach(() => {
-      sinon.stub(email, 'send').returns(Promise.resolve({ response:'250' }));
-    });
-
-    afterEach(() => {
-      email.send.restore();
-    });
-
-    it('should work', function *() {
-      let info = yield email._sendVerifyKeyHelper(userId1, origin);
-
-      expect(info.response).to.match(/^250/);
-    });
-  });
-
-  describe("sendVerifyRemove", () => {
-    beforeEach(() => {
-      sinon.stub(email, 'send').returns(Promise.resolve({ response:'250' }));
-    });
-
-    afterEach(() => {
-      email.send.restore();
-    });
-
-    it('should work', function *() {
-      let info = yield email.sendVerifyRemove({userId:userId1, origin});
-
-      expect(info.response).to.match(/^250/);
-    });
-  });
-
   describe("send", () => {
+    beforeEach(() => {
+      sinon.stub(email, '_sendHelper').returns(Promise.resolve({ response:'250' }));
+    });
+
+    afterEach(() => {
+      email._sendHelper.restore();
+    });
+
+    it('should work', function *() {
+      let info = yield email.send({ template, userId:userId1, origin});
+
+      expect(info.response).to.match(/^250/);
+    });
+  });
+
+  describe("_sendHelper", () => {
     it('should work', function *() {
       sendFnStub.returns(Promise.resolve({ response:'250' }));
 
-      let info = yield email.send(mailOptions);
+      let info = yield email._sendHelper(mailOptions);
 
       expect(info.response).to.match(/^250/);
     });
@@ -151,7 +91,7 @@ describe('Email Unit Tests', () => {
     it('should log warning for reponse error', function *() {
       sendFnStub.returns(Promise.resolve({ response:'554' }));
 
-      let info = yield email.send(mailOptions);
+      let info = yield email._sendHelper(mailOptions);
 
       expect(info.response).to.match(/^554/);
       expect(log.warn.calledOnce).to.be.true;
@@ -161,7 +101,7 @@ describe('Email Unit Tests', () => {
       sendFnStub.returns(Promise.reject(new Error('boom')));
 
       try {
-        yield email.send(mailOptions);
+        yield email._sendHelper(mailOptions);
       } catch(e) {
         expect(log.error.calledOnce).to.be.true;
         expect(e.status).to.equal(500);
