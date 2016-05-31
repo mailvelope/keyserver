@@ -109,9 +109,9 @@ class PublicKey {
   /**
    * Fetch a verified public key from the database. Either the key id or the
    * email address muss be provided.
-   * @param {String} options.keyid   (optional) The public key id
-   * @param {String} options.email   (optional) The user's email address
-   * @yield {Object}                 The public key document
+   * @param {String} keyid   (optional) The public key id
+   * @param {String} email   (optional) The user's email address
+   * @yield {Object}         The public key document
    */
   *get(options) {
     let keyid = options.keyid, email = options.email;
@@ -135,7 +135,7 @@ class PublicKey {
 
   /**
    * Delete a public key document and its corresponding user id documents.
-   * @param {String} options.keyid   The key id
+   * @param {String} keyid   The key id
    * @yield {undefined}
    */
   *remove(options) {

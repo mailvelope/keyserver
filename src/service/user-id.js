@@ -47,11 +47,11 @@ class UserId {
   }
 
   /**
-   * Store a list of user ids. There can only be one verified user ID for
-   * an email address at any given time.
-   * @param {String} options.keyid     The public key id
-   * @param {Array}  options.userIds   The userIds to persist
-   * @yield {Array}                    A list of user ids with generated nonces
+   * Generate nonces for verification and store a list of user ids. There
+   * can only be one verified user ID for an email address at any given time.
+   * @param {String} keyid     The public key id
+   * @param {Array}  userIds   The userIds to persist
+   * @yield {Array}            A list of user ids with generated nonces
    */
   *batch(options) {
     let userIds = options.userIds, keyid = options.keyid;
@@ -73,7 +73,7 @@ class UserId {
    * @yield {undefined}
    */
   *verify(options) {
-    let uid = this._mongo.get(options, DB_TYPE);
+    let uid = yield this._mongo.get(options, DB_TYPE);
     if (!uid) {
       util.throw(404, 'User id not found');
     }
@@ -84,25 +84,21 @@ class UserId {
    * Get a verified user IDs either by key id or email address.
    * There can only be one verified user ID for an email address
    * at any given time.
-   * @param {String} options.keyid     The public key id
-   * @param {String} options.userIds   A list of user ids to check
-   * @yield {Object}                   The verified user ID document
+   * @param {String} keyid     The public key id
+   * @param {String} userIds   A list of user ids to check
+   * @yield {Object}           The verified user ID document
    */
   *getVerfied(options) {
     let keyid = options.keyid, userIds = options.userIds;
     if (keyid) {
-      // try by key id
-      let uids = yield this._mongo.list({ keyid }, DB_TYPE);
-      let verified = uids.find(u => u.verified);
+      let verified = yield this._mongo.get({ keyid, verified:true }, DB_TYPE);
       if (verified) {
         return verified;
       }
     }
     if (userIds) {
-      // try by email addresses
       for (let uid of userIds) {
-        let uids = yield this._mongo.list({ email:uid.email }, DB_TYPE);
-        let verified = uids.find(u => u.verified);
+        let verified = yield this._mongo.get({ email:uid.email, verified:true }, DB_TYPE);
         if (verified) {
           return verified;
         }
@@ -112,7 +108,7 @@ class UserId {
 
   /**
    * Remove all user ids matching a certain query
-   * @param {String} options.keyid   The public key id
+   * @param {String} keyid   The public key id
    * @yield {undefined}
    */
   *remove(options) {
