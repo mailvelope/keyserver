@@ -14,4 +14,4 @@ notifications:
 services:
   - mongodb
 env:
-  - MONGO_URI=127.0.0.1:27017/test_db MONGO_USER=travis MONGO_PASS=test
+  - MONGO_URI=127.0.0.1:27017/test_db MONGO_USER=travis MONGO_PASS=test SMTP_HOST=127.0.0.1 SMTP_USER=smtp_user SMTP_PASS=smtp_pass SENDER_NAME=Travis SENDER_EMAIL=travis@mailvelope.com
