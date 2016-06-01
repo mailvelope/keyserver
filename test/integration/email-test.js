@@ -16,7 +16,7 @@ describe('Email Integration Tests', function() {
 
   let email, credentials, userId, origin;
 
-  before(() => {
+  before(function() {
     try {
       credentials = require('../../credentials.json');
     } catch(e) {
