@@ -61,6 +61,7 @@ class REST {
       ctx.throw(400, 'Invalid request!');
     }
     yield this._userId.verify(q);
+    ctx.body = 'Key successfully verified!';
   }
 
   /**
@@ -97,6 +98,7 @@ class REST {
       ctx.throw(400, 'Invalid request!');
     }
     yield this._publicKey.requestRemove(q);
+    ctx.status = 202;
   }
 
   /**
@@ -109,6 +111,7 @@ class REST {
       ctx.throw(400, 'Invalid request!');
     }
     yield this._publicKey.verifyRemove(q);
+    ctx.body = 'Key successfully removed!';
   }
 
 }

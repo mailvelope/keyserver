@@ -3,6 +3,7 @@
 require('co-mocha')(require('mocha')); // monkey patch mocha for generators
 
 const log = require('npmlog');
+const config = require('config');
 const openpgp = require('openpgp');
 const nodemailer = require('nodemailer');
 const Email = require('../../src/email/email');
@@ -11,6 +12,8 @@ const UserId = require('../../src/service/user-id');
 const PublicKey = require('../../src/service/public-key');
 const expect = require('chai').expect;
 const sinon = require('sinon');
+
+log.level = config.log.level;
 
 describe('Public Key Integration Tests', function() {
   this.timeout(20000);
@@ -74,8 +77,12 @@ describe('Public Key Integration Tests', function() {
   });
 
   describe('put', () => {
-    it('should persist key and send verification email', function *() {
+    it('should persist key and send verification email with primaryEmail', function *() {
       yield publicKey.put({ publicKeyArmored, primaryEmail, origin });
+      expect(emailParams.nonce).to.exist;
+    });
+    it('should persist key and send verification email without primaryEmail', function *() {
+      yield publicKey.put({ publicKeyArmored, origin });
       expect(emailParams.nonce).to.exist;
     });
 
