@@ -29,7 +29,7 @@ log.level = config.log.level; // set log level depending on process.env.NODE_ENV
 //
 
 if (cluster.isMaster) {
-  for (var i = 0; i < numCPUs; i++) {
+  for (let i = 0; i < numCPUs; i++) {
     cluster.fork();
   }
   cluster.on('fork', worker => log.info('cluster', 'Forked worker #%s [pid:%s]', worker.id, worker.process.pid));

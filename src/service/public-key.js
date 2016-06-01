@@ -19,6 +19,7 @@
 
 const log = require('npmlog');
 const util = require('./util');
+const tpl = require('../email/templates.json');
 
 /**
  * Database documents have the format:
@@ -76,7 +77,13 @@ class PublicKey {
       util.throw(500, 'Failed to persist key');
     }
     // send mails to verify user ids (send only one if primary email is provided)
-    yield this._email.sendVerifyKey({ userIds, primaryEmail, origin });
+    let primaryUserId = userIds.find(uid => uid.email === primaryEmail);
+    if (primaryUserId) {
+      userIds = [primaryUserId];
+    }
+    for (let userId of userIds) {
+      yield this._email.send({ template:tpl.verifyKey, userId, origin });
+    }
   }
 
   /**
@@ -102,10 +109,6 @@ class PublicKey {
     };
   }
 
-  verify() {
-
-  }
-
   /**
    * Fetch a verified public key from the database. Either the key id or the
    * email address muss be provided.
@@ -125,12 +128,38 @@ class PublicKey {
     return yield this._mongo.get({ _id:verified.keyid }, DB_TYPE);
   }
 
-  flagForRemove() {
-
+  /**
+   * Request removal of the public key by flagging all user ids and sending
+   * a verification email to the primary email address. Only one email
+   * needs to sent to a single user id to authenticate removal of all user ids
+   * that belong the a certain key id.
+   * @param {String} keyid    (optional) The public key id
+   * @param {String} email    (optional) The user's email address
+   * @param {Object} origin   Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
+   * @yield {undefined}
+   */
+  *requestRemove(options) {
+    let keyid = options.keyid, email = options.email, origin = options.origin;
+    let userIds = yield this._userid.flagForRemove({ keyid, email }, DB_TYPE);
+    for (let userId of userIds) {
+      yield this._email.send({ template:tpl.verifyRemove, userId, origin });
+    }
   }
 
-  verifyRemove() {
-
+  /**
+   * Verify the removal of the user's key id by proving knowledge of the nonce.
+   * Also deletes all user id documents of that key id.
+   * @param {string} keyid   public key id
+   * @param {string} nonce   The verification nonce proving email address ownership
+   * @yield {undefined}
+   */
+  *verifyRemove(options) {
+    let keyid = options.keyid, nonce = options.nonce;
+    let flagged = yield this._userId.getFlaggedForRemove({ keyid, nonce });
+    if (!flagged) {
+      util.throw(404, 'User id not found');
+    }
+    yield this.remove({ keyid });
   }
 
   /**
@@ -139,10 +168,11 @@ class PublicKey {
    * @yield {undefined}
    */
   *remove(options) {
+    let keyid = options.keyid;
     // remove key document
-    yield this._mongo.remove({ _id:options.keyid }, DB_TYPE);
+    yield this._mongo.remove({ _id:keyid }, DB_TYPE);
     // remove matching user id documents
-    yield this._userid.remove({ keyid:options.keyid });
+    yield this._userid.remove({ keyid });
   }
 
 }

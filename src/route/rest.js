@@ -40,11 +40,10 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *create(ctx) {
-    let body = yield parse.json(ctx, { limit: '1mb' });
-    let primaryEmail = body.primaryEmail;
-    let publicKeyArmored = body.publicKeyArmored;
-    if ((primaryEmail && !util.validateAddress(primaryEmail)) ||
-      !util.validatePublicKey(publicKeyArmored)) {
+    let q = yield parse.json(ctx, { limit: '1mb' });
+    let publicKeyArmored = q.publicKeyArmored, primaryEmail = q.primaryEmail;
+    if (!util.validatePublicKey(publicKeyArmored) ||
+      (primaryEmail && !util.validateAddress(primaryEmail))) {
       ctx.throw(400, 'Invalid request!');
     }
     let origin = util.getOrigin(ctx);
@@ -58,7 +57,7 @@ class REST {
    */
   *verify(ctx) {
     let q = { keyid:ctx.query.keyid, nonce:ctx.query.nonce };
-    if (!util.validateKeyId(q.keyid) && !util.isString(q.nonce)) {
+    if (!util.validateKeyId(q.keyid) || !util.isString(q.nonce)) {
       ctx.throw(400, 'Invalid request!');
     }
     yield this._userId.verify(q);
@@ -88,14 +87,28 @@ class REST {
     ctx.body = (yield this._publicKey.get(q)).publicKeyArmored;
   }
 
+  /**
+   * Request public key removal via http DELETE
+   * @param  {Object} ctx   The koa request/response context
+   */
   *remove(ctx) {
-    ctx.throw(501, 'Not implemented!');
-    yield;
+    let q = { keyid:ctx.query.keyid, email:ctx.query.email, origin:util.getOrigin(ctx) };
+    if (!util.validateKeyId(q.keyid) && !util.validateAddress(q.email)) {
+      ctx.throw(400, 'Invalid request!');
+    }
+    yield this._publicKey.requestRemove(q);
   }
 
+  /**
+   * Verify public key removal via http GET
+   * @param  {Object} ctx   The koa request/response context
+   */
   *verifyRemove(ctx) {
-    ctx.throw(501, 'Not implemented!');
-    yield;
+    let q = { keyid:ctx.query.keyid, nonce:ctx.query.nonce };
+    if (!util.validateKeyId(q.keyid) || !util.isString(q.nonce)) {
+      ctx.throw(400, 'Invalid request!');
+    }
+    yield this._publicKey.verifyRemove(q);
   }
 
 }
