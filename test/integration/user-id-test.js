@@ -124,6 +124,11 @@ describe('User ID Integration Tests', function() {
       expect(gotten).to.deep.equal(flagged);
     });
 
+    it('should flag no documents for wrong key id param', function *() {
+      let flagged = yield userId.flagForRemove({ keyid:'4' });
+      expect(flagged.length).to.equal(0);
+    });
+
     it('should flag no documents no param', function *() {
       let flagged = yield userId.flagForRemove({});
       expect(flagged.length).to.equal(0);
