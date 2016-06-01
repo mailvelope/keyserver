@@ -19,7 +19,7 @@ describe('User ID Integration Tests', function() {
     try {
       credentials = require('../../credentials.json');
     } catch(e) {
-      log.info('mongo-test', 'No credentials.json found ... using environment vars.');
+      log.info('user-id-test', 'No credentials.json found ... using environment vars.');
     }
     mongo = new Mongo({
       uri: process.env.MONGO_URI || credentials.mongo.uri,
