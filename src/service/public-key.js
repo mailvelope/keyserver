@@ -85,6 +85,9 @@ class PublicKey {
       log.error('public-key', 'Failed to parse PGP key:\n%s', publicKeyArmored, e);
       util.throw(500, 'Failed to parse PGP key');
     }
+    if (!keys || !keys.length || !keys[0].primaryKey) {
+      util.throw(400, 'Invalid PGP key');
+    }
     // get key user ids
     keys.forEach(key => userIds = userIds.concat(key.getUserIds()));
     userIds = util.deDup(userIds);
