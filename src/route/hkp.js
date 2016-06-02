@@ -77,7 +77,7 @@ class HKP {
       params.email = ctx.query.search;
     }
 
-    if ((params.op !== 'get' && params.op !== 'index') || (params.op === 'index' && !params.mr)) {
+    if (['get','index','vindex'].indexOf(params.op) === -1) {
       ctx.throw(501, 'Not implemented!');
     } else if (!params.keyid && !params.email) {
       ctx.throw(400, 'Invalid request!');
@@ -121,7 +121,7 @@ class HKP {
   setGetBody(ctx, params, key) {
     if (params.op === 'get') {
       ctx.body = key.publicKeyArmored;
-    } else if (params.op === 'index' && params.mr) {
+    } else if (['index','vindex'].indexOf(params.op) !== -1) {
       const VERSION = 1, COUNT = 1; // number of keys
       let algo = (key.algorithm.indexOf('rsa') !== -1) ? 1 : '';
       let created = key.created ? (key.created.getTime() / 1000) : '';

@@ -405,6 +405,14 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           .end(done);
         });
 
+        it('should return 200 for "vindex" op', done => {
+          request(app.listen())
+          .get('/pks/lookup?op=vindex&search=0x' + emailParams.keyid)
+          .expect('Content-Type', 'text/plain; charset=utf-8')
+          .expect(200)
+          .end(done);
+        });
+
         it('should return 200 for "index" with "mr" option', done => {
           request(app.listen())
           .get('/pks/lookup?op=index&options=mr&search=0x' + emailParams.keyid)
@@ -448,9 +456,9 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           .end(done);
         });
 
-        it('should return 501 (Not implemented) for "index" op', done => {
+        it('should return 501 (Not implemented) for "x-email" op', done => {
           request(app.listen())
-          .get('/pks/lookup?op=index&search=0x' + emailParams.keyid)
+          .get('/pks/lookup?op=x-email&search=0x' + emailParams.keyid)
           .expect(501)
           .end(done);
         });
