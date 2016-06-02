@@ -22,6 +22,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
   const DB_TYPE_PUB_KEY = 'publickey';
   const DB_TYPE_USER_ID = 'userid';
   const primaryEmail = 'safewithme.testuser@gmail.com';
+  const fingerprint = '4277257930867231CE393FB8DBC0B3D92B1B86E9';
 
   before(function *() {
     publicKeyArmored = fs.readFileSync(__dirname + '/../key1.asc', 'utf8');
@@ -374,9 +375,16 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           .end(done);
         });
 
-        it('should return 200 for a valid request', done => {
+        it('should return 200 for key id', done => {
           request(app.listen())
           .get('/pks/lookup?op=get&search=0x' + emailParams.keyid)
+          .expect(200, publicKeyArmored)
+          .end(done);
+        });
+
+        it('should return 200 for fingerprint', done => {
+          request(app.listen())
+          .get('/pks/lookup?op=get&search=0x' + fingerprint)
           .expect(200, publicKeyArmored)
           .end(done);
         });

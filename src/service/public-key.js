@@ -154,8 +154,8 @@ class PublicKey {
   *get(options) {
     let keyid = options.keyid, email = options.email;
     let verified = yield this._userId.getVerfied({
-      keyid: keyid ? keyid.toUpperCase() : undefined,
-      userIds: email ? [{ email:email.toLowerCase() }] : undefined
+      keyid: this._formatKeyId(keyid),
+      userIds: this._formatUserIds(email)
     });
     if (!verified) {
       util.throw(404, 'Key not found');
@@ -164,6 +164,29 @@ class PublicKey {
     let params = this._parseKey(key.publicKeyArmored);
     params.publicKeyArmored = key.publicKeyArmored;
     return params;
+  }
+
+  /**
+   * Convert key id to the format used in the database.
+   * @param  {string} keyid   the public key id
+   * @return {string}         the formatted key id
+   */
+  _formatKeyId(keyid) {
+    if (!util.isString(keyid)) {
+      return;
+    }
+    keyid = keyid.toUpperCase(); // use uppercase key ids
+    let len = keyid.length;
+    return (len > 16) ? keyid.substr(len - 16, len) : keyid; // shorten to 16 bytes
+  }
+
+  /**
+   * Format the email address to the format used in the database.
+   * @param  {[type]} email [description]
+   * @return {[type]}       [description]
+   */
+  _formatUserIds(email) {
+    return email ? [{ email:email.toLowerCase() }] : undefined;
   }
 
   /**

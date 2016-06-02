@@ -122,17 +122,16 @@ class HKP {
     if (params.op === 'get') {
       ctx.body = key.publicKeyArmored;
     } else if (params.op === 'index' && params.mr) {
-      const VERSION = 1;
-      const COUNT = 1; // number of keys
+      const VERSION = 1, COUNT = 1; // number of keys
       let algo = (key.algorithm.indexOf('rsa') !== -1) ? 1 : '';
       let created = key.created ? (key.created.getTime() / 1000) : '';
-      let uid = key.userIds.map(u => u.name + ' <' + u.email + '>').join(', ');
 
-      ctx.body =
-        'info:' + VERSION + ':' + COUNT + '\n' +
-        'pub:' + key.keyid + ':' + algo + ':' + key.keylen + ':' + created + '::\n' +
-        'uid:' + encodeURIComponent(uid) + ':' + created + '::\n' +
-        key.publicKeyArmored;
+      ctx.body = 'info:' + VERSION + ':' + COUNT + '\n' +
+        'pub:' + key.fingerprint + ':' + algo + ':' + key.keylen + ':' + created + '::\n';
+
+      for (let uid of key.userIds) {
+        ctx.body += 'uid:' + encodeURIComponent(uid.name + ' <' + uid.email + '>') + ':::\n';
+      }
     }
   }
 
