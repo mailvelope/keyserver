@@ -92,9 +92,14 @@ class PublicKey {
     keys.forEach(key => userIds = userIds.concat(key.getUserIds()));
     userIds = util.deDup(userIds);
     // get key id
+    let primKey = keys[0].primaryKey;
     return {
-      keyid: keys[0].primaryKey.getKeyId().toHex().toUpperCase(),
-      userIds: util.parseUserIds(userIds)
+      keyid: primKey.getKeyId().toHex().toUpperCase(),
+      userIds: util.parseUserIds(userIds),
+      fingerprint: primKey.fingerprint.toUpperCase(),
+      created: primKey.created,
+      algorithm: primKey.algorithm,
+      keylen: primKey.getBitSize()
     };
   }
 
@@ -155,7 +160,10 @@ class PublicKey {
     if (!verified) {
       util.throw(404, 'Key not found');
     }
-    return yield this._mongo.get({ _id:verified.keyid }, DB_TYPE);
+    let key = yield this._mongo.get({ _id:verified.keyid }, DB_TYPE);
+    let params = this._parseKey(key.publicKeyArmored);
+    params.publicKeyArmored = key.publicKeyArmored;
+    return params;
   }
 
   /**

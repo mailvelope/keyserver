@@ -168,20 +168,14 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
         it('should return 200 and get key by id', done => {
           request(app.listen())
           .get('/api/v1/key?keyid=' + emailParams.keyid)
-          .expect(200, {
-            _id: emailParams.keyid,
-            publicKeyArmored
-          })
+          .expect(200)
           .end(done);
         });
 
         it('should return 200 and get key email address', done => {
           request(app.listen())
           .get('/api/v1/key?email=' + primaryEmail)
-          .expect(200, {
-            _id: emailParams.keyid,
-            publicKeyArmored
-          })
+          .expect(200)
           .end(done);
         });
 
@@ -394,12 +388,20 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           .end(done);
         });
 
-        it('should return 200 for "mr" (machine readable) option', done => {
+        it('should return 200 for "mr" option', done => {
           request(app.listen())
           .get('/pks/lookup?op=get&options=mr&search=' + primaryEmail)
-          .expect('Content-Type', 'application/pgp-keys; charset=UTF-8')
+          .expect('Content-Type', 'application/pgp-keys; charset=utf-8')
           .expect('Content-Disposition', 'attachment; filename=openpgpkey.asc')
           .expect(200, publicKeyArmored)
+          .end(done);
+        });
+
+        it('should return 200 for "index" with "mr" option', done => {
+          request(app.listen())
+          .get('/pks/lookup?op=index&options=mr&search=0x' + emailParams.keyid)
+          .expect('Content-Type', 'text/plain; charset=utf-8')
+          .expect(200)
           .end(done);
         });
 

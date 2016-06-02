@@ -55,24 +55,24 @@ keytext=-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK--
 
 ### Lookup a key
 
-Currently only the `get` operation is implemented. Other operations will return a `501` (not implemented) http error code.
+Currently only the `get` and `index` (with options=mr) operations are implemented. Other operations will return a `501` (not implemented) http error code.
 
-#### By key id
+#### By key id (get)
 
 ```
 GET /pks/lookup?op=get&search=0x0123456789ABCDEF
 ```
 
-#### By email address
-
-```
-GET /pks/lookup?op=get&search=user@example.com
-```
-
-#### Machine readable
+#### By email address (get, mr)
 
 ```
 GET /pks/lookup?op=get&options=mr&search=user@example.com
+```
+
+#### By key id (index, mr)
+
+```
+GET /pks/lookup?op=index&options=mr&search=0x0123456789ABCDEF
 ```
 
 

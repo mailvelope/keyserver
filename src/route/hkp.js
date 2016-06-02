@@ -57,7 +57,7 @@ class HKP {
     let params = this.parseQueryString(ctx);
     let key = yield this._publicKey.get(params);
     this.setGetHeaders(ctx, params);
-    ctx.body = key.publicKeyArmored;
+    this.setGetBody(ctx, params, key);
   }
 
   /**
@@ -77,7 +77,7 @@ class HKP {
       params.email = ctx.query.search;
     }
 
-    if (params.op !== 'get') {
+    if ((params.op !== 'get' && params.op !== 'index') || (params.op === 'index' && !params.mr)) {
       ctx.throw(501, 'Not implemented!');
     } else if (!params.keyid && !params.email) {
       ctx.throw(400, 'Invalid request!');
@@ -105,9 +105,34 @@ class HKP {
    * @param  {Object} params   The parsed query string parameters
    */
   setGetHeaders(ctx, params) {
-    if (params.mr) {
-      ctx.set('Content-Type', 'application/pgp-keys; charset=UTF-8');
+    if (params.op === 'get' && params.mr) {
+      ctx.set('Content-Type', 'application/pgp-keys; charset=utf-8');
       ctx.set('Content-Disposition', 'attachment; filename=openpgpkey.asc');
+    }
+  }
+
+  /**
+   * Format the body accordingly.
+   * See https://tools.ietf.org/html/draft-shaw-openpgp-hkp-00#section-5
+   * @param {Object} ctx      The koa request/response context
+   * @param {Object} params   The parsed query string parameters
+   * @param {Object} key      The public key document
+   */
+  setGetBody(ctx, params, key) {
+    if (params.op === 'get') {
+      ctx.body = key.publicKeyArmored;
+    } else if (params.op === 'index' && params.mr) {
+      const VERSION = 1;
+      const COUNT = 1; // number of keys
+      let algo = (key.algorithm.indexOf('rsa') !== -1) ? 1 : '';
+      let created = key.created ? (key.created.getTime() / 1000) : '';
+      let uid = key.userIds.map(u => u.name + ' <' + u.email + '>').join(', ');
+
+      ctx.body =
+        'info:' + VERSION + ':' + COUNT + '\n' +
+        'pub:' + key.keyid + ':' + algo + ':' + key.keylen + ':' + created + '::\n' +
+        'uid:' + encodeURIComponent(uid) + ':' + created + '::\n' +
+        key.publicKeyArmored;
     }
   }
 
