@@ -408,7 +408,6 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
         it('should return 200 for "vindex" op', done => {
           request(app.listen())
           .get('/pks/lookup?op=vindex&search=0x' + emailParams.keyid)
-          .expect('Content-Type', 'text/plain; charset=utf-8')
           .expect(200)
           .end(done);
         });
