@@ -223,6 +223,7 @@ The `credentials.json` file can be used to configure a local development install
 * SMTP_HOST=127.0.0.1
 * SMTP_PORT=465
 * SMTP_TLS=true
+* SMTP_STARTTLS=true
 * SMTP_USER=smtp_user
 * SMTP_PASS=smtp_pass
 * SENDER_NAME="OpenPGP Key Server"

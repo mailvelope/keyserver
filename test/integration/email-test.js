@@ -38,7 +38,8 @@ describe('Email Integration Tests', function() {
     email.init({
       host: process.env.SMTP_HOST || credentials.smtp.host,
       port: process.env.SMTP_PORT || credentials.smtp.port,
-      secure: (process.env.SMTP_TLS || credentials.smtp.tls) === 'true',
+      tls: (process.env.SMTP_TLS || credentials.smtp.tls) === 'true',
+      starttls: (process.env.SMTP_STARTTLS || credentials.smtp.starttls) === 'true',
       auth: {
         user: process.env.SMTP_USER || credentials.smtp.user,
         pass: process.env.SMTP_PASS || credentials.smtp.pass

@@ -35,20 +35,20 @@ class Email {
 
   /**
    * Create an instance of the reusable nodemailer SMTP transport.
-   * @param {string} host          SMTP server's hostname: 'smtp.gmail.com'
-   * @param {Object} auth          Auth credential: { user:'user@gmail.com', pass:'pass' }
-   * @param {Object} sender        message 'FROM' field: { name:'Your Support', email:'noreply@exmple.com' }
-   * @param {string} port          (optional) SMTP server's SMTP port. Defaults to 465.
-   * @param {boolean} secure       (optional) if TSL should be used. Defaults to true.
-   * @param {boolean} requireTLS   (optional) if TSL is mandatory. Defaults to true.
+   * @param {string}  host       SMTP server's hostname: 'smtp.gmail.com'
+   * @param {Object}  auth       Auth credential: { user:'user@gmail.com', pass:'pass' }
+   * @param {Object}  sender     message 'FROM' field: { name:'Your Support', email:'noreply@exmple.com' }
+   * @param {string}  port       (optional) SMTP server's SMTP port. Defaults to 465.
+   * @param {boolean} tls        (optional) if TSL should be used. Defaults to true.
+   * @param {boolean} starttls   (optional) force STARTTLS to prevent downgrade attack. Defaults to true.
    */
   init(options) {
     this._transport = this._mailer.createTransport({
       host: options.host,
       port: options.port || 465,
       auth: options.auth,
-      secure: (options.secure !== undefined) ? options.secure : true,
-      requireTLS: (options.secure !== undefined) ? options.secure : true
+      secure: (options.tls !== undefined) ? options.tls : true,
+      requireTLS: (options.starttls !== undefined) ? options.starttls : true,
     });
     this._sender = options.sender;
   }
