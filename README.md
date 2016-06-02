@@ -122,7 +122,7 @@ GET /api/v1/key?email=user@example.com
 #### By email address (shorthand link for sharing)
 
 ```
-GET /user@example.com
+GET /user/user@example.com
 ```
 
 ### Request key removal
@@ -194,7 +194,7 @@ db.createUser({ user:"keyserver-user", pwd:"trfepCpjhVrqgpXFWsEF", roles:[{ role
 
 ## Setup SMTP user
 
-The key server uses [nodemailer](https://nodemailer.com) to send out emails upon public key upload to verify email address ownership. To test this feature locally, open the `credentials.json` file and change the `user@gmail.com` to your Gmail test account. Be sure that `smtp.user` and `sender.email` match. Otherwise the Gmail SMTP server will block any emails you try to send. Also, be sure to enable the "less secure apps" in the Gmail security settings. You can read how to do this in the [Nodemailer documentation](https://nodemailer.com/using-gmail/).
+The key server uses [nodemailer](https://nodemailer.com) to send out emails upon public key upload to verify email address ownership. To test this feature locally, open the `credentials.json` file and change the `smtp.user` and `smtp.pass` attributes to your Gmail test account. Make sure that `smtp.user` and `sender.email` match. Otherwise the Gmail SMTP server will block any emails you try to send. Also, make sure to enable `Allow less secure apps` in the [Gmail security settings](https://myaccount.google.com/security#connectedapps). You can read more on this in the [Nodemailer documentation](https://nodemailer.com/using-gmail/).
 
 For production you should use a service like [Amazon SES](https://aws.amazon.com/ses/), [Mailgun](https://www.mailgun.com/) or [Sendgrid](https://sendgrid.com/solutions/transactional-email/). Nodemailer supports all of these out of the box.
 
@@ -221,9 +221,11 @@ The `credentials.json` file can be used to configure a local development install
 * MONGO_USER=db_user
 * MONGO_PASS=db_password
 * SMTP_HOST=127.0.0.1
+* SMTP_PORT=465
+* SMTP_TLS=true
 * SMTP_USER=smtp_user
 * SMTP_PASS=smtp_pass
-* SENDER_NAME=Sender
+* SENDER_NAME="OpenPGP Key Server"
 * SENDER_EMAIL=noreply@example.com
 
 

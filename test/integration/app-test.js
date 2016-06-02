@@ -200,7 +200,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       });
     });
 
-    describe('GET /:email (sharing link)', () => {
+    describe('GET /user/:email (sharing link)', () => {
       beforeEach(done => {
         request(app.listen())
         .post('/api/v1/key')
@@ -212,7 +212,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       describe('Not yet verified', () => {
         it('should return 404', done => {
           request(app.listen())
-          .get('/' + primaryEmail)
+          .get('/user/' + primaryEmail)
           .expect(404)
           .end(done);
         });
@@ -228,28 +228,28 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
 
         it('should return 200 for correct email address', done => {
           request(app.listen())
-          .get('/' + primaryEmail)
+          .get('/user/' + primaryEmail)
           .expect(200, publicKeyArmored)
           .end(done);
         });
 
         it('should return 400 for invalid email', done => {
           request(app.listen())
-          .get('/a@bco')
+          .get('/user/a@bco')
           .expect(400)
           .end(done);
         });
 
         it('should return 404 for unkown email', done => {
           request(app.listen())
-          .get('/a@b.co')
+          .get('/user/a@b.co')
           .expect(404)
           .end(done);
         });
 
         it('should return 404 for missing email', done => {
           request(app.listen())
-          .get('/')
+          .get('/user/')
           .expect(404)
           .end(done);
         });

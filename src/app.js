@@ -63,7 +63,7 @@ router.get('/api/v1/verify', function *() { // ?keyid=keyid&nonce=nonce
 router.get('/api/v1/verifyRemove', function *() { // ?keyid=keyid&nonce=nonce
   yield rest.verifyRemove(this);
 });
-router.get('/:email', function *() { // shorthand link for sharing
+router.get('/user/:email', function *() { // shorthand link for sharing
   yield rest.share(this);
 });
 
@@ -103,6 +103,8 @@ function injectDependencies() {
   email = new Email(nodemailer);
   email.init({
     host: process.env.SMTP_HOST || credentials.smtp.host,
+    port: process.env.SMTP_PORT || credentials.smtp.port,
+    secure: (process.env.SMTP_TLS || credentials.smtp.tls) === 'true',
     auth: {
       user: process.env.SMTP_USER || credentials.smtp.user,
       pass: process.env.SMTP_PASS || credentials.smtp.pass

@@ -37,6 +37,8 @@ describe('Email Integration Tests', function() {
     email = new Email(nodemailer);
     email.init({
       host: process.env.SMTP_HOST || credentials.smtp.host,
+      port: process.env.SMTP_PORT || credentials.smtp.port,
+      secure: (process.env.SMTP_TLS || credentials.smtp.tls) === 'true',
       auth: {
         user: process.env.SMTP_USER || credentials.smtp.user,
         pass: process.env.SMTP_PASS || credentials.smtp.pass

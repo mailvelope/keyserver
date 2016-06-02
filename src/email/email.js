@@ -47,8 +47,8 @@ class Email {
       host: options.host,
       port: options.port || 465,
       auth: options.auth,
-      secure: options.secure || true,
-      requireTLS: options.requireTLS || true
+      secure: (options.secure !== undefined) ? options.secure : true,
+      requireTLS: (options.secure !== undefined) ? options.secure : true
     });
     this._sender = options.sender;
   }
