@@ -24,6 +24,7 @@ const config = require('config');
 const router = require('koa-router')();
 const openpgp = require('openpgp');
 const nodemailer = require('nodemailer');
+const openpgpEncrypt = require('nodemailer-openpgp').openpgpEncrypt;
 const Mongo = require('./dao/mongo');
 const Email = require('./email/email');
 const UserId = require('./service/user-id');
@@ -100,12 +101,13 @@ function injectDependencies() {
     user: process.env.MONGO_USER || credentials.mongo.user,
     password: process.env.MONGO_PASS || credentials.mongo.pass
   });
-  email = new Email(nodemailer);
+  email = new Email(nodemailer, openpgpEncrypt);
   email.init({
     host: process.env.SMTP_HOST || credentials.smtp.host,
     port: process.env.SMTP_PORT || credentials.smtp.port,
     tls: (process.env.SMTP_TLS || credentials.smtp.tls) === 'true',
     starttls: (process.env.SMTP_STARTTLS || credentials.smtp.starttls) === 'true',
+    pgp: (process.env.SMTP_PGP || credentials.smtp.pgp) === 'true',
     auth: {
       user: process.env.SMTP_USER || credentials.smtp.user,
       pass: process.env.SMTP_PASS || credentials.smtp.pass

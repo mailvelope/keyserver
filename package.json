@@ -23,6 +23,7 @@
     "mongodb": "^2.1.20",
     "node-uuid": "^1.4.7",
     "nodemailer": "^2.4.2",
+    "nodemailer-openpgp": "^1.0.2",
     "npmlog": "^2.0.4",
     "openpgp": "^2.3.0"
   },

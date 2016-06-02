@@ -1,12 +1,12 @@
 {
   "verifyKey": {
     "subject": "Verify Your Key",
-    "text": "Hello {{name}},\n\nplease click here to verify your key: {{baseUrl}}/api/v1/verify?keyid={{keyid}}&nonce={{nonce}}",
+    "text": "Hello {{name}},\n\nplease click here to verify your key:\n\n{{baseUrl}}/api/v1/verify?keyid={{keyid}}&nonce={{nonce}}",
     "html": ""
   },
   "verifyRemove": {
     "subject": "Verify Key Removal",
-    "text": "Hello {{name}},\n\nplease click here to verify the removal of your key: {{baseUrl}}/api/v1/verifyRemove?keyid={{keyid}}&nonce={{nonce}}",
+    "text": "Hello {{name}},\n\nplease click here to verify the removal of your key:\n\n{{baseUrl}}/api/v1/verifyRemove?keyid={{keyid}}&nonce={{nonce}}",
     "html": ""
   }
 }

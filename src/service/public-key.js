@@ -69,7 +69,7 @@ class PublicKey {
     // store key in database
     let userIds = yield this._persisKey(publicKeyArmored, params);
     // send mails to verify user ids (send only one if primary email is provided)
-    yield this._sendVerifyEmail(userIds, primaryEmail, origin);
+    yield this._sendVerifyEmail(userIds, primaryEmail, origin, publicKeyArmored);
   }
 
   /**
@@ -122,17 +122,19 @@ class PublicKey {
   /**
    * Send verification emails to the public keys user ids for verification.
    * If a primary email address is provided only one email will be sent.
-   * @param {Array}  userIds        user id documents containg the verification nonces
-   * @param {string} primaryEmail   the public key's primary email address
-   * @param {Object} origin         the server's origin (required for email links)
+   * @param {Array}  userIds            user id documents containg the verification nonces
+   * @param {string} primaryEmail       the public key's primary email address
+   * @param {Object} origin             the server's origin (required for email links)
+   * @param {String} publicKeyArmored   The ascii armored pgp key block
    * @yield {undefined}
    */
-  *_sendVerifyEmail(userIds, primaryEmail, origin) {
+  *_sendVerifyEmail(userIds, primaryEmail, origin, publicKeyArmored) {
     let primaryUserId = userIds.find(uid => uid.email === primaryEmail);
     if (primaryUserId) {
       userIds = [primaryUserId];
     }
     for (let userId of userIds) {
+      userId.publicKeyArmored = publicKeyArmored; // set key for encryption
       yield this._email.send({ template:tpl.verifyKey, userId, origin });
     }
   }

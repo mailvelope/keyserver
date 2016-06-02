@@ -15,13 +15,13 @@ The web of trust raises some valid privacy concerns. Not only is a user's social
 
 ### Usability
 
-The main issue with the Web of Trust though is that it does not scale in terms of usability. The goal of this key server is to enable a better user experience for OpenPGP user agents by providing a more reliable source of public keys, where users verify their email address after key upload. This prevents user A from uploading a public key for user B. With this property in place, automatic key lookup is more reliable than with standard SKS servers.
+The main issue with the Web of Trust though is that it does not scale in terms of usability. The goal of this key server is to enable a better user experience for OpenPGP user agents by providing a more reliable source of public keys. Similar to messengers like Signal, users verify their email address by clicking on a link of a PGP encrypted message. This prevents user A from uploading a public key for user B. With this property in place, automatic key lookup is more reliable than with standard SKS servers.
 
 This requires more trust to be placed in the service provider that hosts a key server, but we believe that this trade-off is necessary to improve the user experience for average users. Tech-savvy users or users with a threat model that requires stronger security may still choose to verify PGP key fingerprints just as before.
 
 ## Standardization and (De)centralization
 
-The idea is that an identity provider such as an email provider can host their own key server under a common `openpgpkeys` subdomain. An OpenPGP supporting user agent should attempt to lookup keys under the user's domain e.g. `https://openpgpkeys.example.com` for `user@example.com` first. User agents can host their own fallback key server as well, in case a mail provider does not provide its own key directory.
+The idea is that an identity provider such as an email provider can host their own key directory under a common `openpgpkeys` subdomain. An OpenPGP supporting user agent should attempt to lookup keys under the user's domain e.g. `https://openpgpkeys.example.com` for `user@example.com` first. User agents can host their own fallback key server as well, in case a mail provider does not provide its own key directory.
 
 
 
@@ -224,6 +224,7 @@ The `credentials.json` file can be used to configure a local development install
 * SMTP_PORT=465
 * SMTP_TLS=true
 * SMTP_STARTTLS=true
+* SMTP_PGP=true
 * SMTP_USER=smtp_user
 * SMTP_PASS=smtp_pass
 * SENDER_NAME="OpenPGP Key Server"

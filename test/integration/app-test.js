@@ -46,7 +46,8 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       return !!params.nonce;
     }));
     sinon.stub(nodemailer, 'createTransport').returns({
-      templateSender: () => { return sendEmailStub; }
+      templateSender: () => { return sendEmailStub; },
+      use: function() {}
     });
 
     global.testing = true;

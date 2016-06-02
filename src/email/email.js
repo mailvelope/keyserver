@@ -29,8 +29,9 @@ class Email {
    * Create an instance of the email object.
    * @param  {Object} mailer   An instance of nodemailer
    */
-  constructor(mailer) {
+  constructor(mailer, openpgpEncrypt) {
     this._mailer = mailer;
+    this._openpgpEncrypt = openpgpEncrypt;
   }
 
   /**
@@ -41,6 +42,7 @@ class Email {
    * @param {string}  port       (optional) SMTP server's SMTP port. Defaults to 465.
    * @param {boolean} tls        (optional) if TSL should be used. Defaults to true.
    * @param {boolean} starttls   (optional) force STARTTLS to prevent downgrade attack. Defaults to true.
+   * @param {boolean} pgp        (optional) if outgoing emails are encrypted to the user's public key.
    */
   init(options) {
     this._transport = this._mailer.createTransport({
@@ -50,6 +52,9 @@ class Email {
       secure: (options.tls !== undefined) ? options.tls : true,
       requireTLS: (options.starttls !== undefined) ? options.starttls : true,
     });
+    if (options.pgp) {
+      this._transport.use('stream', this._openpgpEncrypt());
+    }
     this._sender = options.sender;
   }
 
@@ -92,7 +97,8 @@ class Email {
     let template = {
       subject: options.subject,
       text: options.text,
-      html: options.html
+      html: options.html,
+      encryptionKeys: [options.to.publicKeyArmored]
     };
     let sender = {
       from: {
