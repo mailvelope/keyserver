@@ -1,0 +1,12 @@
+branch-defaults:
+  release/prod:
+    environment: keyserver-prod
+  release/test:
+    environment: keyserver-test
+global:
+  application_name: keyserver
+  default_ec2_keyname: null
+  default_platform: Node.js
+  default_region: eu-west-1
+  profile: eb-cli
+  sc: git

@@ -21,9 +21,7 @@ describe('Email Integration Tests', function() {
     try {
       credentials = require('../../credentials.json');
     } catch(e) {
-      log.warn('email-test', 'No credentials.json found ... skipping tests.');
-      this.skip();
-      return;
+      log.info('email-test', 'No credentials.json found ... using environment vars.');
     }
     publicKeyArmored = require('fs').readFileSync(__dirname + '/../key1.asc', 'utf8');
     origin = {
