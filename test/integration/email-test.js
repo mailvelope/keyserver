@@ -17,6 +17,8 @@ describe('Email Integration Tests', function() {
 
   let email, credentials, userId, origin, publicKeyArmored;
 
+  const recipient = { name:'Test User', email:'safewithme.testuser@gmail.com' };
+
   before(function() {
     try {
       credentials = require('../../credentials.json');
@@ -48,8 +50,8 @@ describe('Email Integration Tests', function() {
 
   beforeEach(() => {
     userId = {
-      name: credentials.sender.name,
-      email: credentials.sender.email,
+      name: recipient.name,
+      email: recipient.email,
       keyid: '0123456789ABCDF0',
       nonce: 'qwertzuioasdfghjkqwertzuio',
       publicKeyArmored
@@ -59,8 +61,8 @@ describe('Email Integration Tests', function() {
   describe("_sendHelper", () => {
     it('should work', function *() {
       let mailOptions = {
-        from: credentials.sender,
-        to: credentials.sender,
+        from: email._sender,
+        to: recipient,
         subject: 'Hello ✔', // Subject line
         text: 'Hello world 🐴', // plaintext body
         html: '<b>Hello world 🐴</b>' // html body
