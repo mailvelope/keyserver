@@ -27,55 +27,24 @@ The idea is that an identity provider such as an email provider can host their o
 
 # Api
 
-The key server provides a modern RESTful api over HTTPS, but is also backwards compatible to the [OpenPGP HTTP Keyserver Protocol (HKP)](https://tools.ietf.org/html/draft-shaw-openpgp-hkp-00) for key upload and lookup.
+The key server provides a modern RESTful api, but is also backwards compatible to the OpenPGP HTTP Keyserver Protocol (HKP).
 
 ## HKP api
 
-### Upload a new key
+The HKP apis are not documented here. Please refer to the [HKP specification](https://tools.ietf.org/html/draft-shaw-openpgp-hkp-00) to learn more. The server generally implements the full specification, but has some constraints to improve the security for automatic key lookup:
 
-```
-POST /pks/add
-```
+#### Accepted `search` parameters
+* Email addresses
+* V4 Fingerprints
+* Key ID strings with at least 16 digits (64-bit long key ID)
 
-#### HTTP Request Headers
+#### Accepted `op` parameters
+* get
+* index
+* vindex
 
-```
-'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-```
-
-#### Payload (Form data):
-
-* **keytext**: The ascii armored public PGP key to be uploaded
-
-Example:
-
-```
-keytext=-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----
-```
-
-### Lookup a key
-
-Currently only the `get` and `index` (with options=mr) operations are implemented. Other operations will return a `501` (not implemented) http error code.
-
-#### By key id (get)
-
-```
-GET /pks/lookup?op=get&search=0x0123456789ABCDEF
-```
-
-#### By email address (get, mr)
-
-```
-GET /pks/lookup?op=get&options=mr&search=user@example.com
-```
-
-#### By key id (index, mr)
-
-```
-GET /pks/lookup?op=index&options=mr&search=0x0123456789ABCDEF
-```
-
-
+#### Accepted `options` parameters
+* mr
 
 ## REST api
 
