@@ -70,6 +70,7 @@ router.get('/user/:email', function *() { // shorthand link for sharing
 
 // Set HTTP response headers
 app.use(function *(next) {
+  this.set('Strict-Transport-Security', 'max-age=16070400');
   this.set('Access-Control-Allow-Origin', '*');
   this.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   this.set('Access-Control-Allow-Headers', 'Content-Type');
@@ -77,6 +78,15 @@ app.use(function *(next) {
   this.set('Pragma', 'no-cache');
   this.set('Connection', 'keep-alive');
   yield next;
+});
+
+// Redirect all http traffic to https
+app.use(function *(next) {
+  if (process.env.NODE_ENV === 'production' && !this.secure && this.get('X-Forwarded-Proto') === 'http') {
+    this.redirect('https://' + this.hostname + this.url);
+  } else {
+    yield next;
+  }
 });
 
 app.use(router.routes());
