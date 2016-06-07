@@ -174,9 +174,16 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           .end(done);
         });
 
+        it('should return 400 for short key id', done => {
+          request(app.listen())
+          .get('/api/v1/key?keyid=0123456789ABCDE')
+          .expect(400)
+          .end(done);
+        });
+
         it('should return 404 for wrong key id', done => {
           request(app.listen())
-          .get('/api/v1/key?keyid=0123456789ABCDF')
+          .get('/api/v1/key?keyid=0123456789ABCDEF')
           .expect(404)
           .end(done);
         });
@@ -305,9 +312,9 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
         .end(done);
       });
 
-      it('should return 404 for unknown email address', done => {
+      it('should return 404 for unknown key id', done => {
         request(app.listen())
-        .get('/api/v1/verifyRemove?keyid=0123456789ABCDF&nonce=' + emailParams.nonce)
+        .get('/api/v1/verifyRemove?keyid=0123456789ABCDEF&nonce=' + emailParams.nonce)
         .expect(404)
         .end(done);
       });
@@ -407,10 +414,10 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           .end(done);
         });
 
-        it('should return 400 for invalid email', done => {
+        it('should return 501 for invalid email', done => {
           request(app.listen())
           .get('/pks/lookup?op=get&search=a@bco')
-          .expect(400)
+          .expect(501)
           .end(done);
         });
 
@@ -421,17 +428,17 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           .end(done);
         });
 
-        it('should return 400 for missing params', done => {
+        it('should return 501 for missing params', done => {
           request(app.listen())
           .get('/pks/lookup?op=get')
-          .expect(400)
+          .expect(501)
           .end(done);
         });
 
-        it('should return 400 for a invalid key id format', done => {
+        it('should return 501 for a invalid key id format', done => {
           request(app.listen())
           .get('/pks/lookup?op=get&search=' + emailParams.keyid)
-          .expect(400)
+          .expect(501)
           .end(done);
         });
 
@@ -439,6 +446,13 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           request(app.listen())
           .get('/pks/lookup?op=get&search=0xDBC0B3D92A1B86E9')
           .expect(404)
+          .end(done);
+        });
+
+        it('should return 501 (Not implemented) for short key id', done => {
+          request(app.listen())
+          .get('/pks/lookup?op=get&search=0x2A1B86E9')
+          .expect(501)
           .end(done);
         });
 

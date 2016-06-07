@@ -80,7 +80,7 @@ class HKP {
     if (['get','index','vindex'].indexOf(params.op) === -1) {
       ctx.throw(501, 'Not implemented!');
     } else if (!params.keyid && !params.email) {
-      ctx.throw(400, 'Invalid request!');
+      ctx.throw(501, 'Not implemented!');
     }
 
     return params;
@@ -88,7 +88,7 @@ class HKP {
 
   /**
    * Checks for a valid key id in the query string. A key must be prepended
-   * with '0x' and can be between 8 and 40 hex characters long.
+   * with '0x' and can be between 16 and 40 hex characters long.
    * @param  {String} keyid   The key id
    * @return {Boolean}        If the key id is valid
    */
@@ -96,7 +96,7 @@ class HKP {
     if (!util.isString(keyid)) {
       return false;
     }
-    return /^0x[a-fA-F0-9]{8,40}$/.test(keyid);
+    return /^0x[a-fA-F0-9]{16,40}$/.test(keyid);
   }
 
   /**

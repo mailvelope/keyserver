@@ -53,14 +53,11 @@ describe('Util Unit Tests', () => {
     it('should be true for 16 byte hex', () => {
       expect(util.validateKeyId('0123456789ABCDEF')).to.be.true;
     });
-    it('should be true for 8 byte hex', () => {
-      expect(util.validateKeyId('01234567')).to.be.true;
+    it('should be false for 15 byte hex', () => {
+      expect(util.validateKeyId('0123456789ABCDE')).to.be.false;
     });
-    it('should be false for 8 byte non-hex', () => {
-      expect(util.validateKeyId('0123456Z')).to.be.false;
-    });
-    it('should be false for 7 byte hex', () => {
-      expect(util.validateKeyId('0123456')).to.be.false;
+    it('should be false for 16 byte non-hex', () => {
+      expect(util.validateKeyId('0123456789ABCDEZ')).to.be.false;
     });
     it('should be false for 41 byte hex', () => {
       expect(util.validateKeyId('0123456789ABCDEF0123456789ABCDEF012345678')).to.be.false;

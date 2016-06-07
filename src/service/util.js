@@ -42,7 +42,7 @@ exports.isTrue = function(data) {
 };
 
 /**
- * Checks for a valid key id which is between 8 and 40 hex chars.
+ * Checks for a valid key id which is between 16 and 40 hex chars.
  * @param  {string} data   The key id
  * @return {boolean}       If the key id if valid
  */
@@ -50,7 +50,7 @@ exports.validateKeyId = function(data) {
   if (!this.isString(data)) {
     return false;
   }
-  return /^[a-fA-F0-9]{8,40}$/.test(data);
+  return /^[a-fA-F0-9]{16,40}$/.test(data);
 };
 
 /**
