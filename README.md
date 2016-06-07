@@ -146,18 +146,10 @@ GET /api/v1/verifyRemove?keyid=0123456789ABCDEF&nonce=123e4567-e89b-12d3-a456-42
 ```
 
 
+
 # Development
 
-Copy the `credentials.json` file into the git repo root directory. This file can be changed to configure a local development installation:
-
-```shell
-cp ./res/credentials.json .
-```
-
-## Requirements
-
 The server is written is in JavaScript ES6 and runs on [Node.js](https://nodejs.org/) v4+. It uses [MongoDB](https://www.mongodb.com/) v2.4+ as its database.
-
 
 ## Install Node.js (Mac OS)
 
@@ -184,7 +176,7 @@ Now the mongo daemon should be running in the background. To have mongo start au
 brew services start mongodb
 ```
 
-Now you can use the `mongo` CLI client to create a new test database. **The username and password used here match the ones in the `credentials.json` file. Be sure to change them for production use**:
+Now you can use the `mongo` CLI client to create a new test database. **The username and password used here match the ones in the `config/development.js` file. Be sure to change them for production use**:
 
 ```shell
 mongo
@@ -194,7 +186,7 @@ db.createUser({ user:"keyserver-user", pwd:"trfepCpjhVrqgpXFWsEF", roles:[{ role
 
 ## Setup SMTP user
 
-The key server uses [nodemailer](https://nodemailer.com) to send out emails upon public key upload to verify email address ownership. To test this feature locally, open the `credentials.json` file and change the `smtp.user` and `smtp.pass` attributes to your Gmail test account. Make sure that `smtp.user` and `sender.email` match. Otherwise the Gmail SMTP server will block any emails you try to send. Also, make sure to enable `Allow less secure apps` in the [Gmail security settings](https://myaccount.google.com/security#connectedapps). You can read more on this in the [Nodemailer documentation](https://nodemailer.com/using-gmail/).
+The key server uses [nodemailer](https://nodemailer.com) to send out emails upon public key upload to verify email address ownership. To test this feature locally, open the `config/development.js` file and change the `email.auth.user` and `email.auth.pass` attributes to your Gmail test account. Make sure that `email.auth.user` and `email.sender.email` match. Otherwise the Gmail SMTP server will block any emails you try to send. Also, make sure to enable `Allow less secure apps` in the [Gmail security settings](https://myaccount.google.com/security#connectedapps). You can read more on this in the [Nodemailer documentation](https://nodemailer.com/using-gmail/).
 
 For production you should use a service like [Amazon SES](https://aws.amazon.com/ses/), [Mailgun](https://www.mailgun.com/) or [Sendgrid](https://sendgrid.com/solutions/transactional-email/). Nodemailer supports all of these out of the box.
 
@@ -214,7 +206,7 @@ npm start
 
 # Production
 
-The `credentials.json` file can be used to configure a local development installation. For production use, the following environment variables need to be set:
+The `config/development.js` file can be used to configure a local development installation. For production use, the following environment variables need to be set:
 
 * NODE_ENV=production
 * MONGO_URI=127.0.0.1:27017/test_db

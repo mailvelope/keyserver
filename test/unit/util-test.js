@@ -22,6 +22,30 @@ describe('Util Unit Tests', () => {
     });
   });
 
+  describe('isTrue', () => {
+    it('should be true for "true"', () => {
+      expect(util.isTrue('true')).to.be.true;
+    });
+    it('should be true for true', () => {
+      expect(util.isTrue(true)).to.be.true;
+    });
+    it('should be false for "false"', () => {
+      expect(util.isTrue('false')).to.be.false;
+    });
+    it('should be false for false', () => {
+      expect(util.isTrue(false)).to.be.false;
+    });
+    it('should be true for a random string', () => {
+      expect(util.isTrue('asdf')).to.be.false;
+    });
+    it('should be true for undefined', () => {
+      expect(util.isTrue(undefined)).to.be.false;
+    });
+    it('should be true for null', () => {
+      expect(util.isTrue(null)).to.be.false;
+    });
+  });
+
   describe('validateKeyId', () => {
     it('should be true for 40 byte hex', () => {
       expect(util.validateKeyId('0123456789ABCDEF0123456789ABCDEF01234567')).to.be.true;

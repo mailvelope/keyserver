@@ -26,12 +26,12 @@ class Mongo {
 
   /**
    * Create an instance of the MongoDB client.
-   * @param {String} uri        The mongodb uri
-   * @param {String} user       The databse user
-   * @param {String} password   The database user's password
+   * @param {String} uri    The mongodb uri
+   * @param {String} user   The databse user
+   * @param {String} pass   The database user's password
    */
   constructor(options) {
-    this._uri = 'mongodb://' + options.user + ':' + options.password + '@' + options.uri;
+    this._uri = 'mongodb://' + options.user + ':' + options.pass + '@' + options.uri;
   }
 
   /**

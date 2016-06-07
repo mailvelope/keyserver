@@ -95,40 +95,13 @@ app.on('error', (error, ctx) => {
 //
 
 function injectDependencies() {
-  let credentials = readCredentials();
-  mongo = new Mongo({
-    uri: process.env.MONGO_URI || credentials.mongo.uri,
-    user: process.env.MONGO_USER || credentials.mongo.user,
-    password: process.env.MONGO_PASS || credentials.mongo.pass
-  });
+  mongo = new Mongo(config.mongo);
   email = new Email(nodemailer, openpgpEncrypt);
-  email.init({
-    host: process.env.SMTP_HOST || credentials.smtp.host,
-    port: process.env.SMTP_PORT || credentials.smtp.port,
-    tls: (process.env.SMTP_TLS || credentials.smtp.tls) === 'true',
-    starttls: (process.env.SMTP_STARTTLS || credentials.smtp.starttls) === 'true',
-    pgp: (process.env.SMTP_PGP || credentials.smtp.pgp) === 'true',
-    auth: {
-      user: process.env.SMTP_USER || credentials.smtp.user,
-      pass: process.env.SMTP_PASS || credentials.smtp.pass
-    },
-    sender: {
-      name: process.env.SENDER_NAME || credentials.sender.name,
-      email: process.env.SENDER_EMAIL || credentials.sender.email
-    }
-  });
+  email.init(config.email);
   userId = new UserId(mongo);
   publicKey = new PublicKey(openpgp, mongo, email, userId);
   hkp = new HKP(publicKey);
   rest = new REST(publicKey, userId);
-}
-
-function readCredentials() {
-  try {
-    return require('../credentials.json');
-  } catch(e) {
-    log.info('app', 'No credentials.json found ... using environment vars.');
-  }
 }
 
 //

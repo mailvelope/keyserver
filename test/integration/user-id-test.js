@@ -2,7 +2,7 @@
 
 require('co-mocha')(require('mocha')); // monkey patch mocha for generators
 
-const log = require('npmlog');
+const config = require('config');
 const UserId = require('../../src/service/user-id');
 const Mongo = require('../../src/dao/mongo');
 const expect = require('chai').expect;
@@ -15,17 +15,7 @@ describe('User ID Integration Tests', function() {
   let mongo, userId, uid1, uid2;
 
   before(function *() {
-    let credentials;
-    try {
-      credentials = require('../../credentials.json');
-    } catch(e) {
-      log.info('user-id-test', 'No credentials.json found ... using environment vars.');
-    }
-    mongo = new Mongo({
-      uri: process.env.MONGO_URI || credentials.mongo.uri,
-      user: process.env.MONGO_USER || credentials.mongo.user,
-      password: process.env.MONGO_PASS || credentials.mongo.pass
-    });
+    mongo = new Mongo(config.mongo);
     yield mongo.connect();
     userId = new UserId(mongo);
   });

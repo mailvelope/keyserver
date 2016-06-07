@@ -14,4 +14,4 @@ notifications:
 services:
   - mongodb
 env:
-  - MONGO_URI=127.0.0.1:27017/test_db MONGO_USER=travis MONGO_PASS=test
+  - NODE_ENV=integration MONGO_URI=127.0.0.1:27017/test_db MONGO_USER=travis MONGO_PASS=test

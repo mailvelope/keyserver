@@ -49,10 +49,10 @@ class Email {
       host: options.host,
       port: options.port || 465,
       auth: options.auth,
-      secure: (options.tls !== undefined) ? options.tls : true,
-      requireTLS: (options.starttls !== undefined) ? options.starttls : true,
+      secure: (options.tls !== undefined) ? util.isTrue(options.tls) : true,
+      requireTLS: (options.starttls !== undefined) ? util.isTrue(options.starttls) : true,
     });
-    if (options.pgp) {
+    if (util.isTrue(options.pgp)) {
       this._transport.use('stream', this._openpgpEncrypt());
     }
     this._sender = options.sender;

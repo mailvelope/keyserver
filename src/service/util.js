@@ -29,6 +29,19 @@ exports.isString = function(data) {
 };
 
 /**
+ * Cast string to a boolean value
+ * @param  {}  data    The input to be checked
+ * @return {boolean}   If data is true
+ */
+exports.isTrue = function(data) {
+  if (this.isString(data)) {
+    return data === 'true';
+  } else {
+    return !!data;
+  }
+};
+
+/**
  * Checks for a valid key id which is between 8 and 40 hex chars.
  * @param  {string} data   The key id
  * @return {boolean}       If the key id if valid

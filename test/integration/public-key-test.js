@@ -2,7 +2,6 @@
 
 require('co-mocha')(require('mocha')); // monkey patch mocha for generators
 
-const log = require('npmlog');
 const config = require('config');
 const openpgp = require('openpgp');
 const nodemailer = require('nodemailer');
@@ -12,8 +11,6 @@ const UserId = require('../../src/service/user-id');
 const PublicKey = require('../../src/service/public-key');
 const expect = require('chai').expect;
 const sinon = require('sinon');
-
-log.level = config.log.level;
 
 describe('Public Key Integration Tests', function() {
   this.timeout(20000);
@@ -28,17 +25,7 @@ describe('Public Key Integration Tests', function() {
 
   before(function *() {
     publicKeyArmored = require('fs').readFileSync(__dirname + '/../key1.asc', 'utf8');
-    let credentials;
-    try {
-      credentials = require('../../credentials.json');
-    } catch(e) {
-      log.info('mongo-test', 'No credentials.json found ... using environment vars.');
-    }
-    mongo = new Mongo({
-      uri: process.env.MONGO_URI || credentials.mongo.uri,
-      user: process.env.MONGO_USER || credentials.mongo.user,
-      password: process.env.MONGO_PASS || credentials.mongo.pass
-    });
+    mongo = new Mongo(config.mongo);
     yield mongo.connect();
   });
 

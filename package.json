@@ -10,8 +10,8 @@
     "node": ">=4"
   },
   "scripts": {
-    "start": "node index.js",
-    "test": "export NODE_ENV=integration && grunt test"
+    "start": ": ${NODE_ENV=development} && node index.js",
+    "test": ": ${NODE_ENV=development} && grunt test"
   },
   "dependencies": {
     "addressparser": "^1.0.1",
