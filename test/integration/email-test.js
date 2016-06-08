@@ -5,8 +5,6 @@ require('co-mocha')(require('mocha')); // monkey patch mocha for generators
 const expect = require('chai').expect;
 const config = require('config');
 const Email = require('../../src/email/email');
-const nodemailer = require('nodemailer');
-const openpgpEncrypt = require('nodemailer-openpgp').openpgpEncrypt;
 const tpl = require('../../src/email/templates.json');
 
 describe('Email Integration Tests', function() {
@@ -22,7 +20,7 @@ describe('Email Integration Tests', function() {
       protocol: 'http',
       host: 'localhost:' + config.server.port
     };
-    email = new Email(nodemailer, openpgpEncrypt);
+    email = new Email();
     email.init(config.email);
   });
 

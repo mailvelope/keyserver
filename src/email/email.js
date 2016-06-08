@@ -19,20 +19,13 @@
 
 const log = require('npmlog');
 const util = require('../service/util');
+const nodemailer = require('nodemailer');
+const openpgpEncrypt = require('nodemailer-openpgp').openpgpEncrypt;
 
 /**
  * A simple wrapper around Nodemailer to send verification emails
  */
 class Email {
-
-  /**
-   * Create an instance of the email object.
-   * @param  {Object} mailer   An instance of nodemailer
-   */
-  constructor(mailer, openpgpEncrypt) {
-    this._mailer = mailer;
-    this._openpgpEncrypt = openpgpEncrypt;
-  }
 
   /**
    * Create an instance of the reusable nodemailer SMTP transport.
@@ -45,7 +38,7 @@ class Email {
    * @param {boolean} pgp        (optional) if outgoing emails are encrypted to the user's public key.
    */
   init(options) {
-    this._transport = this._mailer.createTransport({
+    this._transport = nodemailer.createTransport({
       host: options.host,
       port: options.port || 465,
       auth: options.auth,
@@ -53,7 +46,7 @@ class Email {
       requireTLS: (options.starttls !== undefined) ? util.isTrue(options.starttls) : true,
     });
     if (util.isTrue(options.pgp)) {
-      this._transport.use('stream', this._openpgpEncrypt());
+      this._transport.use('stream', openpgpEncrypt());
     }
     this._sender = options.sender;
   }

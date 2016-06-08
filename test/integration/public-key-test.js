@@ -25,8 +25,8 @@ describe('Public Key Integration Tests', function() {
 
   before(function *() {
     publicKeyArmored = require('fs').readFileSync(__dirname + '/../key1.asc', 'utf8');
-    mongo = new Mongo(config.mongo);
-    yield mongo.connect();
+    mongo = new Mongo();
+    yield mongo.init(config.mongo);
   });
 
   beforeEach(function *() {

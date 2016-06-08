@@ -13,8 +13,8 @@ describe('Mongo Integration Tests', function() {
   let mongo;
 
   before(function *() {
-    mongo = new Mongo(config.mongo);
-    yield mongo.connect();
+    mongo = new Mongo();
+    yield mongo.init(config.mongo);
   });
 
   beforeEach(function *() {

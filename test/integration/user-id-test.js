@@ -15,8 +15,8 @@ describe('User ID Integration Tests', function() {
   let mongo, userId, uid1, uid2;
 
   before(function *() {
-    mongo = new Mongo(config.mongo);
-    yield mongo.connect();
+    mongo = new Mongo();
+    yield mongo.init(config.mongo);
     userId = new UserId(mongo);
   });
 

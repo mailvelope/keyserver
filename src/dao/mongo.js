@@ -25,21 +25,15 @@ const MongoClient = require('mongodb').MongoClient;
 class Mongo {
 
   /**
-   * Create an instance of the MongoDB client.
+   * Initializes the database client by connecting to the MongoDB.
    * @param {String} uri    The mongodb uri
    * @param {String} user   The databse user
    * @param {String} pass   The database user's password
-   */
-  constructor(options) {
-    this._uri = 'mongodb://' + options.user + ':' + options.pass + '@' + options.uri;
-  }
-
-  /**
-   * Initializes the database client by connecting to the MongoDB.
    * @yield {undefined}
    */
-  *connect() {
-    this._db = yield MongoClient.connect(this._uri);
+  *init(options) {
+    let uri = 'mongodb://' + options.user + ':' + options.pass + '@' + options.uri;
+    this._db = yield MongoClient.connect(uri);
   }
 
   /**

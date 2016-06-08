@@ -23,8 +23,8 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
 
   before(function *() {
     publicKeyArmored = fs.readFileSync(__dirname + '/../key1.asc', 'utf8');
-    mongo = new Mongo(config.mongo);
-    yield mongo.connect();
+    mongo = new Mongo();
+    yield mongo.init(config.mongo);
 
     sendEmailStub = sinon.stub().returns(Promise.resolve({ response:'250' }));
     sendEmailStub.withArgs(sinon.match(recipient => {
