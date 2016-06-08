@@ -15,6 +15,14 @@ git branch -D release/$1
 git checkout -b release/$1
 git merge master --no-edit
 
+# abort if tests fail
+set -e
+
+# build and test
+rm -rf node_modules
+npm install
+npm test
+
 # install only production dependencies
 rm -rf node_modules/
 npm install --production
