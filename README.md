@@ -48,38 +48,12 @@ The HKP apis are not documented here. Please refer to the [HKP specification](ht
 
 ## REST api
 
-### Upload new key
-
-```
-POST /api/v1/key
-```
-
-#### Payload (JSON):
-
-* **publicKeyArmored**: The ascii armored public PGP key to be uploaded
-* **primaryEmail (optional)**: The ascii armored block is parsed to check for user ids, so this parameter is purely optional. Normally a verification email is sent to every user id found in the pgp key. To prevent this behaviour, user agents can specify the user's primary email address to send out only one email.
-
-Example:
-
-```json
-{
-  "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----",
-  "primaryEmail": "user@example.com"
-}
-```
-
-### Verify uploaded key
-
-```
-GET /api/v1/verify?keyid=0123456789ABCDEF&nonce=123e4567-e89b-12d3-a456-426655440000
-```
-
 ### Lookup a key
 
-#### By key id
+#### By ID (hex long key id or fingerprint)
 
 ```
-GET /api/v1/key?keyid=0123456789ABCDEF
+GET /api/v1/key?id=b8e4105cc9dedc77
 ```
 
 #### By email address
@@ -94,12 +68,64 @@ GET /api/v1/key?email=user@example.com
 GET /user/user@example.com
 ```
 
+#### Payload (JSON):
+
+```json
+{
+  "keyId": "b8e4105cc9dedc77",
+  "fingerprint": "e3317db04d3958fd5f662c37b8e4105cc9dedc77",
+  "userIds": [
+    {
+      "name": "Jon Smith",
+      "email": "jon@smith.com"
+    }
+  ],
+  "created": "Sat Oct 17 2015 12:17:03 GMT+0200 (CEST)",
+  "algorithm": "rsa_encrypt_sign",
+  "keySize": "4096",
+  "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----"
+}
+```
+
+* **keyId**: The 16 char key id in hex
+* **fingerprint**: The 40 char key fingerprint in hex
+* **userIds**: An array of the public key's user IDs
+* **created**: The key creation time as a JavaScript Date
+* **algorithm**: The primary key alogrithm
+* **keySize**: The key length in bits
+* **publicKeyArmored**: The ascii armored public key block
+
+### Upload new key
+
+```
+POST /api/v1/key
+```
+
+#### Payload (JSON):
+
+```json
+{
+  "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----",
+  "primaryEmail": "user@example.com"
+}
+```
+
+* **publicKeyArmored**: The ascii armored public PGP key to be uploaded
+* **primaryEmail (optional)**: The ascii armored block is parsed to check for user ids, so this parameter is purely optional. Normally a verification email is sent to every user id found in the pgp key. To prevent this behaviour, user agents can specify the user's primary email address to send out only one email.
+
+
+### Verify uploaded key
+
+```
+GET /api/v1/verify?id=b8e4105cc9dedc77&nonce=123e4567-e89b-12d3-a456-426655440000
+```
+
 ### Request key removal
 
 #### By key id
 
 ```
-DELETE /api/v1/key?keyid=0123456789ABCDEF
+DELETE /api/v1/key?id=b8e4105cc9dedc77
 ```
 
 #### By email address
@@ -111,7 +137,7 @@ DELETE /api/v1/key?email=user@example.com
 ### Verify key removal
 
 ```
-GET /api/v1/verifyRemove?keyid=0123456789ABCDEF&nonce=123e4567-e89b-12d3-a456-426655440000
+GET /api/v1/verifyRemove?id=b8e4105cc9dedc77&nonce=123e4567-e89b-12d3-a456-426655440000
 ```
 
 
