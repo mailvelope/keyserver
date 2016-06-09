@@ -50,10 +50,16 @@ The HKP apis are not documented here. Please refer to the [HKP specification](ht
 
 ### Lookup a key
 
-#### By ID (hex long key id or fingerprint)
+#### By key ID
 
 ```
-GET /api/v1/key?id=b8e4105cc9dedc77
+GET /api/v1/key?keyId=b8e4105cc9dedc77
+```
+
+#### By fingerprint
+
+```
+GET /api/v1/key?fingerprint=e3317db04d3958fd5f662c37b8e4105cc9dedc77
 ```
 
 #### By email address
@@ -117,7 +123,7 @@ POST /api/v1/key
 ### Verify uploaded key
 
 ```
-GET /api/v1/verify?id=b8e4105cc9dedc77&nonce=123e4567-e89b-12d3-a456-426655440000
+GET /api/v1/verify?keyId=b8e4105cc9dedc77&nonce=123e4567-e89b-12d3-a456-426655440000
 ```
 
 ### Request key removal
@@ -125,7 +131,7 @@ GET /api/v1/verify?id=b8e4105cc9dedc77&nonce=123e4567-e89b-12d3-a456-42665544000
 #### By key id
 
 ```
-DELETE /api/v1/key?id=b8e4105cc9dedc77
+DELETE /api/v1/key?keyId=b8e4105cc9dedc77
 ```
 
 #### By email address
@@ -137,7 +143,7 @@ DELETE /api/v1/key?email=user@example.com
 ### Verify key removal
 
 ```
-GET /api/v1/verifyRemove?id=b8e4105cc9dedc77&nonce=123e4567-e89b-12d3-a456-426655440000
+GET /api/v1/verifyRemove?keyId=b8e4105cc9dedc77&nonce=123e4567-e89b-12d3-a456-426655440000
 ```
 
 
