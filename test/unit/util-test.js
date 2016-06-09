@@ -46,104 +46,69 @@ describe('Util Unit Tests', () => {
     });
   });
 
-  describe('validateKeyId', () => {
-    it('should be true for 40 byte hex', () => {
-      expect(util.validateKeyId('0123456789ABCDEF0123456789ABCDEF01234567')).to.be.true;
-    });
+  describe('isKeyId', () => {
     it('should be true for 16 byte hex', () => {
-      expect(util.validateKeyId('0123456789ABCDEF')).to.be.true;
-    });
-    it('should be false for 15 byte hex', () => {
-      expect(util.validateKeyId('0123456789ABCDE')).to.be.false;
+      expect(util.isKeyId('0123456789ABCDEF')).to.be.true;
     });
     it('should be false for 16 byte non-hex', () => {
-      expect(util.validateKeyId('0123456789ABCDEZ')).to.be.false;
+      expect(util.isKeyId('0123456789ABCDEZ')).to.be.false;
+    });
+    it('should be false for 15 byte hex', () => {
+      expect(util.isKeyId('0123456789ABCDE')).to.be.false;
+    });
+    it('should be false for 17 byte hex', () => {
+      expect(util.isKeyId('0123456789ABCDEF0')).to.be.false;
+    });
+    it('should be false for undefined', () => {
+      expect(util.isKeyId(undefined)).to.be.false;
+    });
+    it('should be false for Object', () => {
+      expect(util.isKeyId({})).to.be.false;
+    });
+  });
+
+  describe('isFingerPrint', () => {
+    it('should be true for 40 byte hex', () => {
+      expect(util.isFingerPrint('0123456789ABCDEF0123456789ABCDEF01234567')).to.be.true;
+    });
+    it('should be false for 40 byte non-hex', () => {
+      expect(util.isKeyId('0123456789ABCDEF0123456789ABCDEF0123456Z')).to.be.false;
+    });
+    it('should be false for 39 byte hex', () => {
+      expect(util.isFingerPrint('0123456789ABCDEF0123456789ABCDEF0123456')).to.be.false;
     });
     it('should be false for 41 byte hex', () => {
-      expect(util.validateKeyId('0123456789ABCDEF0123456789ABCDEF012345678')).to.be.false;
+      expect(util.isFingerPrint('0123456789ABCDEF0123456789ABCDEF012345678')).to.be.false;
     });
     it('should be false for undefined', () => {
-      expect(util.validateKeyId(undefined)).to.be.false;
+      expect(util.isFingerPrint(undefined)).to.be.false;
     });
     it('should be false for Object', () => {
-      expect(util.validateKeyId({})).to.be.false;
+      expect(util.isFingerPrint({})).to.be.false;
     });
   });
 
-  describe('validateAddress', () => {
+  describe('isEmail', () => {
     it('should be true valid email', () => {
-      expect(util.validateAddress('a@b.co')).to.be.true;
+      expect(util.isEmail('a@b.co')).to.be.true;
     });
     it('should be false for too short TLD', () => {
-      expect(util.validateAddress('a@b.c')).to.be.false;
+      expect(util.isEmail('a@b.c')).to.be.false;
     });
     it('should be false for no .', () => {
-      expect(util.validateAddress('a@bco')).to.be.false;
+      expect(util.isEmail('a@bco')).to.be.false;
     });
     it('should be false for no @', () => {
-      expect(util.validateAddress('ab.co')).to.be.false;
+      expect(util.isEmail('ab.co')).to.be.false;
     });
     it('should be false invalid cahr', () => {
-      expect(util.validateAddress('a<@b.co')).to.be.false;
+      expect(util.isEmail('a<@b.co')).to.be.false;
     });
     it('should be false for undefined', () => {
-      expect(util.validateAddress(undefined)).to.be.false;
+      expect(util.isEmail(undefined)).to.be.false;
     });
     it('should be false for Object', () => {
-      expect(util.validateAddress({})).to.be.false;
-    });
-  });
-
-  describe('validatePublicKey', () => {
-    let key;
-    before(() => {
-      key = require('fs').readFileSync(__dirname + '/../key1.asc', 'utf8');
-    });
-    it('should be true valid key', () => {
-      expect(util.validatePublicKey(key)).to.be.true;
-    });
-    it('should be false invalid prefix', () => {
-      expect(util.validatePublicKey(key.replace(/BEGIN PGP/, 'BEGIN PP'))).to.be.false;
-    });
-    it('should be false missing suffix', () => {
-      expect(util.validatePublicKey(key.replace(/-----END PGP PUBLIC KEY BLOCK-----/, ''))).to.be.false;
-    });
-  });
-
-  describe('validatePublicKey', () => {
-    let key;
-    before(() => {
-      key = require('fs').readFileSync(__dirname + '/../key1.asc', 'utf8');
-    });
-    it('should be true valid key', () => {
-      expect(util.validatePublicKey(key)).to.be.true;
-    });
-    it('should be false invalid prefix', () => {
-      expect(util.validatePublicKey(key.replace(/BEGIN PGP/, 'BEGIN PP'))).to.be.false;
-    });
-    it('should be false missing suffix', () => {
-      expect(util.validatePublicKey(key.replace(/-----END PGP PUBLIC KEY BLOCK-----/, ''))).to.be.false;
-    });
-  });
-
-  describe('parseUserIds', () => {
-    it('should parse string', () => {
-      expect(util.parseUserIds(['A <A@b.co>'])).to.deep.equal([{name:'A', email:'a@b.co'}]);
-    });
-    it('should work for empty array', () => {
-      expect(util.parseUserIds([])).to.deep.equal([]);
-    });
-  });
-
-  describe('deDup', () => {
-    it('should work for empty array', () => {
-      expect(util.deDup([])).to.deep.equal([]);
-    });
-    it('should work for empty array', () => {
-      expect(util.deDup(['a','b','a'])).to.deep.equal(['a','b']);
-    });
-    it('should throw for undefined', () => {
-      expect(util.deDup.bind(null, undefined)).to.throw(/Cannot read property/);
+      expect(util.isEmail({})).to.be.false;
     });
   });
 

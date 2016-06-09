@@ -17,8 +17,6 @@
 
 'use strict';
 
-const addressparser = require('addressparser');
-
 /**
  * Checks for a valid string
  * @param  {} data     The input to be checked
@@ -42,15 +40,27 @@ exports.isTrue = function(data) {
 };
 
 /**
- * Checks for a valid key id which is between 16 and 40 hex chars.
+ * Checks for a valid long key id which is 16 hex chars long.
  * @param  {string} data   The key id
- * @return {boolean}       If the key id if valid
+ * @return {boolean}       If the key id is valid
  */
-exports.validateKeyId = function(data) {
+exports.isKeyId = function(data) {
   if (!this.isString(data)) {
     return false;
   }
-  return /^[a-fA-F0-9]{16,40}$/.test(data);
+  return /^[a-fA-F0-9]{16}$/.test(data);
+};
+
+/**
+ * Checks for a valid version 4 fingerprint which is 40 hex chars long.
+ * @param  {string} data   The key id
+ * @return {boolean}       If the fingerprint is valid
+ */
+exports.isFingerPrint = function(data) {
+  if (!this.isString(data)) {
+    return false;
+  }
+  return /^[a-fA-F0-9]{40}$/.test(data);
 };
 
 /**
@@ -58,55 +68,12 @@ exports.validateKeyId = function(data) {
  * @param  {string} data   The email address
  * @return {boolean}       If the email address if valid
  */
-exports.validateAddress = function(data) {
+exports.isEmail = function(data) {
   if (!this.isString(data)) {
     return false;
   }
   const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(data);
-};
-
-/**
- * Validate an ascii armored public PGP key block.
- * @param  {string} data   The armored key block
- * @return {boolean}       If the key is valid
- */
-exports.validatePublicKey = function(data) {
-  if (!this.isString(data)) {
-    return false;
-  }
-  const begin = /-----BEGIN PGP PUBLIC KEY BLOCK-----/;
-  const end = /-----END PGP PUBLIC KEY BLOCK-----/;
-  return begin.test(data) && end.test(data);
-};
-
-/**
- * Parse an array of user id string to objects
- * @param  {Array} userIds   A list of user ids strings
- * @return {Array}           An array of user id objects
- */
-exports.parseUserIds = function(userIds) {
-  let result = [];
-  userIds.forEach(uid => result = result.concat(addressparser(uid)));
-  return result.map(u => ({
-    email: u.address ? u.address.toLowerCase() : undefined,
-    name: u.name
-  }));
-};
-
-/**
- * Deduplicates items in an array
- * @param  {Array} list   The list of items with duplicates
- * @return {Array}        The list of items without duplicates
- */
-exports.deDup = function(list) {
-  var result = [];
-  for (let i of list) {
-    if (result.indexOf(i) === -1) {
-      result.push(i);
-    }
-  }
-  return result;
 };
 
 /**
