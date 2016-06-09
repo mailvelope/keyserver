@@ -55,11 +55,12 @@ class Email {
    * Send the verification email to the user using a template.
    * @param {Object} template   the email template to use
    * @param {Object} userId     user id document
+   * @param {string} keyId      key id of public key
    * @param {Object} origin     origin of the server
    * @yield {Object}            send response from the SMTP server
    */
   *send(options) {
-    let template = options.template, userId = options.userId, origin = options.origin;
+    let template = options.template, userId = options.userId, keyId = options.keyId, origin = options.origin;
     let message = {
       from: this._sender,
       to: userId,
@@ -69,7 +70,7 @@ class Email {
       params: {
         name: userId.name,
         baseUrl: origin.protocol + '://' + origin.host,
-        keyid: encodeURIComponent(userId.keyid),
+        keyId: encodeURIComponent(keyId),
         nonce: encodeURIComponent(userId.nonce)
       }
     };

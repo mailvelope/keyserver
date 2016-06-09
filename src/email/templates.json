@@ -1,12 +1,12 @@
 {
   "verifyKey": {
     "subject": "Verify Your Key",
-    "text": "Hello {{name}},\n\nplease click here to verify your key:\n\n{{baseUrl}}/api/v1/verify?keyid={{keyid}}&nonce={{nonce}}",
-    "html": "<p>Hello {{name}},</p><p>please <a href=\"{{baseUrl}}/api/v1/verify?keyid={{keyid}}&nonce={{nonce}}\">click here to verify</a> your key.</p>"
+    "text": "Hello {{name}},\n\nplease click here to verify your key:\n\n{{baseUrl}}/api/v1/verify?id={{keyId}}&nonce={{nonce}}",
+    "html": "<p>Hello {{name}},</p><p>please <a href=\"{{baseUrl}}/api/v1/verify?id={{keyId}}&nonce={{nonce}}\">click here to verify</a> your key.</p>"
   },
   "verifyRemove": {
     "subject": "Verify Key Removal",
-    "text": "Hello {{name}},\n\nplease click here to verify the removal of your key:\n\n{{baseUrl}}/api/v1/verifyRemove?keyid={{keyid}}&nonce={{nonce}}",
-    "html": "<p>Hello {{name}},</p><p>please <a href=\"{{baseUrl}}/api/v1/verifyRemove?keyid={{keyid}}&nonce={{nonce}}\">click here to verify</a> the removal of your key.</p>"
+    "text": "Hello {{name}},\n\nplease click here to verify the removal of your key:\n\n{{baseUrl}}/api/v1/verifyRemove?id={{keyId}}&nonce={{nonce}}",
+    "html": "<p>Hello {{name}},</p><p>please <a href=\"{{baseUrl}}/api/v1/verifyRemove?id={{keyId}}&nonce={{nonce}}\">click here to verify</a> the removal of your key.</p>"
   }
 }

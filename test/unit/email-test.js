@@ -24,9 +24,9 @@ describe('Email Unit Tests', () => {
   let userId1 = {
     name: 'name1',
     email: 'email1',
-    keyid: '0123456789ABCDF0',
     nonce: 'qwertzuioasdfghjkqwertzuio'
   };
+  let keyId = '0123456789ABCDF0';
   let origin = {
     protocol: 'http',
     host: 'localhost:8888'
@@ -73,7 +73,7 @@ describe('Email Unit Tests', () => {
     });
 
     it('should work', function *() {
-      let info = yield email.send({ template, userId:userId1, origin});
+      let info = yield email.send({ template, userId:userId1, keyId, origin});
 
       expect(info.response).to.match(/^250/);
     });

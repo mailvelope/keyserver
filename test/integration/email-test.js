@@ -10,7 +10,7 @@ const tpl = require('../../src/email/templates.json');
 describe('Email Integration Tests', function() {
   this.timeout(20000);
 
-  let email, userId, origin, publicKeyArmored;
+  let email, keyId, userId, origin, publicKeyArmored;
 
   const recipient = { name:'Test User', email:'safewithme.testuser@gmail.com' };
 
@@ -25,10 +25,10 @@ describe('Email Integration Tests', function() {
   });
 
   beforeEach(() => {
+    keyId = '0123456789ABCDF0';
     userId = {
       name: recipient.name,
       email: recipient.email,
-      keyid: '0123456789ABCDF0',
       nonce: 'qwertzuioasdfghjkqwertzuio',
       publicKeyArmored
     };
@@ -51,22 +51,22 @@ describe('Email Integration Tests', function() {
   describe("send verifyKey template", () => {
     it('should send plaintext email', function *() {
       delete userId.publicKeyArmored;
-      yield email.send({ template:tpl.verifyKey, userId, origin });
+      yield email.send({ template:tpl.verifyKey, userId, keyId, origin });
     });
 
     it('should send pgp encrypted email', function *() {
-      yield email.send({ template:tpl.verifyKey, userId, origin });
+      yield email.send({ template:tpl.verifyKey, userId, keyId, origin });
     });
   });
 
   describe("send verifyRemove template", () => {
     it('should send plaintext email', function *() {
       delete userId.publicKeyArmored;
-      yield email.send({ template:tpl.verifyRemove, userId, origin });
+      yield email.send({ template:tpl.verifyRemove, userId, keyId, origin });
     });
 
     it('should send pgp encrypted email', function *() {
-      yield email.send({ template:tpl.verifyRemove, userId, origin });
+      yield email.send({ template:tpl.verifyRemove, userId, keyId, origin });
     });
   });
 
