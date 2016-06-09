@@ -17,15 +17,28 @@
 
 'use strict';
 
-const log = require('npmlog');
 const util = require('./util');
+const uuid = require('node-uuid');
 const tpl = require('../email/templates.json');
 
 /**
  * Database documents have the format:
  * {
- *   _id: "02C134D079701934", // the 16 byte key id in uppercase hex
- *   publicKeyArmored: "-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----"
+ *   _id: ObjectId, // a randomly generated MongoDB document ID
+ *   keyId: 'b8e4105cc9dedc77', // the 16 char key id in lowercase hex
+ *   fingerprint: 'e3317db04d3958fd5f662c37b8e4105cc9dedc77', // the 40 char key fingerprint in lowercase hex
+ *   userIds: [
+ *     {
+ *       name:'Jon Smith',
+ *       email:'jon@smith.com',
+ *       nonce: "123e4567-e89b-12d3-a456-426655440000", // UUID v4 verifier used to prove ownership
+ *       verified: true // if the user ID has been verified
+ *     }
+ *   ],
+ *   created: Sat Oct 17 2015 12:17:03 GMT+0200 (CEST), // key creation time as JavaScript Date
+ *   algorithm: 'rsa_encrypt_sign', // primary key alogrithm
+ *   keySize: 4096, // key length in bits
+ *   publicKeyArmored: '-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----'
  * }
  */
 const DB_TYPE = 'publickey';
@@ -37,16 +50,14 @@ class PublicKey {
 
   /**
    * Create an instance of the service
-   * @param {Object} openpgp   An instance of OpenPGP.js
+   * @param {Object} pgp       An instance of the OpenPGP.js wrapper
    * @param {Object} mongo     An instance of the MongoDB client
    * @param {Object} email     An instance of the Email Sender
-   * @param {Object} userId    An instance of the UserId service
    */
-  constructor(openpgp, mongo, email, userId) {
-    this._openpgp = openpgp;
+  constructor(pgp, mongo, email) {
+    this._pgp = pgp;
     this._mongo = mongo;
     this._email = email;
-    this._userId = userId;
   }
 
   /**
@@ -59,69 +70,35 @@ class PublicKey {
   *put(options) {
     // parse key block
     let publicKeyArmored = options.publicKeyArmored, primaryEmail = options.primaryEmail, origin = options.origin;
-    publicKeyArmored = publicKeyArmored.trim(); // remove whitespace
-    let params = this._parseKey(publicKeyArmored);
+    let key = this._pgp.parseKey(publicKeyArmored);
     // check for existing verfied key by id or email addresses
-    let verified = yield this._userId.getVerfied(params);
+    let verified = yield this.getVerified(key);
     if (verified) {
       util.throw(304, 'Key for this user already exists');
     }
     // store key in database
-    let userIds = yield this._persisKey(publicKeyArmored, params);
+    yield this._persisKey(key);
     // send mails to verify user ids (send only one if primary email is provided)
-    yield this._sendVerifyEmail(userIds, primaryEmail, origin, publicKeyArmored);
-  }
-
-  /**
-   * Parse an ascii armored pgp key block and get its parameters.
-   * @param  {String} publicKeyArmored   ascii armored pgp key block
-   * @return {Object}                    key's id and user ids
-   */
-  _parseKey(publicKeyArmored) {
-    let keys, userIds = [];
-    try {
-      keys = this._openpgp.key.readArmored(publicKeyArmored).keys;
-    } catch(e) {
-      log.error('public-key', 'Failed to parse PGP key:\n%s', publicKeyArmored, e);
-      util.throw(500, 'Failed to parse PGP key');
-    }
-    if (!keys || !keys.length || !keys[0].primaryKey) {
-      util.throw(400, 'Invalid PGP key');
-    }
-    // get key user ids
-    keys.forEach(key => userIds = userIds.concat(key.getUserIds()));
-    userIds = util.deDup(userIds);
-    // get key id
-    let primKey = keys[0].primaryKey;
-    return {
-      keyid: primKey.getKeyId().toHex().toUpperCase(),
-      userIds: util.parseUserIds(userIds),
-      fingerprint: primKey.fingerprint.toUpperCase(),
-      created: primKey.created,
-      algorithm: primKey.algorithm,
-      keylen: primKey.getBitSize()
-    };
+    yield this._sendVerifyEmail(key, primaryEmail, origin);
   }
 
   /**
    * Persist the public key and its user ids in the database.
-   * @param {String} publicKeyArmored   ascii armored pgp key block
-   * @param {Object} params             public key parameters
-   * @yield {Array}                     The persisted user id documents
+   * @param {Object} key   public key parameters
+   * @yield {undefined}    The persisted user id documents
    */
-  *_persisKey(publicKeyArmored, params) {
-    // delete old/unverified key and user ids with the same key id
-    yield this.remove({ keyid:params.keyid });
-    // persist new user ids
-    let userIds = yield this._userId.batch(params);
+  *_persisKey(key) {
+    // delete old/unverified key
+    yield this._mongo.remove({ fingerprint:key.fingerprint }, DB_TYPE);
+    // generate nonces for verification
+    for (let uid of key.userIds) {
+      uid.nonce = uuid.v4();
+    }
     // persist new key
-    let r = yield this._mongo.create({ _id:params.keyid, publicKeyArmored }, DB_TYPE);
+    let r = yield this._mongo.create(key, DB_TYPE);
     if (r.insertedCount !== 1) {
-      // rollback user ids
-      yield this.remove({ keyid:params.keyid });
       util.throw(500, 'Failed to persist key');
     }
-    return userIds;
   }
 
   /**
@@ -130,63 +107,107 @@ class PublicKey {
    * @param {Array}  userIds            user id documents containg the verification nonces
    * @param {string} primaryEmail       the public key's primary email address
    * @param {Object} origin             the server's origin (required for email links)
-   * @param {String} publicKeyArmored   The ascii armored pgp key block
    * @yield {undefined}
    */
-  *_sendVerifyEmail(userIds, primaryEmail, origin, publicKeyArmored) {
+  *_sendVerifyEmail(key, primaryEmail, origin) {
+    let userIds = key.userIds, keyId = key.keyId;
+    // check for primary email (send only one email)
     let primaryUserId = userIds.find(uid => uid.email === primaryEmail);
     if (primaryUserId) {
       userIds = [primaryUserId];
     }
+    // send emails
     for (let userId of userIds) {
-      userId.publicKeyArmored = publicKeyArmored; // set key for encryption
-      yield this._email.send({ template:tpl.verifyKey, userId, origin });
+      userId.publicKeyArmored = key.publicKeyArmored; // set key for encryption
+      yield this._email.send({ template:tpl.verifyKey, userId, keyId, origin });
     }
+  }
+
+  /**
+   * Verify a user id by proving knowledge of the nonce.
+   * @param {string} keyId   Correspronding public key id
+   * @param {string} nonce   The verification nonce proving email address ownership
+   * @yield {undefined}
+   */
+  *verify(options) {
+    let keyId = options.keyId, nonce = options.nonce;
+    // look for verification nonce in database
+    let query = { keyId, 'userIds.nonce':nonce };
+    let key = yield this._mongo.get(query, DB_TYPE);
+    if (!key) {
+      util.throw(404, 'User id not found');
+    }
+    // flag the user id as verified
+    yield this._mongo.update(query, {
+      'userIds.$.verified': true,
+      'userIds.$.nonce': null
+    }, DB_TYPE);
+  }
+
+  /**
+   * Check if a verified key already exists either by fingerprint, 16 char key id,
+   * or email address. There can only be one verified user ID for an email address
+   * at any given time.
+   * @param {Array}  userIds       A list of user ids to check
+   * @param {string} fingerprint   The public key fingerprint
+   * @param {string} keyId         (optional) The public key id
+   * @yield {Object}               The verified key document
+   */
+  *getVerified(options) {
+    let fingerprint = options.fingerprint, userIds = options.userIds, keyId = options.keyId;
+    let queries = [];
+    // query by fingerprint
+    if (fingerprint) {
+      queries.push({
+        fingerprint: fingerprint.toLowerCase(),
+        'userIds.verified': true
+      });
+    }
+    // query by key id (to prevent key id collision)
+    if (keyId) {
+      queries.push({
+        keyId: keyId.toLowerCase(),
+        'userIds.verified': true
+      });
+    }
+    // query by user id
+    if (userIds) {
+      queries = queries.concat(userIds.map(uid => ({
+        userIds: {
+          $elemMatch: {
+            'email': uid.email.toLowerCase(),
+            'verified': true
+          }
+        }
+      })));
+    }
+    return yield this._mongo.get({ $or:queries }, DB_TYPE);
   }
 
   /**
    * Fetch a verified public key from the database. Either the key id or the
    * email address muss be provided.
-   * @param {String} keyid   (optional) The public key id
-   * @param {String} email   (optional) The user's email address
-   * @yield {Object}         The public key document
+   * @param {string} fingerprint   (optional) The public key fingerprint
+   * @param {string} keyId         (optional) The public key id
+   * @param {String} email         (optional) The user's email address
+   * @yield {Object}               The public key document
    */
   *get(options) {
-    let keyid = options.keyid, email = options.email;
-    let verified = yield this._userId.getVerfied({
-      keyid: this._formatKeyId(keyid),
-      userIds: this._formatUserIds(email)
-    });
-    if (!verified) {
+    let fingerprint = options.fingerprint, keyId = options.keyId, email = options.email;
+    // look for verified key
+    let userIds = email ? [{ email:email }] : undefined;
+    let key = yield this.getVerified({ keyId, fingerprint, userIds });
+    if (!key) {
       util.throw(404, 'Key not found');
     }
-    let key = yield this._mongo.get({ _id:verified.keyid }, DB_TYPE);
-    let params = this._parseKey(key.publicKeyArmored);
-    params.publicKeyArmored = key.publicKeyArmored;
-    return params;
-  }
-
-  /**
-   * Convert key id to the format used in the database.
-   * @param  {string} keyid   the public key id
-   * @return {string}         the formatted key id
-   */
-  _formatKeyId(keyid) {
-    if (!util.isString(keyid)) {
-      return;
-    }
-    keyid = keyid.toUpperCase(); // use uppercase key ids
-    let len = keyid.length;
-    return (len > 16) ? keyid.substr(len - 16, len) : keyid; // shorten to 16 bytes
-  }
-
-  /**
-   * Format the email address to the format used in the database.
-   * @param  {[type]} email [description]
-   * @return {[type]}       [description]
-   */
-  _formatUserIds(email) {
-    return email ? [{ email:email.toLowerCase() }] : undefined;
+    // clean json return value (_id, nonce)
+    delete key._id;
+    key.userIds = key.userIds.map(uid => ({
+      name: uid.name,
+      email: uid.email,
+      verified: uid.verified
+    }));
+    return key;
   }
 
   /**
@@ -194,49 +215,66 @@ class PublicKey {
    * a verification email to the primary email address. Only one email
    * needs to sent to a single user id to authenticate removal of all user ids
    * that belong the a certain key id.
-   * @param {String} keyid    (optional) The public key id
+   * @param {String} keyId    (optional) The public key id
    * @param {String} email    (optional) The user's email address
    * @param {Object} origin   Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
    * @yield {undefined}
    */
   *requestRemove(options) {
-    let keyid = options.keyid, email = options.email, origin = options.origin;
-    let userIds = yield this._userId.flagForRemove({ keyid, email }, DB_TYPE);
+    let keyId = options.keyId, email = options.email, origin = options.origin;
+    let userIds = yield this._flagForRemove(keyId, email);
     if (!userIds.length) {
       util.throw(404, 'User id not found');
     }
     for (let userId of userIds) {
-      yield this._email.send({ template:tpl.verifyRemove, userId, origin });
+      yield this._email.send({ template:tpl.verifyRemove, userId, keyId, origin });
+    }
+  }
+
+  /**
+   * Flag all user IDs of a key for removal by generating a new nonce and
+   * saving it. Either a key id or email address must be provided
+   * @param {String} keyId   (optional) The public key id
+   * @param {String} email   (optional) The user's email address
+   * @yield {Array}          A list of user ids with nonces
+   */
+  *_flagForRemove(keyId, email) {
+    let query = email ? { 'userIds.email':email } : { keyId };
+    let key = yield this._mongo.get(query, DB_TYPE);
+    if (!key) {
+      return [];
+    }
+    if (email) {
+      let nonce = uuid.v4();
+      yield this._mongo.update(query, { 'userIds.$.nonce':nonce }, DB_TYPE);
+      let uid = key.userIds.find(u => u.email === email);
+      uid.nonce = nonce;
+      return [uid];
+    }
+    if (keyId) {
+      for (let uid of key.userIds) {
+        let nonce = uuid.v4();
+        yield this._mongo.update({ 'userIds.email':uid.email }, { 'userIds.$.nonce':nonce }, DB_TYPE);
+        uid.nonce = nonce;
+      }
+      return key.userIds;
     }
   }
 
   /**
    * Verify the removal of the user's key id by proving knowledge of the nonce.
    * Also deletes all user id documents of that key id.
-   * @param {string} keyid   public key id
+   * @param {string} keyId   public key id
    * @param {string} nonce   The verification nonce proving email address ownership
    * @yield {undefined}
    */
   *verifyRemove(options) {
-    let keyid = options.keyid, nonce = options.nonce;
-    let flagged = yield this._userId.getFlaggedForRemove({ keyid, nonce });
+    let keyId = options.keyId, nonce = options.nonce;
+    let flagged = yield this._mongo.get({ keyId, 'userIds.nonce':nonce }, DB_TYPE);
     if (!flagged) {
       util.throw(404, 'User id not found');
     }
-    yield this.remove({ keyid });
-  }
-
-  /**
-   * Delete a public key document and its corresponding user id documents.
-   * @param {String} keyid   The key id
-   * @yield {undefined}
-   */
-  *remove(options) {
-    let keyid = options.keyid;
-    // remove key document
-    yield this._mongo.remove({ _id:keyid }, DB_TYPE);
-    // remove matching user id documents
-    yield this._userId.remove({ keyid });
+    yield this._mongo.remove({ keyId }, DB_TYPE);
   }
 
 }
