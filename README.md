@@ -25,6 +25,12 @@ The idea is that an identity provider such as an email provider can host their o
 
 
 
+# Demo
+
+Try out the server here: [https://keys.mailvelope.com](https://keys.mailvelope.com)
+
+
+
 # Api
 
 The key server provides a modern RESTful api, but is also backwards compatible to the OpenPGP HTTP Keyserver Protocol (HKP).
@@ -83,7 +89,8 @@ GET /user/user@example.com
   "userIds": [
     {
       "name": "Jon Smith",
-      "email": "jon@smith.com"
+      "email": "jon@smith.com",
+      "verified": "true"
     }
   ],
   "created": "Sat Oct 17 2015 12:17:03 GMT+0200 (CEST)",
@@ -95,7 +102,9 @@ GET /user/user@example.com
 
 * **keyId**: The 16 char key id in hex
 * **fingerprint**: The 40 char key fingerprint in hex
-* **userIds**: An array of the public key's user IDs
+* **userIds.name**: The user ID's name
+* **userIds.email**: The user ID's email address
+* **userIds.verified**: If the user ID's email address has been verified
 * **created**: The key creation time as a JavaScript Date
 * **algorithm**: The primary key alogrithm
 * **keySize**: The key length in bits
@@ -128,16 +137,17 @@ GET /api/v1/verify?keyId=b8e4105cc9dedc77&nonce=123e4567-e89b-12d3-a456-42665544
 
 ### Request key removal
 
-#### By key id
+#### Via delete request
 
 ```
-DELETE /api/v1/key?keyId=b8e4105cc9dedc77
+DELETE /api/v1/key?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
 ```
 
-#### By email address
+#### Via link
 
 ```
-DELETE /api/v1/key?email=user@example.com
+GET /api/v1/removeKey?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
+```
 ```
 
 ### Verify key removal

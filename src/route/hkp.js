@@ -41,7 +41,7 @@ class HKP {
   *add(ctx) {
     let body = yield parse.form(ctx, { limit: '1mb' });
     let publicKeyArmored = body.keytext;
-    if (!util.validatePublicKey(publicKeyArmored)) {
+    if (!publicKeyArmored) {
       ctx.throw(400, 'Invalid request!');
     }
     let origin = util.getOrigin(ctx);
@@ -72,14 +72,16 @@ class HKP {
       mr: ctx.query.options === 'mr' // machine readable
     };
     if (this.checkId(ctx.query.search)) {
-      params.keyid = ctx.query.search.replace(/^0x/, '');
-    } else if(util.validateAddress(ctx.query.search)) {
+      let id = ctx.query.search.replace(/^0x/, '');
+      params.keyId = util.isKeyId(id) ? id : undefined;
+      params.fingerprint = util.isFingerPrint(id) ? id : undefined;
+    } else if (util.isEmail(ctx.query.search)) {
       params.email = ctx.query.search;
     }
 
     if (['get','index','vindex'].indexOf(params.op) === -1) {
       ctx.throw(501, 'Not implemented!');
-    } else if (!params.keyid && !params.email) {
+    } else if (!params.keyId && !params.fingerprint && !params.email) {
       ctx.throw(501, 'Not implemented!');
     }
 
@@ -89,14 +91,14 @@ class HKP {
   /**
    * Checks for a valid key id in the query string. A key must be prepended
    * with '0x' and can be between 16 and 40 hex characters long.
-   * @param  {String} keyid   The key id
-   * @return {Boolean}        If the key id is valid
+   * @param  {String} id   The key id
+   * @return {Boolean}     If the key id is valid
    */
-  checkId(keyid) {
-    if (!util.isString(keyid)) {
+  checkId(id) {
+    if (!util.isString(id)) {
       return false;
     }
-    return /^0x[a-fA-F0-9]{16,40}$/.test(keyid);
+    return /^0x[a-fA-F0-9]{16,40}$/.test(id);
   }
 
   /**
@@ -123,11 +125,12 @@ class HKP {
       ctx.body = key.publicKeyArmored;
     } else if (['index','vindex'].indexOf(params.op) !== -1) {
       const VERSION = 1, COUNT = 1; // number of keys
+      let fp = key.fingerprint.toUpperCase();
       let algo = (key.algorithm.indexOf('rsa') !== -1) ? 1 : '';
       let created = key.created ? (key.created.getTime() / 1000) : '';
 
       ctx.body = 'info:' + VERSION + ':' + COUNT + '\n' +
-        'pub:' + key.fingerprint + ':' + algo + ':' + key.keylen + ':' + created + '::\n';
+        'pub:' + fp + ':' + algo + ':' + key.keySize + ':' + created + '::\n';
 
       for (let uid of key.userIds) {
         ctx.body += 'uid:' + encodeURIComponent(uid.name + ' <' + uid.email + '>') + ':::\n';

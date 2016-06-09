@@ -22,51 +22,55 @@ const app = require('koa')();
 const log = require('npmlog');
 const config = require('config');
 const router = require('koa-router')();
-const openpgp = require('openpgp');
-const nodemailer = require('nodemailer');
-const openpgpEncrypt = require('nodemailer-openpgp').openpgpEncrypt;
 const Mongo = require('./dao/mongo');
 const Email = require('./email/email');
-const UserId = require('./service/user-id');
+const PGP = require('./service/pgp');
 const PublicKey = require('./service/public-key');
 const HKP = require('./route/hkp');
 const REST = require('./route/rest');
+const home = require('./route/home');
 
-let mongo, email, userId, publicKey, hkp, rest;
+let mongo, email, pgp, publicKey, hkp, rest;
 
 //
 // Configure koa HTTP server
 //
 
 // HKP routes
-router.post('/pks/add', function *() { // no query params
+router.post('/pks/add', function *() {
   yield hkp.add(this);
 });
-router.get('/pks/lookup', function *() { // ?op=get&search=0x1234567890123456
+router.get('/pks/lookup', function *() {
   yield hkp.lookup(this);
 });
 
 // REST api routes
-router.post('/api/v1/key', function *() { // { publicKeyArmored, primaryEmail } hint the primary email address
+router.post('/api/v1/key', function *() {
   yield rest.create(this);
 });
-router.get('/api/v1/key', function *() { // ?keyid=keyid OR ?email=email
+router.get('/api/v1/key', function *() {
   yield rest.read(this);
 });
-router.del('/api/v1/key', function *() { // ?keyid=keyid OR ?email=email
+router.del('/api/v1/key', function *() {
   yield rest.remove(this);
 });
 
-// links for verification and sharing
-router.get('/api/v1/verify', function *() { // ?keyid=keyid&nonce=nonce
+// links for verification, removal and sharing
+router.get('/api/v1/verify', function *() {
   yield rest.verify(this);
 });
-router.get('/api/v1/verifyRemove', function *() { // ?keyid=keyid&nonce=nonce
+router.get('/api/v1/removeKey', function *() {
+  yield rest.remove(this);
+});
+router.get('/api/v1/verifyRemove', function *() {
   yield rest.verifyRemove(this);
 });
-router.get('/user/:email', function *() { // shorthand link for sharing
+router.get('/user/:email', function *() {
   yield rest.share(this);
 });
+
+// display homepage
+router.get('/', home);
 
 // Set HTTP response headers
 app.use(function *(next) {
@@ -75,7 +79,6 @@ app.use(function *(next) {
   this.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   this.set('Access-Control-Allow-Headers', 'Content-Type');
   this.set('Cache-Control', 'no-cache');
-  this.set('Pragma', 'no-cache');
   this.set('Connection', 'keep-alive');
   yield next;
 });
@@ -105,13 +108,12 @@ app.on('error', (error, ctx) => {
 //
 
 function injectDependencies() {
-  mongo = new Mongo(config.mongo);
-  email = new Email(nodemailer, openpgpEncrypt);
-  email.init(config.email);
-  userId = new UserId(mongo);
-  publicKey = new PublicKey(openpgp, mongo, email, userId);
+  mongo = new Mongo();
+  email = new Email();
+  pgp = new PGP();
+  publicKey = new PublicKey(pgp, mongo, email);
   hkp = new HKP(publicKey);
-  rest = new REST(publicKey, userId);
+  rest = new REST(publicKey);
 }
 
 //
@@ -129,8 +131,9 @@ if (!global.testing) { // don't automatically start server in tests
 function *init() {
   log.level = config.log.level; // set log level depending on process.env.NODE_ENV
   injectDependencies();
+  email.init(config.email);
   log.info('app', 'Connecting to MongoDB ...');
-  yield mongo.connect();
+  yield mongo.init(config.mongo);
   return app;
 }
 

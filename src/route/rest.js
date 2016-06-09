@@ -30,9 +30,8 @@ class REST {
    * @param  {Object} publicKey   An instance of the public key service
    * @param  {Object} userId      An instance of the user id service
    */
-  constructor(publicKey, userId) {
+  constructor(publicKey) {
     this._publicKey = publicKey;
-    this._userId = userId;
   }
 
   /**
@@ -42,8 +41,7 @@ class REST {
   *create(ctx) {
     let q = yield parse.json(ctx, { limit: '1mb' });
     let publicKeyArmored = q.publicKeyArmored, primaryEmail = q.primaryEmail;
-    if (!util.validatePublicKey(publicKeyArmored) ||
-      (primaryEmail && !util.validateAddress(primaryEmail))) {
+    if (!publicKeyArmored || (primaryEmail && !util.isEmail(primaryEmail))) {
       ctx.throw(400, 'Invalid request!');
     }
     let origin = util.getOrigin(ctx);
@@ -56,11 +54,11 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *verify(ctx) {
-    let q = { keyid:ctx.query.keyid, nonce:ctx.query.nonce };
-    if (!util.validateKeyId(q.keyid) || !util.isString(q.nonce)) {
+    let q = { keyId:ctx.query.keyId, nonce:ctx.query.nonce };
+    if (!util.isKeyId(q.keyId) || !util.isString(q.nonce)) {
       ctx.throw(400, 'Invalid request!');
     }
-    yield this._userId.verify(q);
+    yield this._publicKey.verify(q);
     ctx.body = 'Key successfully verified!';
   }
 
@@ -69,8 +67,8 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *read(ctx) {
-    let q = { keyid:ctx.query.keyid, email:ctx.query.email };
-    if (!util.validateKeyId(q.keyid) && !util.validateAddress(q.email)) {
+    let q = { keyId:ctx.query.keyId, fingerprint:ctx.query.fingerprint, email:ctx.query.email };
+    if (!util.isKeyId(q.keyId) && !util.isFingerPrint(q.fingerprint) && !util.isEmail(q.email)) {
       ctx.throw(400, 'Invalid request!');
     }
     ctx.body = yield this._publicKey.get(q);
@@ -82,7 +80,7 @@ class REST {
    */
   *share(ctx) {
     let q = { email:ctx.params.email };
-    if (!util.validateAddress(q.email)) {
+    if (!util.isEmail(q.email)) {
       ctx.throw(400, 'Invalid request!');
     }
     ctx.body = (yield this._publicKey.get(q)).publicKeyArmored;
@@ -93,8 +91,8 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *remove(ctx) {
-    let q = { keyid:ctx.query.keyid, email:ctx.query.email, origin:util.getOrigin(ctx) };
-    if (!util.validateKeyId(q.keyid) && !util.validateAddress(q.email)) {
+    let q = { keyId:ctx.query.keyId, email:ctx.query.email, origin:util.getOrigin(ctx) };
+    if (!util.isKeyId(q.keyId) && !util.isEmail(q.email)) {
       ctx.throw(400, 'Invalid request!');
     }
     yield this._publicKey.requestRemove(q);
@@ -106,8 +104,8 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *verifyRemove(ctx) {
-    let q = { keyid:ctx.query.keyid, nonce:ctx.query.nonce };
-    if (!util.validateKeyId(q.keyid) || !util.isString(q.nonce)) {
+    let q = { keyId:ctx.query.keyId, nonce:ctx.query.nonce };
+    if (!util.isKeyId(q.keyId) || !util.isString(q.nonce)) {
       ctx.throw(400, 'Invalid request!');
     }
     yield this._publicKey.verifyRemove(q);
