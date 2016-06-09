@@ -1,8 +1,9 @@
 'use strict';
 
 module.exports = function () {
-  let hkp = (this.secure ? 'hkps://' : 'hkp://') + this.host;
-  let del = this.origin + '/api/v1/removeKey?email=user@example.com';
+  let tls = this.secure || process.env.NODE_ENV === 'production' && this.get('X-Forwarded-Proto') === 'https';
+  let hkp = (tls ? 'hkps://' : 'hkp://') + this.host;
+  let del = (tls ? 'https://' : 'http://') + this.host + '/api/v1/removeKey?email=user@example.com';
   this.body =
   `
   <h1>Welcome to the OpenPGP key server</h1>
