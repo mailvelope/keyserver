@@ -44,7 +44,7 @@ class HKP {
     if (!publicKeyArmored) {
       ctx.throw(400, 'Invalid request!');
     }
-    let origin = util.getOrigin(ctx);
+    let origin = util.origin(ctx);
     yield this._publicKey.put({ publicKeyArmored, origin });
     ctx.status = 201;
   }

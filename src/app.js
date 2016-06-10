@@ -22,6 +22,7 @@ const app = require('koa')();
 const log = require('npmlog');
 const config = require('config');
 const router = require('koa-router')();
+const util = require('./service/util');
 const Mongo = require('./dao/mongo');
 const Email = require('./email/email');
 const PGP = require('./service/pgp');
@@ -85,7 +86,7 @@ app.use(function *(next) {
 
 // Redirect all http traffic to https
 app.use(function *(next) {
-  if (process.env.NODE_ENV === 'production' && !this.secure && this.get('X-Forwarded-Proto') === 'http') {
+  if (config.server.upgradeHTTP && util.checkHTTP(this)) {
     this.redirect('https://' + this.hostname + this.url);
   } else {
     yield next;

@@ -44,7 +44,7 @@ class REST {
     if (!publicKeyArmored || (primaryEmail && !util.isEmail(primaryEmail))) {
       ctx.throw(400, 'Invalid request!');
     }
-    let origin = util.getOrigin(ctx);
+    let origin = util.origin(ctx);
     yield this._publicKey.put({ publicKeyArmored, primaryEmail, origin });
     ctx.status = 201;
   }
@@ -91,7 +91,7 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *remove(ctx) {
-    let q = { keyId:ctx.query.keyId, email:ctx.query.email, origin:util.getOrigin(ctx) };
+    let q = { keyId:ctx.query.keyId, email:ctx.query.email, origin:util.origin(ctx) };
     if (!util.isKeyId(q.keyId) && !util.isEmail(q.email)) {
       ctx.throw(400, 'Invalid request!');
     }

@@ -103,6 +103,25 @@ exports.random = function(bytes) {
 };
 
 /**
+ * Check if the user is connecting over a plaintext http connection.
+ * This can be used as an indicator to upgrade their connection to https.
+ * @param  {Object} ctx   The koa request/repsonse context
+ * @return {boolean}      If http is used
+ */
+exports.checkHTTP = function(ctx) {
+  return !ctx.secure && ctx.get('X-Forwarded-Proto') === 'http';
+};
+
+/**
+ * Check if the user is connecting over a https connection.
+ * @param  {Object} ctx   The koa request/repsonse context
+ * @return {boolean}      If https is used
+ */
+exports.checkHTTPS = function(ctx) {
+  return ctx.secure || ctx.get('X-Forwarded-Proto') === 'https';
+};
+
+/**
  * Get the server's own origin host and protocol. Required for sending
  * verification links via email. If the PORT environmane variable
  * is set, we assume the protocol to be 'https', since the AWS loadbalancer
@@ -110,9 +129,29 @@ exports.random = function(bytes) {
  * @param  {Object} ctx   The koa request/repsonse context
  * @return {Object}       The server origin
  */
-exports.getOrigin = function(ctx) {
+exports.origin = function(ctx) {
   return {
-    protocol: process.env.PORT ? 'https' : ctx.protocol,
+    protocol: this.checkHTTPS(ctx) ? 'https' : ctx.protocol,
     host: ctx.host
   };
+};
+
+/**
+ * Helper to create urls pointing to this server
+ * @param  {Object} origin     The server's origin
+ * @param  {string} resource   (optional) The resource to point to
+ * @return {string}            The complete url
+ */
+exports.url = function(origin, resource) {
+  return origin.protocol + '://' + origin.host + (resource || '');
+};
+
+/**
+ * Helper to create a url for hkp clients to connect to this server via
+ * the hkp protocol.
+ * @param  {Object} ctx   The koa request/repsonse context
+ * @return {string}       The complete url
+ */
+exports.hkpUrl = function(ctx) {
+  return (this.checkHTTPS(ctx) ? 'hkps://' : 'hkp://') + ctx.host;
 };

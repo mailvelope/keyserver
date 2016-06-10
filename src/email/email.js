@@ -69,7 +69,7 @@ class Email {
       html: template.html,
       params: {
         name: userId.name,
-        baseUrl: origin.protocol + '://' + origin.host,
+        baseUrl: util.url(origin),
         keyId: encodeURIComponent(keyId),
         nonce: encodeURIComponent(userId.nonce)
       }

@@ -135,9 +135,21 @@ describe('Util Unit Tests', () => {
     });
   });
 
-  describe('getOrigin', () => {
+  describe('origin', () => {
     it('should work', () => {
-      expect(util.getOrigin({host:'h', protocol:'p'})).to.exist;
+      expect(util.origin({ secure:true, host:'h', protocol:'p' })).to.exist;
+    });
+  });
+
+  describe('url', () => {
+    it('should work with resource', () => {
+      let url = util.url({ host:'localhost', protocol:'http'}, '/foo');
+      expect(url).to.equal('http://localhost/foo');
+    });
+
+    it('should work without resource', () => {
+      let url = util.url({ host:'localhost', protocol:'http'});
+      expect(url).to.equal('http://localhost');
     });
   });
 
