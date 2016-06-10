@@ -41,7 +41,7 @@ module.exports = function () {
       </p>
       <p>
         Search:
-        <input name="search" type="email" spellcheck="false" size="40" placeholder="Email address, long key ID or fingerprint">
+        <input name="search" spellcheck="false" size="40" placeholder="Email address, long key ID or fingerprint">
       </p>
       <p>
         <input type="reset" value="Reset">
