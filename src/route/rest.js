@@ -61,7 +61,7 @@ class REST {
     yield this._publicKey.verify(q);
     // create link for sharing
     let link = util.url(util.origin(ctx), '/user/' + q.keyId.toUpperCase());
-    ctx.body = `<p>Key successfully verified!</p><p>Link to share your key: <a href="${link}" target="_blank">${link}</a></p>`;
+    ctx.body = `<p>Email address successfully verified!</p><p>Link to share your key: <a href="${link}" target="_blank">${link}</a></p>`;
     ctx.set('Content-Type', 'text/html; charset=utf-8');
   }
 
