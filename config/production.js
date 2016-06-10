@@ -5,7 +5,7 @@ module.exports = {
   },
 
   server: {
-    upgradeHTTPS: process.env.UPGRADE_HTTPS || true // use HTTPS by default
+    httpsUpgrade: process.env.HTTPS_UPGRADE || true // use HTTPS by default
   }
 
 };

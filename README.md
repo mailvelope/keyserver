@@ -231,9 +231,9 @@ The `config/development.js` file can be used to configure a local development in
 * SMTP_PASS=smtp_pass
 * SENDER_NAME="OpenPGP Key Server"
 * SENDER_EMAIL=noreply@example.com
-* UPGRADE_HTTPS=true                           (upgrade HTTP requests to HTTPS and use [HSTS](https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security))
-* PUBLIC_KEY_PIN=base64_encoded_sha256         (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
-* PUBLIC_KEY_PIN_BACKUP=base64_encoded_sha256  (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
+* HTTPS_UPGRADE=true                          (upgrade HTTP requests to HTTPS and use [HSTS](https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security))
+* HTTPS_KEY_PIN=base64_encoded_sha256         (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
+* HTTPS_KEY_PIN_BACKUP=base64_encoded_sha256  (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
 
 
 

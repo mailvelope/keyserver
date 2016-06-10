@@ -75,7 +75,7 @@ router.get('/', home);
 
 // Redirect all http traffic to https
 app.use(function *(next) {
-  if (util.isTrue(config.server.upgradeHTTPS) && util.checkHTTP(this)) {
+  if (util.isTrue(config.server.httpsUpgrade) && util.checkHTTP(this)) {
     this.redirect('https://' + this.hostname + this.url);
   } else {
     yield next;
@@ -84,11 +84,11 @@ app.use(function *(next) {
 
 // Set HTTP response headers
 app.use(function *(next) {
-  if (util.isTrue(config.server.upgradeHTTPS)) {
+  if (util.isTrue(config.server.httpsUpgrade)) {
     this.set('Strict-Transport-Security', 'max-age=16070400');
   }
-  if (config.server.publicKeyPin && config.server.publicKeyPinBackup) {
-    this.set('Public-Key-Pins', 'pin-sha256="' + config.server.publicKeyPin + '"; pin-sha256="' + config.server.publicKeyPinBackup + '"; max-age=16070400');
+  if (config.server.httpsKeyPin && config.server.httpsKeyPinBackup) {
+    this.set('Public-Key-Pins', 'pin-sha256="' + config.server.httpsKeyPin + '"; pin-sha256="' + config.server.httpsKeyPinBackup + '"; max-age=16070400');
   }
   this.set('Access-Control-Allow-Origin', '*');
   this.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
