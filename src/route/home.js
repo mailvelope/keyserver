@@ -15,7 +15,6 @@ module.exports = function () {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   </head>
   <body>
-
     <h1>${config.ui.title}</h1>
 
     <h2>Try it out</h2>
@@ -42,7 +41,7 @@ module.exports = function () {
       </p>
       <p>
         Search:
-        <input name="search" size="40" spellcheck="false" placeholder="Email address, long key ID or fingerprint">
+        <input name="search" type="email" spellcheck="false" size="40" placeholder="Email address, long key ID or fingerprint">
       </p>
       <p>
         <input type="reset" value="Reset">
@@ -57,7 +56,7 @@ module.exports = function () {
     <form action="/pks/add" method="post">
       <p>Paste ASCII-armored OpenPGP key block here:</p>
       <p>
-        <textarea name="keytext" rows="20" cols="66"></textarea>
+        <textarea name="keytext" rows="20" cols="50"></textarea>
       </p>
       <p>
         <input type="reset" value="Reset">
@@ -79,7 +78,6 @@ module.exports = function () {
         <input type="submit" value="Remove">
       </p>
     </form>
-
   </body>
   </html>
   `;
