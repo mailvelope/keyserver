@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="An OpenPGP public key server that verifies users by sending an encrypted verification email.">
+    <meta name="author" content="Tankred Hase">
+
+    <title>Mailvelope Key Server</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/jumbotron-narrow.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="header clearfix">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation" class="active"><a href="#">Home</a></li>
+            <li role="presentation"><a href="demo.html">Demo</a></li>
+            <li role="presentation"><a href="https://github.com/mailvelope/keyserver" target="_blank">GitHub</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">Mailvelope Key Server</h3>
+      </div>
+
+      <div class="jumbotron">
+        <h1>Secure. Easy.</h1>
+        <p class="lead">The Mailvelope OpenPGP public key server is the first of its kind. It allows automatic public key lookup to make email privacy <strong>just as painless as modern messengers</strong>.</p>
+        <p><a class="btn btn-lg btn-success" href="demo.html" role="button">Try it now</a></p>
+      </div>
+
+      <div class="row marketing">
+        <div class="col-lg-6">
+          <h4>Privacy made Easy</h4>
+          <p>Automatic key lookup in OpenPGP mail user agents makes reading and writing encrypted email just as painless as modern messenengers.</p>
+
+          <h4>No Web of Trust</h4>
+          <p>No more key signing parties or publishing your social network online. You can even delete your public key at anytime. <a href="https://github.com/mailvelope/keyserver/blob/master/README.md#why-not-use-web-of-trust" target="_blank">Learn more</a>.</p>
+
+          <h4>Secure REST Api</h4>
+          <p>The server offers a modern REST api over HTTPS with HSTS and public key pinning that can be integrated into any app architecture. <a href="https://github.com/mailvelope/keyserver/blob/master/README.md#rest-api" target="_blank">Learn more</a>.</p>
+        </div>
+
+        <div class="col-lg-6">
+          <h4>Verify Yourself</h4>
+          <p>The server verifies email address ownership as well as private key ownership by sending an encrypted verification email.</p>
+
+          <h4>Completely Open</h4>
+          <p>The code is licensed under the AGPL v3.0 which means you are free to host your own key directory under your domain. <a href="https://github.com/mailvelope/keyserver/blob/master/README.md#development" target="_blank">Learn more</a>.</p>
+
+          <h4>HKP Compatible</h4>
+          <p>No need to update your current OpenPGP plugin. Just copy and paste <a href="hkps://keys.mailvelope.com" target="_blank">hkps://keys.mailvelope.com</a> into your settings and go. <a href="https://github.com/mailvelope/keyserver/blob/master/README.md#hkp-api" target="_blank">Learn more</a>.</p>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>&copy; 2016 Mailvelope GmbH</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>

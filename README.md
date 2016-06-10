@@ -42,7 +42,7 @@ The HKP apis are not documented here. Please refer to the [HKP specification](ht
 #### Accepted `search` parameters
 * Email addresses
 * V4 Fingerprints
-* Key ID strings with at least 16 digits (64-bit long key ID)
+* Key IDs with 16 digits (64-bit long key ID)
 
 #### Accepted `op` parameters
 * get

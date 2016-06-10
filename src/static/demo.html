@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="An OpenPGP public key server that verifies users by sending an encrypted verification email.">
+    <meta name="author" content="Tankred Hase">
+
+    <title>Mailvelope Key Server</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/jumbotron-narrow.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="header clearfix">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation"><a href="index.html">Home</a></li>
+            <li role="presentation" class="active"><a href="#">Demo</a></li>
+            <li role="presentation"><a href="https://github.com/mailvelope/keyserver" target="_blank">GitHub</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">Mailvelope Key Server</h3>
+      </div>
+
+      <div class="row marketing">
+        <div class="col-lg-12">
+          <h2>OpenPGP key lookup</h2>
+          <form action="/pks/lookup" method="get">
+            <input type="radio" name="op" value="get" checked="checked" style="display: none">
+            <div class="input-group input-group-lg">
+              <input class="form-control" name="search" type="text" spellcheck="false" placeholder="Email address or Key ID e.g. 0x11A1A9C84B18732F" required>
+              <span class="input-group-btn">
+                <input class="btn btn-default" type="submit" value="Search">
+              </span>
+            </div><!-- /input-group -->
+          </form>
+          <hr>
+        </div> <!-- /col-lg-12 -->
+
+        <div class="col-lg-12">
+          <h2>OpenPGP key upload</h2>
+          <form action="/pks/add" method="post">
+            <p><textarea class="form-control" name="keytext" rows="5" placeholder="Paste -----PGP PUBLIC KEY BLOCK----- here" required></textarea></p>
+            <input class="btn btn-primary btn-lg" type="submit" value="Upload">
+          </form>
+          <hr>
+        </div> <!-- /col-lg-12 -->
+
+        <div class="col-lg-12">
+          <h2>OpenPGP key removal</h2>
+          <form action="/api/v1/removeKey" method="get">
+            <div class="input-group input-group-lg">
+              <input class="form-control" name="email" type="email" spellcheck="false" placeholder="Email address" required>
+              <span class="input-group-btn">
+                <input class="btn btn-default" type="submit" value="Delete">
+              </span>
+            </div><!-- /input-group -->
+          </form>
+          <hr>
+        </div> <!-- /col-lg-12 -->
+
+        <div class="col-lg-12">
+          <h2>HKP and REST Apis</h2>
+          <p>The server offers a modern REST api over HTTPS with HSTS and public key pinning that can be integrated into any app architecture. It is also compatible to the OpenPGP HTTP Keyserver Protocol (HKP). Just copy and paste <a href="hkps://keys.mailvelope.com" target="_blank">hkps://keys.mailvelope.com</a> into your current OpenPGP plugin and go. <a href="https://github.com/mailvelope/keyserver/blob/master/README.md#api" target="_blank">Learn more</a>.</p>
+        </div>
+      </div> <!-- /row marketing -->
+
+      <footer class="footer">
+        <p>&copy; 2016 Mailvelope GmbH</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>

@@ -29,7 +29,6 @@ const PGP = require('./service/pgp');
 const PublicKey = require('./service/public-key');
 const HKP = require('./route/hkp');
 const REST = require('./route/rest');
-const home = require('./route/home');
 
 let mongo, email, pgp, publicKey, hkp, rest;
 
@@ -70,9 +69,6 @@ router.get('/user/:search', function *() {
   yield rest.share(this);
 });
 
-// display homepage
-router.get('/', home);
-
 // Redirect all http traffic to https
 app.use(function *(next) {
   if (util.isTrue(config.server.httpsUpgrade) && util.checkHTTP(this)) {
@@ -100,6 +96,9 @@ app.use(function *(next) {
 
 app.use(router.routes());
 app.use(router.allowedMethods());
+
+// serve static files
+app.use(require('koa-static')(__dirname + '/static'));
 
 app.on('error', (error, ctx) => {
   if (error.status) {
