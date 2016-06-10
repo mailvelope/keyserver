@@ -47,21 +47,35 @@ class PGP {
       util.throw(400, 'Invalid PGP key: only one key can be uploaded');
     }
 
-    let key = {
-      keyId: r.keys[0].primaryKey.getKeyId().toHex(),
-      fingerprint: r.keys[0].primaryKey.fingerprint,
-      userIds: this.parseUserIds(r.keys[0].getUserIds()),
-      created: r.keys[0].primaryKey.created,
-      algorithm: r.keys[0].primaryKey.algorithm,
-      keySize: r.keys[0].primaryKey.getBitSize(),
+    let key = r.keys[0];
+    let primaryKey = key.primaryKey;
+
+    // public key document that is stored in the database
+    let keyDoc = {
+      keyId: primaryKey.getKeyId().toHex(),
+      fingerprint: primaryKey.fingerprint,
+      userIds: this.parseUserIds(key.getUserIds()),
+      created: primaryKey.created,
+      algorithm: primaryKey.algorithm,
+      keySize: primaryKey.getBitSize(),
       publicKeyArmored
     };
 
-    if (!util.isKeyId(key.keyId) || !util.isFingerPrint(key.fingerprint)) {
+    // accept version 4 keys only
+    if (!util.isKeyId(keyDoc.keyId) || !util.isFingerPrint(keyDoc.fingerprint)) {
       util.throw(400, 'Invalid PGP key: only v4 keys are accepted');
     }
 
-    return key;
+    // verify user id signatures
+    for (let user of key.users) {
+      for (let cert of user.selfCertifications) {
+        if (!user.isValidSelfCertificate(primaryKey, cert)) {
+          util.throw(400, 'Invalid PGP key: invalid user id signatures');
+        }
+      }
+    }
+
+    return keyDoc;
   }
 
   /**
