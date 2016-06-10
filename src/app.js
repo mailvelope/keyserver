@@ -73,24 +73,29 @@ router.get('/user/:search', function *() {
 // display homepage
 router.get('/', home);
 
+// Redirect all http traffic to https
+app.use(function *(next) {
+  if (util.isTrue(config.server.upgradeHTTPS) && util.checkHTTP(this)) {
+    this.redirect('https://' + this.hostname + this.url);
+  } else {
+    yield next;
+  }
+});
+
 // Set HTTP response headers
 app.use(function *(next) {
-  this.set('Strict-Transport-Security', 'max-age=16070400');
+  if (util.isTrue(config.server.upgradeHTTPS)) {
+    this.set('Strict-Transport-Security', 'max-age=31536000');
+  }
+  if (config.server.publicKeyPin) {
+    this.set('Public-Key-Pins', 'pin-sha256="' + config.server.publicKeyPin + '"');
+  }
   this.set('Access-Control-Allow-Origin', '*');
   this.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   this.set('Access-Control-Allow-Headers', 'Content-Type');
   this.set('Cache-Control', 'no-cache');
   this.set('Connection', 'keep-alive');
   yield next;
-});
-
-// Redirect all http traffic to https
-app.use(function *(next) {
-  if (config.server.upgradeHTTP && util.checkHTTP(this)) {
-    this.redirect('https://' + this.hostname + this.url);
-  } else {
-    yield next;
-  }
 });
 
 app.use(router.routes());
