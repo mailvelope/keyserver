@@ -123,15 +123,15 @@ class PGP {
           oneValid = true;
         }
       }
-      if (oneValid) {
-        result = result.concat(addressparser(user.userId.userid));
+      if (oneValid && user.userId && user.userId.userid) {
+        let uid = addressparser(user.userId.userid)[0];
+        if (util.isEmail(uid.address)) {
+          result.push(uid);
+        }
       }
     }
     // map to local user id object format
     return result.map(uid => {
-      if (!util.isEmail(uid.address)) {
-        util.throw(400, 'Invalid PGP key: invalid email address');
-      }
       return {
         name: uid.name,
         email: uid.address.toLowerCase(),

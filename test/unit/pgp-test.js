@@ -182,8 +182,9 @@ describe('PGP Unit Tests', () => {
 
     it('should throw for a invalid email address', () => {
       let verifyStub = sinon.stub(key.users[0], 'isValidSelfCertificate').returns(true);
-      key.users[0].userId.userid = 'safewithme.testusergmail.com';
-      expect(pgp.parseUserIds.bind(pgp, key.users, key.primaryKey)).to.throw(/invalid email address/);
+      key.users[0].userId.userid = 'safewithme testuser <safewithme.testusergmail.com>';
+      let parsed = pgp.parseUserIds(key.users, key.primaryKey);
+      expect(parsed.length).to.equal(0);
       verifyStub.restore();
     });
   });
