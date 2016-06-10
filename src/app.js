@@ -66,7 +66,7 @@ router.get('/api/v1/removeKey', function *() {
 router.get('/api/v1/verifyRemove', function *() {
   yield rest.verifyRemove(this);
 });
-router.get('/user/:email', function *() {
+router.get('/user/:search', function *() {
   yield rest.share(this);
 });
 

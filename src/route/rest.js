@@ -59,7 +59,10 @@ class REST {
       ctx.throw(400, 'Invalid request!');
     }
     yield this._publicKey.verify(q);
-    ctx.body = 'Key successfully verified!';
+    // create link for sharing
+    let link = util.url(util.origin(ctx), '/user/' + q.keyId.toUpperCase());
+    ctx.body = `<p>Key successfully verified!</p><p>Link to share your key: <a href="${link}" target="_blank">${link}</a></p>`;
+    ctx.set('Content-Type', 'text/html; charset=utf-8');
   }
 
   /**
@@ -79,8 +82,15 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *share(ctx) {
-    let q = { email:ctx.params.email };
-    if (!util.isEmail(q.email)) {
+    let q, search = ctx.params.search;
+    if (util.isEmail(search)) {
+      q = { email:search };
+    } else if (util.isKeyId(search)) {
+      q = { keyId:search };
+    } else if (util.isFingerPrint(search)) {
+      q = { fingerprint:search };
+    }
+    if (!q) {
       ctx.throw(400, 'Invalid request!');
     }
     ctx.body = (yield this._publicKey.get(q)).publicKeyArmored;

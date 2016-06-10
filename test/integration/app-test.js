@@ -190,7 +190,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       });
     });
 
-    describe('GET /user/:email (sharing link)', () => {
+    describe('GET /user/:search (sharing link)', () => {
       beforeEach(done => {
         request(app.listen())
         .post('/api/v1/key')
@@ -216,9 +216,23 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           .end(done);
         });
 
-        it('should return 200 for correct email address', done => {
+        it('should return 200 for email address', done => {
           request(app.listen())
           .get('/user/' + primaryEmail)
+          .expect(200, publicKeyArmored)
+          .end(done);
+        });
+
+        it('should return 200 for key id', done => {
+          request(app.listen())
+          .get('/user/' + emailParams.keyId)
+          .expect(200, publicKeyArmored)
+          .end(done);
+        });
+
+        it('should return 200 for fingerprint', done => {
+          request(app.listen())
+          .get('/user/' + fingerprint)
           .expect(200, publicKeyArmored)
           .end(done);
         });
