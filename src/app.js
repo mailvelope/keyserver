@@ -87,8 +87,8 @@ app.use(function *(next) {
   if (util.isTrue(config.server.upgradeHTTPS)) {
     this.set('Strict-Transport-Security', 'max-age=16070400');
   }
-  if (config.server.publicKeyPin) {
-    this.set('Public-Key-Pins', 'pin-sha256="' + config.server.publicKeyPin + '"; max-age=16070400');
+  if (config.server.publicKeyPin && config.server.publicKeyPinBackup) {
+    this.set('Public-Key-Pins', 'pin-sha256="' + config.server.publicKeyPin + '"; pin-sha256="' + config.server.publicKeyPinBackup + '"; max-age=16070400');
   }
   this.set('Access-Control-Allow-Origin', '*');
   this.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');

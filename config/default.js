@@ -7,7 +7,8 @@ module.exports = {
   server: {
     port: process.env.PORT || 8888,
     upgradeHTTPS: process.env.UPGRADE_HTTPS,
-    publicKeyPin: process.env.PUBLIC_KEY_PIN
+    publicKeyPin: process.env.PUBLIC_KEY_PIN,
+    publicKeyPinBackup: process.env.PUBLIC_KEY_PIN_BACKUP
   },
 
   mongo: {
