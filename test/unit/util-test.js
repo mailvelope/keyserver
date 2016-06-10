@@ -125,6 +125,16 @@ describe('Util Unit Tests', () => {
     });
   });
 
+  describe('random', () => {
+    it('should generate random 32 char hex string', () => {
+      expect(util.random().length).to.equal(32);
+    });
+
+    it('should generate random 16 char hex string', () => {
+      expect(util.random(8).length).to.equal(16);
+    });
+  });
+
   describe('getOrigin', () => {
     it('should work', () => {
       expect(util.getOrigin({host:'h', protocol:'p'})).to.exist;

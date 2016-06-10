@@ -132,7 +132,7 @@ POST /api/v1/key
 ### Verify uploaded key
 
 ```
-GET /api/v1/verify?keyId=b8e4105cc9dedc77&nonce=123e4567-e89b-12d3-a456-426655440000
+GET /api/v1/verify?keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
 ```
 
 ### Request key removal
@@ -152,7 +152,7 @@ GET /api/v1/removeKey?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
 ### Verify key removal
 
 ```
-GET /api/v1/verifyRemove?keyId=b8e4105cc9dedc77&nonce=123e4567-e89b-12d3-a456-426655440000
+GET /api/v1/verifyRemove?keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
 ```
 
 

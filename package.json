@@ -21,7 +21,6 @@
     "koa": "^1.2.0",
     "koa-router": "^5.4.0",
     "mongodb": "^2.1.20",
-    "node-uuid": "^1.4.7",
     "nodemailer": "^2.4.2",
     "nodemailer-openpgp": "^1.0.2",
     "npmlog": "^2.0.4",

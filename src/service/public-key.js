@@ -18,7 +18,6 @@
 'use strict';
 
 const util = require('./util');
-const uuid = require('node-uuid');
 const tpl = require('../email/templates.json');
 
 /**
@@ -31,7 +30,7 @@ const tpl = require('../email/templates.json');
  *     {
  *       name:'Jon Smith',
  *       email:'jon@smith.com',
- *       nonce: "123e4567-e89b-12d3-a456-426655440000", // UUID v4 verifier used to prove ownership
+ *       nonce: "6a314915c09368224b11df0feedbc53c", // random 32 char verifier used to prove ownership
  *       verified: true // if the user ID has been verified
  *     }
  *   ],
@@ -92,7 +91,7 @@ class PublicKey {
     yield this._mongo.remove({ fingerprint:key.fingerprint }, DB_TYPE);
     // generate nonces for verification
     for (let uid of key.userIds) {
-      uid.nonce = uuid.v4();
+      uid.nonce = util.random();
     }
     // persist new key
     let r = yield this._mongo.create(key, DB_TYPE);
@@ -245,7 +244,7 @@ class PublicKey {
       return [];
     }
     if (email) {
-      let nonce = uuid.v4();
+      let nonce = util.random();
       yield this._mongo.update(query, { 'userIds.$.nonce':nonce }, DB_TYPE);
       let uid = key.userIds.find(u => u.email === email);
       uid.nonce = nonce;
@@ -253,7 +252,7 @@ class PublicKey {
     }
     if (keyId) {
       for (let uid of key.userIds) {
-        let nonce = uuid.v4();
+        let nonce = util.random();
         yield this._mongo.update({ 'userIds.email':uid.email }, { 'userIds.$.nonce':nonce }, DB_TYPE);
         uid.nonce = nonce;
       }
