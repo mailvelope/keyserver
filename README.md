@@ -219,9 +219,6 @@ npm start
 The `config/development.js` file can be used to configure a local development installation. For production use, the following environment variables need to be set:
 
 * NODE_ENV=production
-* UPGRADE_HTTPS=true  (upgrade HTTP to HTTPS and use [HSTS](https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security))
-* PUBLIC_KEY_PIN=base64_encoded_sha256  (use [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
-* PUBLIC_KEY_PIN_BACKUP=base64_encoded_sha256
 * MONGO_URI=127.0.0.1:27017/test_db
 * MONGO_USER=db_user
 * MONGO_PASS=db_password
@@ -234,6 +231,9 @@ The `config/development.js` file can be used to configure a local development in
 * SMTP_PASS=smtp_pass
 * SENDER_NAME="OpenPGP Key Server"
 * SENDER_EMAIL=noreply@example.com
+* UPGRADE_HTTPS=true                           (upgrade HTTP requests to HTTPS and use [HSTS](https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security))
+* PUBLIC_KEY_PIN=base64_encoded_sha256         (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
+* PUBLIC_KEY_PIN_BACKUP=base64_encoded_sha256  (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
 
 
 
