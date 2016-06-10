@@ -47,35 +47,36 @@ class PGP {
       util.throw(400, 'Invalid PGP key: only one key can be uploaded');
     }
 
+    // verify primar key
     let key = r.keys[0];
     let primaryKey = key.primaryKey;
+    if (key.verifyPrimaryKey() !== openpgp.enums.keyStatus.valid) {
+      util.throw(400, 'Invalid PGP key: primary key verification failed');
+    }
+
+    // accept version 4 keys only
+    let keyId = primaryKey.getKeyId().toHex();
+    let fingerprint = primaryKey.fingerprint;
+    if (!util.isKeyId(keyId) || !util.isFingerPrint(fingerprint)) {
+      util.throw(400, 'Invalid PGP key: only v4 keys are accepted');
+    }
+
+    // check for at least one valid user id
+    let userIds = this.parseUserIds(key.users, primaryKey);
+    if (!userIds.length) {
+      util.throw(400, 'Invalid PGP key: invalid user ids');
+    }
 
     // public key document that is stored in the database
-    let keyDoc = {
-      keyId: primaryKey.getKeyId().toHex(),
-      fingerprint: primaryKey.fingerprint,
-      userIds: this.parseUserIds(key.getUserIds()),
+    return {
+      keyId,
+      fingerprint,
+      userIds,
       created: primaryKey.created,
       algorithm: primaryKey.algorithm,
       keySize: primaryKey.getBitSize(),
       publicKeyArmored
     };
-
-    // accept version 4 keys only
-    if (!util.isKeyId(keyDoc.keyId) || !util.isFingerPrint(keyDoc.fingerprint)) {
-      util.throw(400, 'Invalid PGP key: only v4 keys are accepted');
-    }
-
-    // verify user id signatures
-    for (let user of key.users) {
-      for (let cert of user.selfCertifications) {
-        if (!user.isValidSelfCertificate(primaryKey, cert)) {
-          util.throw(400, 'Invalid PGP key: invalid user id signatures');
-        }
-      }
-    }
-
-    return keyDoc;
   }
 
   /**
@@ -105,20 +106,31 @@ class PGP {
   }
 
   /**
-   * Parse an array of user id string to objects
-   * @param  {Array} userIds   A list of user ids strings
-   * @return {Array}           An array of user id objects
+   * Parse an array of user ids and verify signatures
+   * @param  {Array} users   A list of openpgp.js user objects
+   * @return {Array}         An array of user id objects
    */
-  parseUserIds(userIds) {
-    if (!userIds.length) {
+  parseUserIds(users, primaryKey) {
+    if (!users || !users.length) {
       util.throw(400, 'Invalid PGP key: no user id found');
     }
-
+    // at least one user id signature must be valid
     let result = [];
-    userIds.forEach(uid => result = result.concat(addressparser(uid)));
+    for (let user of users) {
+      let oneValid = false;
+      for (let cert of user.selfCertifications) {
+        if (user.isValidSelfCertificate(primaryKey, cert)) {
+          oneValid = true;
+        }
+      }
+      if (oneValid) {
+        result = result.concat(addressparser(user.userId.userid));
+      }
+    }
+    // map to local user id object format
     return result.map(uid => {
       if (!util.isEmail(uid.address)) {
-        util.throw(400, 'Invalid PGP key: invalid user id');
+        util.throw(400, 'Invalid PGP key: invalid email address');
       }
       return {
         name: uid.name,
@@ -127,7 +139,6 @@ class PGP {
       };
     });
   }
-
 }
 
 module.exports = PGP;
