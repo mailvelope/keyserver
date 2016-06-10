@@ -148,7 +148,6 @@ DELETE /api/v1/key?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
 ```
 GET /api/v1/removeKey?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
 ```
-```
 
 ### Verify key removal
 
