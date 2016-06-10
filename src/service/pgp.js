@@ -47,7 +47,7 @@ class PGP {
       util.throw(400, 'Invalid PGP key: only one key can be uploaded');
     }
 
-    // verify primar key
+    // verify primary key
     let key = r.keys[0];
     let primaryKey = key.primaryKey;
     if (key.verifyPrimaryKey() !== openpgp.enums.keyStatus.valid) {
