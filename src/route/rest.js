@@ -46,6 +46,7 @@ class REST {
     }
     let origin = util.origin(ctx);
     yield this._publicKey.put({ publicKeyArmored, primaryEmail, origin });
+    ctx.body = 'Upload successful. Check your inbox to verify your email address.';
     ctx.status = 201;
   }
 
@@ -106,6 +107,7 @@ class REST {
       ctx.throw(400, 'Invalid request!');
     }
     yield this._publicKey.requestRemove(q);
+    ctx.body = 'Check your inbox to verify the removal of your key.';
     ctx.status = 202;
   }
 

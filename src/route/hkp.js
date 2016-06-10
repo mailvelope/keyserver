@@ -46,6 +46,7 @@ class HKP {
     }
     let origin = util.origin(ctx);
     yield this._publicKey.put({ publicKeyArmored, origin });
+    ctx.body = 'Upload successful. Check your inbox to verify your email address.';
     ctx.status = 201;
   }
 

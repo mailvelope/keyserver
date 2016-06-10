@@ -31,6 +31,10 @@ module.exports = {
       name: process.env.SENDER_NAME,
       email: process.env.SENDER_EMAIL
     }
+  },
+
+  ui: {
+    title: process.env.UI_TITLE || 'OpenPGP Public Key Server'
   }
 
 };
