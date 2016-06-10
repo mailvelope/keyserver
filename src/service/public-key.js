@@ -221,10 +221,12 @@ class PublicKey {
    */
   *requestRemove(options) {
     let keyId = options.keyId, email = options.email, origin = options.origin;
+    // flag user ids for removal
     let key = yield this._flagForRemove(keyId, email);
     if (!key) {
       util.throw(404, 'User id not found');
     }
+    // send verification mails
     keyId = key.keyId; // get keyId in case request was by email
     for (let userId of key.userIds) {
       yield this._email.send({ template:tpl.verifyRemove, userId, keyId, origin });
@@ -244,6 +246,7 @@ class PublicKey {
     if (!key) {
       return;
     }
+    // flag only the provided user id
     if (email) {
       let nonce = util.random();
       yield this._mongo.update(query, { 'userIds.$.nonce':nonce }, DB_TYPE);
@@ -251,6 +254,7 @@ class PublicKey {
       uid.nonce = nonce;
       return { userIds:[uid], keyId:key.keyId };
     }
+    // flag all key user ids
     if (keyId) {
       for (let uid of key.userIds) {
         let nonce = util.random();
@@ -270,10 +274,12 @@ class PublicKey {
    */
   *verifyRemove(options) {
     let keyId = options.keyId, nonce = options.nonce;
+    // check if key exists in database
     let flagged = yield this._mongo.get({ keyId, 'userIds.nonce':nonce }, DB_TYPE);
     if (!flagged) {
       util.throw(404, 'User id not found');
     }
+    // delete the key
     yield this._mongo.remove({ keyId }, DB_TYPE);
   }
 
