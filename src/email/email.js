@@ -70,8 +70,8 @@ class Email {
       params: {
         name: userId.name,
         baseUrl: util.url(origin),
-        keyId: encodeURIComponent(keyId),
-        nonce: encodeURIComponent(userId.nonce)
+        keyId: keyId,
+        nonce: userId.nonce
       }
     };
     return yield this._sendHelper(message);

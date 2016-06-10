@@ -35,7 +35,7 @@ describe('Public Key Integration Tests', function() {
       return recipient.to.address === primaryEmail;
     }), sinon.match(params => {
       emailParams = params;
-      return !!params.nonce;
+      return params.nonce !== undefined && params.keyId !== undefined;
     }));
     sinon.stub(nodemailer, 'createTransport').returns({
       templateSender: () => { return sendEmailStub; }
@@ -253,18 +253,21 @@ describe('Public Key Integration Tests', function() {
       yield publicKey.verify(emailParams);
       emailParams = null;
       yield publicKey.requestRemove({ keyId, origin });
+      expect(emailParams.keyId).to.exist;
       expect(emailParams.nonce).to.exist;
     });
 
     it('should work for unverified key', function *() {
       emailParams = null;
       yield publicKey.requestRemove({ keyId, origin });
+      expect(emailParams.keyId).to.exist;
       expect(emailParams.nonce).to.exist;
     });
 
     it('should work by email address', function *() {
       emailParams = null;
       yield publicKey.requestRemove({ email:primaryEmail, origin });
+      expect(emailParams.keyId).to.exist;
       expect(emailParams.nonce).to.exist;
     });
 
