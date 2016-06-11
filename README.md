@@ -91,6 +91,11 @@ GET /user/user@example.com
       "name": "Jon Smith",
       "email": "jon@smith.com",
       "verified": "true"
+    },
+    {
+      "name": "Jon Smith",
+      "email": "jon@organization.com",
+      "verified": "false"
     }
   ],
   "created": "Sat Oct 17 2015 12:17:03 GMT+0200 (CEST)",
