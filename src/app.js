@@ -80,17 +80,25 @@ app.use(function *(next) {
 
 // Set HTTP response headers
 app.use(function *(next) {
+  // HSTS
   if (util.isTrue(config.server.httpsUpgrade)) {
     this.set('Strict-Transport-Security', 'max-age=16070400');
   }
+  // HPKP
   if (config.server.httpsKeyPin && config.server.httpsKeyPinBackup) {
     this.set('Public-Key-Pins', 'pin-sha256="' + config.server.httpsKeyPin + '"; pin-sha256="' + config.server.httpsKeyPinBackup + '"; max-age=16070400');
   }
+  // CSP
+  this.set('Content-Security-Policy', "default-src 'self'; object-src 'none'");
+  // Prevent rendering website in foreign iframe (Clickjacking)
+  this.set('X-Frame-Options', 'DENY');
+  // CORS
   this.set('Access-Control-Allow-Origin', '*');
   this.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   this.set('Access-Control-Allow-Headers', 'Content-Type');
   this.set('Cache-Control', 'no-cache');
   this.set('Connection', 'keep-alive');
+
   yield next;
 });
 

@@ -40,7 +40,7 @@
         <div class="col-lg-12">
           <h2>OpenPGP key lookup</h2>
           <form action="/pks/lookup" method="get">
-            <input type="radio" name="op" value="get" checked="checked" style="display: none">
+            <input class="hidden" type="radio" name="op" value="get" checked="checked">
             <div class="input-group input-group-lg">
               <input class="form-control" name="search" type="text" spellcheck="false" placeholder="Email address or Key ID e.g. 0x11A1A9C84B18732F" required>
               <span class="input-group-btn">
