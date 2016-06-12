@@ -131,13 +131,11 @@ class PGP {
       }
     }
     // map to local user id object format
-    return result.map(uid => {
-      return {
-        name: uid.name,
-        email: uid.address.toLowerCase(),
-        verified: false
-      };
-    });
+    return result.map(uid => ({
+      name: uid.name,
+      email: uid.address.toLowerCase(),
+      verified: false
+    }));
   }
 }
 
