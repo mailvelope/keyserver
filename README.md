@@ -137,7 +137,7 @@ GET /api/v1/key?op=verify&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0fe
 ### Request key removal
 
 ```
-GET /api/v1/key?op=remove&keyId=b8e4105cc9dedc77 OR ?email=user@example.com
+DELETE /api/v1/key?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
 ```
 
 ### Verify key removal

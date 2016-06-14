@@ -51,6 +51,9 @@ router.post('/api/v1/key', function *() {
 router.get('/api/v1/key', function *() {
   yield rest.query(this);
 });
+router.del('/api/v1/key', function *() {
+  yield rest.remove(this);
+});
 
 // Redirect all http traffic to https
 app.use(function *(next) {

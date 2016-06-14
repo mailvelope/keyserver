@@ -56,7 +56,7 @@ class REST {
    */
   *query(ctx) {
     let op = ctx.query.op;
-    if (this[op]) {
+    if (op === 'verify' || op ===  'verifyRemove') {
       return yield this[op](ctx); // delegate operation
     }
     // do READ if no 'op' provided
