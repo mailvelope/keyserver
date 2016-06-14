@@ -20,7 +20,7 @@
         <nav>
           <ul class="nav nav-pills pull-right">
             <li role="presentation"><a href="/">Home</a></li>
-            <li role="presentation" class="active"><a href="/demo.html">Demo</a></li>
+            <li role="presentation" class="active"><a href="demo.html">Demo</a></li>
             <li role="presentation"><a href="https://github.com/mailvelope/keyserver" target="_blank">GitHub</a></li>
           </ul>
         </nav>
@@ -28,8 +28,17 @@
       </div>
 
       <div class="row marketing">
-        <div class="col-lg-12">
+        <div id="addKey" class="col-lg-12">
           <h2>OpenPGP key upload</h2>
+          <div class="alert alert-success hidden" role="alert">
+            <strong>Success!</strong> <span></span>
+          </div>
+          <div class="alert alert-danger hidden" role="alert">
+            <strong>Error!</strong> <span></span>
+          </div>
+          <div class="progress hidden">
+            <div class="progress-bar progress-bar-striped active" role="progressbar"></div>
+          </div>
           <form action="/pks/add" method="post">
             <p><textarea class="form-control" name="keytext" rows="5" spellcheck="false" placeholder="Paste PGP PUBLIC KEY BLOCK here ..." required></textarea></p>
             <input class="btn btn-primary btn-lg" type="submit" value="Upload">
@@ -51,10 +60,18 @@
           <hr>
         </div> <!-- /col-lg-12 -->
 
-        <div class="col-lg-12">
+        <div id="removeKey" class="col-lg-12">
           <h2>OpenPGP key removal</h2>
-          <form action="/api/v1/key" method="get">
-            <input class="hidden" type="radio" name="op" value="remove" checked="checked">
+          <div class="alert alert-success hidden" role="alert">
+            <strong>Success!</strong> <span></span>
+          </div>
+          <div class="alert alert-danger hidden" role="alert">
+            <strong>Error!</strong> <span></span>
+          </div>
+          <div class="progress hidden">
+            <div class="progress-bar progress-bar-striped active" role="progressbar"></div>
+          </div>
+          <form>
             <div class="input-group input-group-lg">
               <input class="form-control" name="email" type="email" spellcheck="false" placeholder="Email address" required>
               <span class="input-group-btn">
@@ -76,6 +93,9 @@
       </footer>
 
     </div> <!-- /container -->
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/demo.js"></script>
 
   </body>
 </html>

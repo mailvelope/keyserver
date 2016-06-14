@@ -128,7 +128,7 @@ POST /api/v1/key
 * **primaryEmail (optional)**: The ascii armored block is parsed to check for user ids, so this parameter is purely optional. Normally a verification email is sent to every user id found in the pgp key. To prevent this behaviour, user agents can specify the user's primary email address to send out only one email.
 
 
-### Verify uploaded key
+### Verify uploaded key (via link in email)
 
 ```
 GET /api/v1/key?op=verify&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
@@ -140,7 +140,7 @@ GET /api/v1/key?op=verify&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0fe
 DELETE /api/v1/key?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
 ```
 
-### Verify key removal
+### Verify key removal (via link in email)
 
 ```
 GET /api/v1/key?op=verifyRemove&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
