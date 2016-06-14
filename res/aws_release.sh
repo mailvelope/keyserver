@@ -40,3 +40,4 @@ eb deploy keyserver-$1
 
 # switch back to master branch
 git checkout master
+npm install
