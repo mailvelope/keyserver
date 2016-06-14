@@ -61,7 +61,7 @@ class REST {
     }
     yield this._publicKey.verify(q);
     // create link for sharing
-    let link = util.url(util.origin(ctx), '/user/' + q.keyId.toUpperCase());
+    let link = util.url(util.origin(ctx), '/pks/lookup?op=get&search=0x' + q.keyId.toUpperCase());
     ctx.body = `<p>Email address successfully verified!</p><p>Link to share your key: <a href="${link}" target="_blank">${link}</a></p>`;
     ctx.set('Content-Type', 'text/html; charset=utf-8');
   }
@@ -76,25 +76,6 @@ class REST {
       ctx.throw(400, 'Invalid request!');
     }
     ctx.body = yield this._publicKey.get(q);
-  }
-
-  /**
-   * Public key fetch via http GET (shorthand link for sharing)
-   * @param  {Object} ctx   The koa request/response context
-   */
-  *share(ctx) {
-    let q, search = ctx.params.search;
-    if (util.isEmail(search)) {
-      q = { email:search };
-    } else if (util.isKeyId(search)) {
-      q = { keyId:search };
-    } else if (util.isFingerPrint(search)) {
-      q = { fingerprint:search };
-    }
-    if (!q) {
-      ctx.throw(400, 'Invalid request!');
-    }
-    ctx.body = (yield this._publicKey.get(q)).publicKeyArmored;
   }
 
   /**

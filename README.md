@@ -74,12 +74,6 @@ GET /api/v1/key?fingerprint=e3317db04d3958fd5f662c37b8e4105cc9dedc77
 GET /api/v1/key?email=user@example.com
 ```
 
-#### By email address (shorthand link for sharing)
-
-```
-GET /user/user@example.com
-```
-
 #### Payload (JSON):
 
 ```json
