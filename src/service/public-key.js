@@ -88,7 +88,7 @@ class PublicKey {
    */
   *_persisKey(key) {
     // delete old/unverified key
-    yield this._mongo.remove({ fingerprint:key.fingerprint }, DB_TYPE);
+    yield this._mongo.remove({ keyId:key.keyId }, DB_TYPE);
     // generate nonces for verification
     for (let uid of key.userIds) {
       uid.nonce = util.random();
