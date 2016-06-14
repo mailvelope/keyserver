@@ -136,6 +136,11 @@ class PublicKey {
     if (!key) {
       util.throw(404, 'User id not found');
     }
+    // check if user ids of this key have already been verified in another key
+    let verified = yield this.getVerified(key);
+    if (verified) {
+      util.throw(304, 'Key for this user already exists');
+    }
     // flag the user id as verified
     yield this._mongo.update(query, {
       'userIds.$.verified': true,
