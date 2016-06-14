@@ -75,7 +75,7 @@ app.use(function *(next) {
     this.set('Public-Key-Pins', 'pin-sha256="' + config.server.httpsKeyPin + '"; pin-sha256="' + config.server.httpsKeyPinBackup + '"; max-age=16070400');
   }
   // CSP
-  this.set('Content-Security-Policy', "default-src 'self'; object-src 'none'");
+  this.set('Content-Security-Policy', "default-src 'self'; object-src 'none'; script-src 'self' code.jquery.com; style-src 'self' maxcdn.bootstrapcdn.com; font-src 'self' maxcdn.bootstrapcdn.com");
   // Prevent rendering website in foreign iframe (Clickjacking)
   this.set('X-Frame-Options', 'DENY');
   // CORS
