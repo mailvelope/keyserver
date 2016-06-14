@@ -131,27 +131,19 @@ POST /api/v1/key
 ### Verify uploaded key
 
 ```
-GET /api/v1/verify?keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
+GET /api/v1/key?op=verify&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
 ```
 
 ### Request key removal
 
-#### Via delete request
-
 ```
-DELETE /api/v1/key?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
-```
-
-#### Via link
-
-```
-GET /api/v1/removeKey?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
+GET /api/v1/key?op=remove&keyId=b8e4105cc9dedc77 OR ?email=user@example.com
 ```
 
 ### Verify key removal
 
 ```
-GET /api/v1/verifyRemove?keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
+GET /api/v1/key?op=verifyRemove&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
 ```
 
 

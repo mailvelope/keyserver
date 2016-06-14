@@ -49,21 +49,7 @@ router.post('/api/v1/key', function *() {
   yield rest.create(this);
 });
 router.get('/api/v1/key', function *() {
-  yield rest.read(this);
-});
-router.del('/api/v1/key', function *() {
-  yield rest.remove(this);
-});
-
-// links for verification, removal and sharing
-router.get('/api/v1/verify', function *() {
-  yield rest.verify(this);
-});
-router.get('/api/v1/removeKey', function *() {
-  yield rest.remove(this);
-});
-router.get('/api/v1/verifyRemove', function *() {
-  yield rest.verifyRemove(this);
+  yield rest.query(this);
 });
 
 // Redirect all http traffic to https

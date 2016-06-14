@@ -51,6 +51,23 @@ class REST {
   }
 
   /**
+   * Public key query via http GET
+   * @param  {Object} ctx   The koa request/response context
+   */
+  *query(ctx) {
+    let op = ctx.query.op;
+    if (this[op]) {
+      return yield this[op](ctx); // delegate operation
+    }
+    // do READ if no 'op' provided
+    let q = { keyId:ctx.query.keyId, fingerprint:ctx.query.fingerprint, email:ctx.query.email };
+    if (!util.isKeyId(q.keyId) && !util.isFingerPrint(q.fingerprint) && !util.isEmail(q.email)) {
+      ctx.throw(400, 'Invalid request!');
+    }
+    ctx.body = yield this._publicKey.get(q);
+  }
+
+  /**
    * Verify a public key's user id via http GET
    * @param  {Object} ctx   The koa request/response context
    */
@@ -64,18 +81,6 @@ class REST {
     let link = util.url(util.origin(ctx), '/pks/lookup?op=get&search=0x' + q.keyId.toUpperCase());
     ctx.body = `<p>Email address successfully verified!</p><p>Link to share your key: <a href="${link}" target="_blank">${link}</a></p>`;
     ctx.set('Content-Type', 'text/html; charset=utf-8');
-  }
-
-  /**
-   * Public key fetch via http GET
-   * @param  {Object} ctx   The koa request/response context
-   */
-  *read(ctx) {
-    let q = { keyId:ctx.query.keyId, fingerprint:ctx.query.fingerprint, email:ctx.query.email };
-    if (!util.isKeyId(q.keyId) && !util.isFingerPrint(q.fingerprint) && !util.isEmail(q.email)) {
-      ctx.throw(400, 'Invalid request!');
-    }
-    ctx.body = yield this._publicKey.get(q);
   }
 
   /**

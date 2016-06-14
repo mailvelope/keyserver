@@ -53,7 +53,8 @@
 
         <div class="col-lg-12">
           <h2>OpenPGP key removal</h2>
-          <form action="/api/v1/removeKey" method="get">
+          <form action="/api/v1/key" method="get">
+            <input class="hidden" type="radio" name="op" value="remove" checked="checked">
             <div class="input-group input-group-lg">
               <input class="form-control" name="email" type="email" spellcheck="false" placeholder="Email address" required>
               <span class="input-group-btn">

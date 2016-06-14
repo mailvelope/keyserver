@@ -97,7 +97,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       });
     });
 
-    describe('GET /api/v1/verify', () => {
+    describe('GET /api/v1/key?op=verify', () => {
       beforeEach(done => {
         request(app.listen())
         .post('/api/v1/key')
@@ -108,21 +108,21 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
 
       it('should return 200 for valid params', done => {
         request(app.listen())
-        .get('/api/v1/verify?keyId=' + emailParams.keyId + '&nonce=' + emailParams.nonce)
+        .get('/api/v1/key?op=verify&keyId=' + emailParams.keyId + '&nonce=' + emailParams.nonce)
         .expect(200)
         .end(done);
       });
 
       it('should return 400 for missing keyid and', done => {
         request(app.listen())
-        .get('/api/v1/verify?nonce=' + emailParams.nonce)
+        .get('/api/v1/key?op=verify&nonce=' + emailParams.nonce)
         .expect(400)
         .end(done);
       });
 
       it('should return 400 for missing nonce', done => {
         request(app.listen())
-        .get('/api/v1/verify?keyId=' + emailParams.keyId)
+        .get('/api/v1/key?op=verify&keyId=' + emailParams.keyId)
         .expect(400)
         .end(done);
       });
@@ -148,7 +148,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       describe('Verified', () => {
         beforeEach(done => {
           request(app.listen())
-          .get('/api/v1/verify?keyId=' + emailParams.keyId + '&nonce=' + emailParams.nonce)
+          .get('/api/v1/key?op=verify&keyId=' + emailParams.keyId + '&nonce=' + emailParams.nonce)
           .expect(200)
           .end(done);
         });
@@ -190,7 +190,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       });
     });
 
-    describe('DELETE /api/v1/key', () => {
+    describe('GET /api/v1/key?op=remove', () => {
       beforeEach(done => {
         request(app.listen())
         .post('/api/v1/key')
@@ -201,51 +201,34 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
 
       it('should return 202 for key id', done => {
         request(app.listen())
-        .del('/api/v1/key?keyId=' + emailParams.keyId)
+        .get('/api/v1/key?op=remove&keyId=' + emailParams.keyId)
         .expect(202)
         .end(done);
       });
 
       it('should return 202 for email address', done => {
         request(app.listen())
-        .del('/api/v1/key?email=' + primaryEmail)
+        .get('/api/v1/key?op=remove&email=' + primaryEmail)
         .expect(202)
         .end(done);
       });
 
       it('should return 400 for invalid params', done => {
         request(app.listen())
-        .del('/api/v1/key')
+        .get('/api/v1/key?op=remove')
         .expect(400)
         .end(done);
       });
 
       it('should return 404 for unknown email address', done => {
         request(app.listen())
-        .del('/api/v1/key?email=a@foo.com')
+        .get('/api/v1/key?op=remove&email=a@foo.com')
         .expect(404)
         .end(done);
       });
     });
 
-    describe('GET /api/v1/removeKey', () => {
-      beforeEach(done => {
-        request(app.listen())
-        .post('/api/v1/key')
-        .send({ publicKeyArmored, primaryEmail })
-        .expect(201)
-        .end(done);
-      });
-
-      it('should return 202 for key id', done => {
-        request(app.listen())
-        .get('/api/v1/removeKey?keyId=' + emailParams.keyId)
-        .expect(202)
-        .end(done);
-      });
-    });
-
-    describe('GET /api/v1/verifyRemove', () => {
+    describe('GET /api/v1/key?op=verifyRemove', () => {
       beforeEach(done => {
         request(app.listen())
         .post('/api/v1/key')
@@ -253,7 +236,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
         .expect(201)
         .end(function() {
           request(app.listen())
-          .del('/api/v1/key?keyId=' + emailParams.keyId)
+          .get('/api/v1/key?op=remove&keyId=' + emailParams.keyId)
           .expect(202)
           .end(done);
         });
@@ -261,21 +244,21 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
 
       it('should return 200 for key id', done => {
         request(app.listen())
-        .get('/api/v1/verifyRemove?keyId=' + emailParams.keyId + '&nonce=' + emailParams.nonce)
+        .get('/api/v1/key?op=verifyRemove&keyId=' + emailParams.keyId + '&nonce=' + emailParams.nonce)
         .expect(200)
         .end(done);
       });
 
       it('should return 400 for invalid params', done => {
         request(app.listen())
-        .get('/api/v1/verifyRemove')
+        .get('/api/v1/key?op=verifyRemove')
         .expect(400)
         .end(done);
       });
 
       it('should return 404 for unknown key id', done => {
         request(app.listen())
-        .get('/api/v1/verifyRemove?keyId=0123456789ABCDEF&nonce=' + emailParams.nonce)
+        .get('/api/v1/key?op=verifyRemove&keyId=0123456789ABCDEF&nonce=' + emailParams.nonce)
         .expect(404)
         .end(done);
       });
@@ -325,7 +308,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       describe('Verified', () => {
         beforeEach(done => {
           request(app.listen())
-          .get('/api/v1/verify?keyId=' + emailParams.keyId + '&nonce=' + emailParams.nonce)
+          .get('/api/v1/key?op=verify&keyId=' + emailParams.keyId + '&nonce=' + emailParams.nonce)
           .expect(200)
           .end(done);
         });
