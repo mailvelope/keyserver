@@ -142,6 +142,21 @@ describe('Public Key Integration Tests', function() {
       expect(gotten.userIds[1].verified).to.be.false;
       expect(gotten.userIds[1].nonce).to.equal(mailsSent[0].params.nonce);
     });
+
+    it('should be able to verify multiple user ids', function *() {
+      yield publicKey.put({ publicKeyArmored, origin });
+      expect(mailsSent.length).to.equal(4);
+      yield publicKey.verify(mailsSent[0].params);
+      yield publicKey.verify(mailsSent[1].params);
+      yield publicKey.verify(mailsSent[2].params);
+      yield publicKey.verify(mailsSent[3].params);
+      let gotten = yield mongo.get({ keyId:mailsSent[0].params.keyId }, DB_TYPE);
+      expect(gotten.userIds[0].verified).to.be.true;
+      expect(gotten.userIds[1].verified).to.be.true;
+      expect(gotten.userIds[2].verified).to.be.true;
+      expect(gotten.userIds[3].verified).to.be.true;
+    });
+
   });
 
   describe('getVerified', () => {

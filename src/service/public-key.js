@@ -138,7 +138,7 @@ class PublicKey {
     }
     // check if user ids of this key have already been verified in another key
     let verified = yield this.getVerified(key);
-    if (verified) {
+    if (verified && verified.keyId !== keyId) {
       util.throw(304, 'Key for this user already exists');
     }
     // flag the user id as verified
