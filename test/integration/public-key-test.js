@@ -156,7 +156,6 @@ describe('Public Key Integration Tests', function() {
       expect(gotten.userIds[2].verified).to.be.true;
       expect(gotten.userIds[3].verified).to.be.true;
     });
-
   });
 
   describe('getVerified', () => {
