@@ -21,6 +21,7 @@ const co = require('co');
 const app = require('koa')();
 const log = require('npmlog');
 const config = require('config');
+const serve = require('koa-static');
 const router = require('koa-router')();
 const util = require('./service/util');
 const Mongo = require('./dao/mongo');
@@ -82,9 +83,7 @@ app.use(function *(next) {
   this.set('Access-Control-Allow-Origin', '*');
   this.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   this.set('Access-Control-Allow-Headers', 'Content-Type');
-  this.set('Cache-Control', 'no-cache');
   this.set('Connection', 'keep-alive');
-
   yield next;
 });
 
@@ -92,7 +91,7 @@ app.use(router.routes());
 app.use(router.allowedMethods());
 
 // serve static files
-app.use(require('koa-static')(__dirname + '/static'));
+app.use(serve(__dirname + '/static'));
 
 app.on('error', (error, ctx) => {
   if (error.status) {
