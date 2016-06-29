@@ -91,7 +91,7 @@ app.use(router.routes());
 app.use(router.allowedMethods());
 
 // serve static files
-app.use(serve(__dirname + '/static', { maxage:31536000000 }));
+app.use(serve(__dirname + '/static'));
 
 app.on('error', (error, ctx) => {
   if (error.status) {
