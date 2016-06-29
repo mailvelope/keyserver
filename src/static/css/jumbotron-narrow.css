@@ -30,6 +30,21 @@ body {
   color: #777;
   border-top: 1px solid #e5e5e5;
 }
+.footer nav {
+  display: block;
+  float: right;
+}
+.footer ul {
+  display: block;
+  padding-left: 10px;
+}
+.footer li {
+  display: inline;
+  margin: 0 8px;
+}
+.footer a {
+  color: inherit;
+}
 
 /* Customize container */
 @media (min-width: 768px) {
