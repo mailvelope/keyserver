@@ -1,10 +1,7 @@
 'use strict';
 
-require('co-mocha')(require('mocha')); // monkey patch mocha for generators
-
 const config = require('config');
 const Mongo = require('../../src/dao/mongo');
-const expect = require('chai').expect;
 
 describe('Mongo Integration Tests', function() {
   this.timeout(20000);

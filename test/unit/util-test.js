@@ -1,6 +1,5 @@
 'use strict';
 
-const expect = require('chai').expect;
 const util = require('../../src/service/util');
 
 describe('Util Unit Tests', () => {
