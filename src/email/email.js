@@ -37,18 +37,18 @@ class Email {
    * @param {boolean} starttls   (optional) force STARTTLS to prevent downgrade attack. Defaults to true.
    * @param {boolean} pgp        (optional) if outgoing emails are encrypted to the user's public key.
    */
-  init(options) {
+  init({ host, port=465, auth, tls, starttls, pgp, sender }) {
     this._transport = nodemailer.createTransport({
-      host: options.host,
-      port: options.port || 465,
-      auth: options.auth,
-      secure: (options.tls !== undefined) ? util.isTrue(options.tls) : true,
-      requireTLS: (options.starttls !== undefined) ? util.isTrue(options.starttls) : true,
+      host,
+      port,
+      auth,
+      secure: (tls !== undefined) ? util.isTrue(tls) : true,
+      requireTLS: (starttls !== undefined) ? util.isTrue(starttls) : true,
     });
-    if (util.isTrue(options.pgp)) {
+    if (util.isTrue(pgp)) {
       this._transport.use('stream', openpgpEncrypt());
     }
-    this._sender = options.sender;
+    this._sender = sender;
   }
 
   /**
@@ -59,8 +59,7 @@ class Email {
    * @param {Object} origin     origin of the server
    * @yield {Object}            send response from the SMTP server
    */
-  *send(options) {
-    let template = options.template, userId = options.userId, keyId = options.keyId, origin = options.origin;
+  *send({ template, userId, keyId, origin }) {
     let message = {
       from: this._sender,
       to: userId,
@@ -87,26 +86,25 @@ class Email {
    * @param {Object} params    (optional) nodermailer template parameters
    * @yield {Object}           reponse object containing SMTP info
    */
-  *_sendHelper(options) {
+  *_sendHelper({ from, to, subject, text, html, params={} }) {
     let template = {
-      subject: options.subject,
-      text: options.text,
-      html: options.html,
-      encryptionKeys: [options.to.publicKeyArmored]
+      subject,
+      text,
+      html,
+      encryptionKeys: [to.publicKeyArmored]
     };
     let sender = {
       from: {
-        name: options.from.name,
-        address: options.from.email
+        name: from.name,
+        address: from.email
       }
     };
     let recipient = {
       to: {
-        name: options.to.name,
-        address: options.to.email
+        name: to.name,
+        address: to.email
       }
     };
-    let params = options.params || {};
 
     try {
       let sendFn = this._transport.templateSender(template, sender);
@@ -116,7 +114,7 @@ class Email {
       }
       return info;
     } catch(error) {
-      log.error('email', 'Sending message failed.', error, options);
+      log.error('email', 'Sending message failed.', error);
       util.throw(500, 'Sending email to user failed');
     }
   }

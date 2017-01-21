@@ -66,9 +66,8 @@ class PublicKey {
    * @param {Object} origin             Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
    * @yield {undefined}
    */
-  *put(options) {
+  *put({ publicKeyArmored, primaryEmail, origin }) {
     // parse key block
-    let publicKeyArmored = options.publicKeyArmored, primaryEmail = options.primaryEmail, origin = options.origin;
     let key = this._pgp.parseKey(publicKeyArmored);
     // check for existing verfied key by id or email addresses
     let verified = yield this.getVerified(key);
@@ -128,8 +127,7 @@ class PublicKey {
    * @param {string} nonce   The verification nonce proving email address ownership
    * @yield {undefined}
    */
-  *verify(options) {
-    let keyId = options.keyId, nonce = options.nonce;
+  *verify({ keyId, nonce }) {
     // look for verification nonce in database
     let query = { keyId, 'userIds.nonce':nonce };
     let key = yield this._mongo.get(query, DB_TYPE);
@@ -157,8 +155,7 @@ class PublicKey {
    * @param {string} keyId         (optional) The public key id
    * @yield {Object}               The verified key document
    */
-  *getVerified(options) {
-    let fingerprint = options.fingerprint, userIds = options.userIds, keyId = options.keyId;
+  *getVerified({ userIds, fingerprint, keyId }) {
     let queries = [];
     // query by fingerprint
     if (fingerprint) {
@@ -196,8 +193,7 @@ class PublicKey {
    * @param {String} email         (optional) The user's email address
    * @yield {Object}               The public key document
    */
-  *get(options) {
-    let fingerprint = options.fingerprint, keyId = options.keyId, email = options.email;
+  *get({ fingerprint, keyId, email }) {
     // look for verified key
     let userIds = email ? [{ email:email }] : undefined;
     let key = yield this.getVerified({ keyId, fingerprint, userIds });
@@ -224,8 +220,7 @@ class PublicKey {
    * @param {Object} origin   Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
    * @yield {undefined}
    */
-  *requestRemove(options) {
-    let keyId = options.keyId, email = options.email, origin = options.origin;
+  *requestRemove({ keyId, email, origin }) {
     // flag user ids for removal
     let key = yield this._flagForRemove(keyId, email);
     if (!key) {
@@ -277,8 +272,7 @@ class PublicKey {
    * @param {string} nonce   The verification nonce proving email address ownership
    * @yield {undefined}
    */
-  *verifyRemove(options) {
-    let keyId = options.keyId, nonce = options.nonce;
+  *verifyRemove({ keyId, nonce }) {
     // check if key exists in database
     let flagged = yield this._mongo.get({ keyId, 'userIds.nonce':nonce }, DB_TYPE);
     if (!flagged) {
