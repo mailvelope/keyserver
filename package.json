@@ -22,7 +22,7 @@
     "koa-router": "^5.4.0",
     "koa-static": "^2.0.0",
     "mongodb": "^2.1.20",
-    "nodemailer": "^2.4.2",
+    "nodemailer": "^3.0.0",
     "nodemailer-openpgp": "^1.0.2",
     "npmlog": "^4.0.2",
     "openpgp": "^2.3.0"
