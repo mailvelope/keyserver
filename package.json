@@ -16,7 +16,7 @@
   "dependencies": {
     "addressparser": "^1.0.1",
     "co": "^4.6.0",
-    "co-body": "^4.2.0",
+    "co-body": "^5.0.0",
     "config": "^1.20.4",
     "koa": "^1.2.0",
     "koa-router": "^5.4.0",
