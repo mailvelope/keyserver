@@ -7,35 +7,42 @@
     "url": "https://github.com/mailvelope/keyserver.git"
   },
   "engines": {
-    "node": ">=4"
+    "node": ">=6"
   },
   "scripts": {
     "start": ": ${NODE_ENV=development} && node index.js",
-    "test": ": ${NODE_ENV=development} && grunt test"
+    "test": ": ${NODE_ENV=development} && npm run test:jshint && npm run test:jscs && npm run test:unit && npm run test:integration",
+    "test:jshint": "jshint *.js src/**/*.js test/**/*.js",
+    "test:jscs": "jscs *.js src/**/*.js test/**/*.js",
+    "test:unit": "mocha --opts test/mocha.opts ./test/unit/",
+    "test:integration": "mocha --opts test/mocha.opts ./test/integration"
   },
   "dependencies": {
     "addressparser": "^1.0.1",
     "co": "^4.6.0",
-    "co-body": "^4.2.0",
+    "co-body": "^5.1.1",
     "config": "^1.20.4",
     "koa": "^1.2.0",
     "koa-router": "^5.4.0",
     "koa-static": "^2.0.0",
-    "mongodb": "^2.1.20",
+    "mongodb": "^2.2.31",
     "nodemailer": "^2.4.2",
     "nodemailer-openpgp": "^1.0.2",
     "npmlog": "^4.0.2",
     "openpgp": "^2.3.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "^4.1.1",
     "co-mocha": "^1.1.2",
-    "grunt": "^1.0.1",
-    "grunt-contrib-jshint": "^1.0.0",
-    "grunt-jscs": "^3.0.1",
-    "grunt-mocha-test": "^0.13.2",
+    "jscs": "^3.0.7",
+    "jshint": "^2.9.4",
     "mocha": "^3.2.0",
     "sinon": "^3.2.0",
-    "supertest": "^2.0.1"
+    "supertest": "^3.0.0"
+  },
+  "greenkeeper": {
+    "ignore": [
+      "nodemailer"
+    ]
   }
 }

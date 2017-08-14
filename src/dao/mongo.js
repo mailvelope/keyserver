@@ -31,9 +31,9 @@ class Mongo {
    * @param {String} pass   The database user's password
    * @yield {undefined}
    */
-  *init(options) {
-    let uri = 'mongodb://' + options.user + ':' + options.pass + '@' + options.uri;
-    this._db = yield MongoClient.connect(uri);
+  *init({ uri, user, pass }) {
+    let url = 'mongodb://' + user + ':' + pass + '@' + uri;
+    this._db = yield MongoClient.connect(url);
   }
 
   /**

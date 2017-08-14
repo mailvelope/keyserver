@@ -1,13 +1,8 @@
 'use strict';
 
-require('co-mocha')(require('mocha')); // monkey patch mocha for generators
-
-const expect = require('chai').expect;
 const log = require('npmlog');
 const Email = require('../../src/email/email');
 const nodemailer = require('nodemailer');
-const sinon = require('sinon');
-
 
 describe('Email Unit Tests', () => {
   let email, sendFnStub;
