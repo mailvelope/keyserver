@@ -1,13 +1,13 @@
 {
   "name": "mailvelope-keyserver",
-  "version": "1.2.6",
+  "version": "2.0.0",
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/mailvelope/keyserver.git"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=8"
   },
   "scripts": {
     "start": ": ${NODE_ENV=development} && node index.js",
@@ -15,7 +15,10 @@
     "test:jshint": "jshint *.js src/**/*.js test/**/*.js",
     "test:jscs": "jscs *.js src/**/*.js test/**/*.js",
     "test:unit": "mocha --opts test/mocha.opts ./test/unit/",
-    "test:integration": "mocha --opts test/mocha.opts ./test/integration"
+    "test:integration": "mocha --opts test/mocha.opts ./test/integration",
+    "release": "npm run release:install && npm run release:archive",
+    "release:install": "rm -rf node_modules/ && npm install --production",
+    "release:archive": "zip -rq release.zip package.json package-lock.json node_modules/ *.js src/ config/"
   },
   "dependencies": {
     "addressparser": "^1.0.1",
