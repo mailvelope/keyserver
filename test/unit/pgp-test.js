@@ -1,11 +1,9 @@
 'use strict';
 
 const fs = require('fs');
-const expect = require('chai').expect;
 const log = require('npmlog');
 const openpgp = require('openpgp');
 const PGP = require('../../src/service/pgp');
-const sinon = require('sinon');
 
 describe('PGP Unit Tests', () => {
   let pgp, key1Armored, key2Armored, key3Armored;

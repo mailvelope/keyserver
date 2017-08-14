@@ -1,0 +1,2 @@
+--recursive
+-r ./test/setup.js

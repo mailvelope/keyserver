@@ -1,15 +1,11 @@
 'use strict';
 
-require('co-mocha')(require('mocha')); // monkey patch mocha for generators
-
 const config = require('config');
 const nodemailer = require('nodemailer');
 const Email = require('../../src/email/email');
 const Mongo = require('../../src/dao/mongo');
 const PGP = require('../../src/service/pgp');
 const PublicKey = require('../../src/service/public-key');
-const expect = require('chai').expect;
-const sinon = require('sinon');
 
 describe('Public Key Integration Tests', function() {
   this.timeout(20000);
