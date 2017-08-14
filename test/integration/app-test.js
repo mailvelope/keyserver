@@ -1,14 +1,10 @@
 'use strict';
 
-require('co-mocha')(require('mocha')); // monkey patch mocha for generators
-
 const request = require('supertest');
 const Mongo = require('../../src/dao/mongo');
 const nodemailer = require('nodemailer');
 const config = require('config');
 const fs = require('fs');
-const expect = require('chai').expect;
-const sinon = require('sinon');
 
 describe('Koa App (HTTP Server) Integration Tests', function() {
   this.timeout(20000);

@@ -1,8 +1,5 @@
 'use strict';
 
-require('co-mocha')(require('mocha')); // monkey patch mocha for generators
-
-const expect = require('chai').expect;
 const config = require('config');
 const Email = require('../../src/email/email');
 const tpl = require('../../src/email/templates.json');
