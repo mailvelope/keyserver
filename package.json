@@ -42,7 +42,8 @@
   },
   "greenkeeper": {
     "ignore": [
-      "nodemailer"
+      "nodemailer",
+      "sinon"
     ]
   }
 }
