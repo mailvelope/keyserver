@@ -37,7 +37,7 @@ exports.isTrue = function(data) {
   if (this.isString(data)) {
     return data === 'true';
   } else {
-    return !!data;
+    return Boolean(data);
   }
 };
 
@@ -85,7 +85,7 @@ exports.isEmail = function(data) {
  * @return {Error}            The resulting error object
  */
 exports.throw = function(status, message) {
-  let err = new Error(message);
+  const err = new Error(message);
   err.status = status;
   err.expose = true; // display message to the client
   throw err;
@@ -143,7 +143,7 @@ exports.origin = function(ctx) {
  * @return {string}            The complete url
  */
 exports.url = function(origin, resource) {
-  return origin.protocol + '://' + origin.host + (resource || '');
+  return `${origin.protocol}://${origin.host}${resource || ''}`;
 };
 
 /**

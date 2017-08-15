@@ -26,7 +26,6 @@ const openpgpEncrypt = require('nodemailer-openpgp').openpgpEncrypt;
  * A simple wrapper around Nodemailer to send verification emails
  */
 class Email {
-
   /**
    * Create an instance of the reusable nodemailer SMTP transport.
    * @param {string}  host       SMTP server's hostname: 'smtp.gmail.com'
@@ -37,7 +36,7 @@ class Email {
    * @param {boolean} starttls   (optional) force STARTTLS to prevent downgrade attack. Defaults to true.
    * @param {boolean} pgp        (optional) if outgoing emails are encrypted to the user's public key.
    */
-  init({ host, port=465, auth, tls, starttls, pgp, sender }) {
+  init({host, port = 465, auth, tls, starttls, pgp, sender}) {
     this._transport = nodemailer.createTransport({
       host,
       port,
@@ -59,8 +58,8 @@ class Email {
    * @param {Object} origin     origin of the server
    * @yield {Object}            send response from the SMTP server
    */
-  *send({ template, userId, keyId, origin }) {
-    let message = {
+  *send({template, userId, keyId, origin}) {
+    const message = {
       from: this._sender,
       to: userId,
       subject: template.subject,
@@ -69,7 +68,7 @@ class Email {
       params: {
         name: userId.name,
         baseUrl: util.url(origin),
-        keyId: keyId,
+        keyId,
         nonce: userId.nonce
       }
     };
@@ -86,20 +85,20 @@ class Email {
    * @param {Object} params    (optional) nodermailer template parameters
    * @yield {Object}           reponse object containing SMTP info
    */
-  *_sendHelper({ from, to, subject, text, html, params={} }) {
-    let template = {
+  *_sendHelper({from, to, subject, text, html, params = {}}) {
+    const template = {
       subject,
       text,
       html,
       encryptionKeys: [to.publicKeyArmored]
     };
-    let sender = {
+    const sender = {
       from: {
         name: from.name,
         address: from.email
       }
     };
-    let recipient = {
+    const recipient = {
       to: {
         name: to.name,
         address: to.email
@@ -107,13 +106,13 @@ class Email {
     };
 
     try {
-      let sendFn = this._transport.templateSender(template, sender);
-      let info = yield sendFn(recipient, params);
+      const sendFn = this._transport.templateSender(template, sender);
+      const info = yield sendFn(recipient, params);
       if (!this._checkResponse(info)) {
         log.warn('email', 'Message may not have been received.', info);
       }
       return info;
-    } catch(error) {
+    } catch (error) {
       log.error('email', 'Sending message failed.', error);
       util.throw(500, 'Sending email to user failed');
     }
@@ -128,7 +127,6 @@ class Email {
   _checkResponse(info) {
     return /^2/.test(info.response);
   }
-
 }
 
 module.exports = Email;

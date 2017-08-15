@@ -29,7 +29,6 @@ const KEY_END = '-----END PGP PUBLIC KEY BLOCK-----';
  * A simple wrapper around OpenPGP.js
  */
 class PGP {
-
   /**
    * Parse an ascii armored pgp key block and get its parameters.
    * @param  {String} publicKeyArmored   ascii armored pgp key block
@@ -38,9 +37,9 @@ class PGP {
   parseKey(publicKeyArmored) {
     publicKeyArmored = this.trimKey(publicKeyArmored);
 
-    let r = openpgp.key.readArmored(publicKeyArmored);
+    const r = openpgp.key.readArmored(publicKeyArmored);
     if (r.err) {
-      let error = r.err[0];
+      const error = r.err[0];
       log.error('pgp', 'Failed to parse PGP key:\n%s', publicKeyArmored, error);
       util.throw(500, 'Failed to parse PGP key');
     } else if (!r.keys || r.keys.length !== 1 || !r.keys[0].primaryKey) {
@@ -48,21 +47,21 @@ class PGP {
     }
 
     // verify primary key
-    let key = r.keys[0];
-    let primaryKey = key.primaryKey;
+    const key = r.keys[0];
+    const primaryKey = key.primaryKey;
     if (key.verifyPrimaryKey() !== openpgp.enums.keyStatus.valid) {
       util.throw(400, 'Invalid PGP key: primary key verification failed');
     }
 
     // accept version 4 keys only
-    let keyId = primaryKey.getKeyId().toHex();
-    let fingerprint = primaryKey.fingerprint;
+    const keyId = primaryKey.getKeyId().toHex();
+    const fingerprint = primaryKey.fingerprint;
     if (!util.isKeyId(keyId) || !util.isFingerPrint(fingerprint)) {
       util.throw(400, 'Invalid PGP key: only v4 keys are accepted');
     }
 
     // check for at least one valid user id
-    let userIds = this.parseUserIds(key.users, primaryKey);
+    const userIds = this.parseUserIds(key.users, primaryKey);
     if (!userIds.length) {
       util.throw(400, 'Invalid PGP key: invalid user ids');
     }
@@ -115,16 +114,16 @@ class PGP {
       util.throw(400, 'Invalid PGP key: no user id found');
     }
     // at least one user id signature must be valid
-    let result = [];
-    for (let user of users) {
+    const result = [];
+    for (const user of users) {
       let oneValid = false;
-      for (let cert of user.selfCertifications) {
+      for (const cert of user.selfCertifications) {
         if (user.isValidSelfCertificate(primaryKey, cert)) {
           oneValid = true;
         }
       }
       if (oneValid && user.userId && user.userId.userid) {
-        let uid = addressparser(user.userId.userid)[0];
+        const uid = addressparser(user.userId.userid)[0];
         if (util.isEmail(uid.address)) {
           result.push(uid);
         }

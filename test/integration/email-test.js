@@ -7,15 +7,19 @@ const tpl = require('../../src/email/templates.json');
 describe('Email Integration Tests', function() {
   this.timeout(20000);
 
-  let email, keyId, userId, origin, publicKeyArmored;
+  let email;
+  let keyId;
+  let userId;
+  let origin;
+  let publicKeyArmored;
 
-  const recipient = { name:'Test User', email:'safewithme.testuser@gmail.com' };
+  const recipient = {name: 'Test User', email: 'safewithme.testuser@gmail.com'};
 
-  before(function() {
-    publicKeyArmored = require('fs').readFileSync(__dirname + '/../key1.asc', 'utf8');
+  before(() => {
+    publicKeyArmored = require('fs').readFileSync(`${__dirname}/../key1.asc`, 'utf8');
     origin = {
       protocol: 'http',
-      host: 'localhost:' + config.server.port
+      host: `localhost:${config.server.port}`
     };
     email = new Email();
     email.init(config.email);
@@ -33,14 +37,14 @@ describe('Email Integration Tests', function() {
 
   describe("_sendHelper", () => {
     it('should work', function *() {
-      let mailOptions = {
+      const mailOptions = {
         from: email._sender,
         to: recipient,
         subject: 'Hello ✔', // Subject line
         text: 'Hello world 🐴', // plaintext body
         html: '<b>Hello world 🐴</b>' // html body
       };
-      let info = yield email._sendHelper(mailOptions);
+      const info = yield email._sendHelper(mailOptions);
       expect(info).to.exist;
     });
   });
@@ -48,23 +52,22 @@ describe('Email Integration Tests', function() {
   describe("send verifyKey template", () => {
     it('should send plaintext email', function *() {
       delete userId.publicKeyArmored;
-      yield email.send({ template:tpl.verifyKey, userId, keyId, origin });
+      yield email.send({template: tpl.verifyKey, userId, keyId, origin});
     });
 
     it('should send pgp encrypted email', function *() {
-      yield email.send({ template:tpl.verifyKey, userId, keyId, origin });
+      yield email.send({template: tpl.verifyKey, userId, keyId, origin});
     });
   });
 
   describe("send verifyRemove template", () => {
     it('should send plaintext email', function *() {
       delete userId.publicKeyArmored;
-      yield email.send({ template:tpl.verifyRemove, userId, keyId, origin });
+      yield email.send({template: tpl.verifyRemove, userId, keyId, origin});
     });
 
     it('should send pgp encrypted email', function *() {
-      yield email.send({ template:tpl.verifyRemove, userId, keyId, origin });
+      yield email.send({template: tpl.verifyRemove, userId, keyId, origin});
     });
   });
-
 });
