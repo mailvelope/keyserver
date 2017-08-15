@@ -24,7 +24,6 @@ const util = require('../service/util');
  * The REST api to provide additional functionality on top of HKP
  */
 class REST {
-
   /**
    * Create an instance of the REST server
    * @param  {Object} publicKey   An instance of the public key service
@@ -39,13 +38,12 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *create(ctx) {
-    let q = yield parse.json(ctx, { limit: '1mb' });
-    let publicKeyArmored = q.publicKeyArmored, primaryEmail = q.primaryEmail;
+    const {publicKeyArmored, primaryEmail} = yield parse.json(ctx, {limit: '1mb'});
     if (!publicKeyArmored || (primaryEmail && !util.isEmail(primaryEmail))) {
       ctx.throw(400, 'Invalid request!');
     }
-    let origin = util.origin(ctx);
-    yield this._publicKey.put({ publicKeyArmored, primaryEmail, origin });
+    const origin = util.origin(ctx);
+    yield this._publicKey.put({publicKeyArmored, primaryEmail, origin});
     ctx.body = 'Upload successful. Check your inbox to verify your email address.';
     ctx.status = 201;
   }
@@ -55,12 +53,12 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *query(ctx) {
-    let op = ctx.query.op;
+    const op = ctx.query.op;
     if (op === 'verify' || op ===  'verifyRemove') {
       return yield this[op](ctx); // delegate operation
     }
     // do READ if no 'op' provided
-    let q = { keyId:ctx.query.keyId, fingerprint:ctx.query.fingerprint, email:ctx.query.email };
+    const q = {keyId: ctx.query.keyId, fingerprint: ctx.query.fingerprint, email: ctx.query.email};
     if (!util.isKeyId(q.keyId) && !util.isFingerPrint(q.fingerprint) && !util.isEmail(q.email)) {
       ctx.throw(400, 'Invalid request!');
     }
@@ -72,13 +70,13 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *verify(ctx) {
-    let q = { keyId:ctx.query.keyId, nonce:ctx.query.nonce };
+    const q = {keyId: ctx.query.keyId, nonce: ctx.query.nonce};
     if (!util.isKeyId(q.keyId) || !util.isString(q.nonce)) {
       ctx.throw(400, 'Invalid request!');
     }
     yield this._publicKey.verify(q);
     // create link for sharing
-    let link = util.url(util.origin(ctx), '/pks/lookup?op=get&search=0x' + q.keyId.toUpperCase());
+    const link = util.url(util.origin(ctx), `/pks/lookup?op=get&search=0x${q.keyId.toUpperCase()}`);
     ctx.body = `<p>Email address successfully verified!</p><p>Link to share your key: <a href="${link}" target="_blank">${link}</a></p>`;
     ctx.set('Content-Type', 'text/html; charset=utf-8');
   }
@@ -88,7 +86,7 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *remove(ctx) {
-    let q = { keyId:ctx.query.keyId, email:ctx.query.email, origin:util.origin(ctx) };
+    const q = {keyId: ctx.query.keyId, email: ctx.query.email, origin: util.origin(ctx)};
     if (!util.isKeyId(q.keyId) && !util.isEmail(q.email)) {
       ctx.throw(400, 'Invalid request!');
     }
@@ -102,14 +100,13 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   *verifyRemove(ctx) {
-    let q = { keyId:ctx.query.keyId, nonce:ctx.query.nonce };
+    const q = {keyId: ctx.query.keyId, nonce: ctx.query.nonce};
     if (!util.isKeyId(q.keyId) || !util.isString(q.nonce)) {
       ctx.throw(400, 'Invalid request!');
     }
     yield this._publicKey.verifyRemove(q);
     ctx.body = 'Key successfully removed!';
   }
-
 }
 
 module.exports = REST;

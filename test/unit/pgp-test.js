@@ -6,18 +6,21 @@ const openpgp = require('openpgp');
 const PGP = require('../../src/service/pgp');
 
 describe('PGP Unit Tests', () => {
-  let pgp, key1Armored, key2Armored, key3Armored;
+  let pgp;
+  let key1Armored;
+  let key2Armored;
+  let key3Armored;
 
   beforeEach(() => {
-    key1Armored = fs.readFileSync(__dirname + '/../key1.asc', 'utf8');
-    key2Armored = fs.readFileSync(__dirname + '/../key2.asc', 'utf8');
-    key3Armored = fs.readFileSync(__dirname + '/../key3.asc', 'utf8');
+    key1Armored = fs.readFileSync(`${__dirname}/../key1.asc`, 'utf8');
+    key2Armored = fs.readFileSync(`${__dirname}/../key2.asc`, 'utf8');
+    key3Armored = fs.readFileSync(`${__dirname}/../key3.asc`, 'utf8');
     pgp = new PGP();
   });
 
   describe('parseKey', () => {
     it('should should throw error on key parsing', () => {
-      let readStub = sinon.stub(openpgp.key, 'readArmored').returns({err:[new Error()]});
+      const readStub = sinon.stub(openpgp.key, 'readArmored').returns({err: [new Error()]});
       sinon.stub(log, 'error');
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/Failed to parse/);
       expect(log.error.calledOnce).to.be.true;
@@ -26,16 +29,16 @@ describe('PGP Unit Tests', () => {
     });
 
     it('should should throw error when more than one key', () => {
-      let readStub = sinon.stub(openpgp.key, 'readArmored').returns({keys:[{},{}]});
+      const readStub = sinon.stub(openpgp.key, 'readArmored').returns({keys: [{}, {}]});
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/only one key/);
       readStub.restore();
     });
 
     it('should should throw error when more than one key', () => {
-      let readStub = sinon.stub(openpgp.key, 'readArmored').returns({
+      const readStub = sinon.stub(openpgp.key, 'readArmored').returns({
         keys: [{
           primaryKey: {},
-          verifyPrimaryKey: function() { return false; }
+          verifyPrimaryKey() { return false; }
         }]
       });
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/primary key verification/);
@@ -43,17 +46,17 @@ describe('PGP Unit Tests', () => {
     });
 
     it('should only accept 16 char key id', () => {
-      let readStub = sinon.stub(openpgp.key, 'readArmored').returns({
+      const readStub = sinon.stub(openpgp.key, 'readArmored').returns({
         keys: [{
           primaryKey: {
             fingerprint: '4277257930867231ce393fb8dbc0b3d92b1b86e9',
-            getKeyId: function() {
+            getKeyId() {
               return {
-                toHex:function() { return 'asdf'; }
+                toHex() { return 'asdf'; }
               };
             }
           },
-          verifyPrimaryKey: function() { return openpgp.enums.keyStatus.valid; }
+          verifyPrimaryKey() { return openpgp.enums.keyStatus.valid; }
         }]
       });
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/only v4 keys/);
@@ -61,17 +64,17 @@ describe('PGP Unit Tests', () => {
     });
 
     it('should only accept version 4 fingerprint', () => {
-      let readStub = sinon.stub(openpgp.key, 'readArmored').returns({
+      const readStub = sinon.stub(openpgp.key, 'readArmored').returns({
         keys: [{
           primaryKey: {
             fingerprint: '4277257930867231ce393fb8dbc0b3d92b1b86e',
-            getKeyId: function() {
+            getKeyId() {
               return {
-                toHex:function() { return 'dbc0b3d92b1b86e9'; }
+                toHex() { return 'dbc0b3d92b1b86e9'; }
               };
             }
           },
-          verifyPrimaryKey: function() { return openpgp.enums.keyStatus.valid; }
+          verifyPrimaryKey() { return openpgp.enums.keyStatus.valid; }
         }]
       });
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/only v4 keys/);
@@ -84,7 +87,7 @@ describe('PGP Unit Tests', () => {
     });
 
     it('should be able to parse RSA key', () => {
-      let params = pgp.parseKey(key1Armored);
+      const params = pgp.parseKey(key1Armored);
       expect(params.keyId).to.equal('dbc0b3d92b1b86e9');
       expect(params.fingerprint).to.equal('4277257930867231ce393fb8dbc0b3d92b1b86e9');
       expect(params.userIds[0].name).to.equal('safewithme testuser');
@@ -96,7 +99,7 @@ describe('PGP Unit Tests', () => {
     });
 
     it('should be able to parse RSA/ECC key', () => {
-      let params = pgp.parseKey(key2Armored);
+      const params = pgp.parseKey(key2Armored);
       expect(params.keyId).to.equal('b8e4105cc9dedc77');
       expect(params.fingerprint).to.equal('e3317db04d3958fd5f662c37b8e4105cc9dedc77');
       expect(params.userIds.length).to.equal(1);
@@ -107,7 +110,7 @@ describe('PGP Unit Tests', () => {
     });
 
     it('should be able to parse komplex key', () => {
-      let params = pgp.parseKey(key3Armored);
+      const params = pgp.parseKey(key3Armored);
       expect(params.keyId).to.equal('4001a127a90de8e1');
       expect(params.fingerprint).to.equal('04062c70b446e33016e219a74001a127a90de8e1');
       expect(params.userIds.length).to.equal(4);
@@ -120,12 +123,12 @@ describe('PGP Unit Tests', () => {
 
   describe('trimKey', () => {
     it('should be the same as key1', () => {
-      let trimmed = pgp.trimKey(key1Armored);
+      const trimmed = pgp.trimKey(key1Armored);
       expect(trimmed).to.equal(key1Armored);
     });
 
     it('should not be the same as key2', () => {
-      let trimmed = pgp.trimKey(key2Armored);
+      const trimmed = pgp.trimKey(key2Armored);
       expect(trimmed).to.not.equal(key2Armored);
     });
   });
@@ -135,22 +138,22 @@ describe('PGP Unit Tests', () => {
     const KEY_END = '-----END PGP PUBLIC KEY BLOCK-----';
 
     it('should return true for valid key block', () => {
-      let input = KEY_BEGIN + KEY_END;
+      const input = KEY_BEGIN + KEY_END;
       expect(pgp.validateKeyBlock(input)).to.be.true;
     });
 
     it('should return false for invalid key block', () => {
-      let input = KEY_END + KEY_BEGIN;
+      const input = KEY_END + KEY_BEGIN;
       expect(pgp.validateKeyBlock(input)).to.be.false;
     });
 
     it('should return false for invalid key block', () => {
-      let input = KEY_END;
+      const input = KEY_END;
       expect(pgp.validateKeyBlock(input)).to.be.false;
     });
 
     it('should return false for invalid key block', () => {
-      let input = KEY_BEGIN;
+      const input = KEY_BEGIN;
       expect(pgp.validateKeyBlock(input)).to.be.false;
     });
   });
@@ -163,7 +166,7 @@ describe('PGP Unit Tests', () => {
     });
 
     it('should parse a valid user id', () => {
-      let parsed = pgp.parseUserIds(key.users, key.primaryKey);
+      const parsed = pgp.parseUserIds(key.users, key.primaryKey);
       expect(parsed[0].name).to.equal('safewithme testuser');
       expect(parsed[0].email).to.equal('safewithme.testuser@gmail.com');
     });
@@ -174,17 +177,16 @@ describe('PGP Unit Tests', () => {
 
     it('should return no user id for an invalid signature', () => {
       key.users[0].userId.userid = 'fake@example.com';
-      let parsed = pgp.parseUserIds(key.users, key.primaryKey);
+      const parsed = pgp.parseUserIds(key.users, key.primaryKey);
       expect(parsed.length).to.equal(0);
     });
 
     it('should throw for a invalid email address', () => {
-      let verifyStub = sinon.stub(key.users[0], 'isValidSelfCertificate').returns(true);
+      const verifyStub = sinon.stub(key.users[0], 'isValidSelfCertificate').returns(true);
       key.users[0].userId.userid = 'safewithme testuser <safewithme.testusergmail.com>';
-      let parsed = pgp.parseUserIds(key.users, key.primaryKey);
+      const parsed = pgp.parseUserIds(key.users, key.primaryKey);
       expect(parsed.length).to.equal(0);
       verifyStub.restore();
     });
   });
-
 });

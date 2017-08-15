@@ -25,7 +25,6 @@ const util = require('../service/util');
  * See https://tools.ietf.org/html/draft-shaw-openpgp-hkp-00
  */
 class HKP {
-
   /**
    * Create an instance of the HKP server
    * @param  {Object} publicKey   An instance of the public key service
@@ -39,13 +38,12 @@ class HKP {
    * @param  {Object} ctx   The koa request/response context
    */
   *add(ctx) {
-    let body = yield parse.form(ctx, { limit: '1mb' });
-    let publicKeyArmored = body.keytext;
+    const {keytext: publicKeyArmored} = yield parse.form(ctx, {limit: '1mb'});
     if (!publicKeyArmored) {
       ctx.throw(400, 'Invalid request!');
     }
-    let origin = util.origin(ctx);
-    yield this._publicKey.put({ publicKeyArmored, origin });
+    const origin = util.origin(ctx);
+    yield this._publicKey.put({publicKeyArmored, origin});
     ctx.body = 'Upload successful. Check your inbox to verify your email address.';
     ctx.status = 201;
   }
@@ -55,8 +53,8 @@ class HKP {
    * @param  {Object} ctx   The koa request/response context
    */
   *lookup(ctx) {
-    let params = this.parseQueryString(ctx);
-    let key = yield this._publicKey.get(params);
+    const params = this.parseQueryString(ctx);
+    const key = yield this._publicKey.get(params);
     this.setGetHeaders(ctx, params);
     this.setGetBody(ctx, params, key);
   }
@@ -68,19 +66,19 @@ class HKP {
    * @return {Object}       The query parameters or undefined for an invalid request
    */
   parseQueryString(ctx) {
-    let params = {
+    const params = {
       op: ctx.query.op, // operation ... only 'get' is supported
       mr: ctx.query.options === 'mr' // machine readable
     };
     if (this.checkId(ctx.query.search)) {
-      let id = ctx.query.search.replace(/^0x/, '');
+      const id = ctx.query.search.replace(/^0x/, '');
       params.keyId = util.isKeyId(id) ? id : undefined;
       params.fingerprint = util.isFingerPrint(id) ? id : undefined;
     } else if (util.isEmail(ctx.query.search)) {
       params.email = ctx.query.search;
     }
 
-    if (['get','index','vindex'].indexOf(params.op) === -1) {
+    if (['get', 'index', 'vindex'].indexOf(params.op) === -1) {
       ctx.throw(501, 'Not implemented!');
     } else if (!params.keyId && !params.fingerprint && !params.email) {
       ctx.throw(501, 'Not implemented!');
@@ -124,21 +122,21 @@ class HKP {
   setGetBody(ctx, params, key) {
     if (params.op === 'get') {
       ctx.body = key.publicKeyArmored;
-    } else if (['index','vindex'].indexOf(params.op) !== -1) {
-      const VERSION = 1, COUNT = 1; // number of keys
-      let fp = key.fingerprint.toUpperCase();
-      let algo = (key.algorithm.indexOf('rsa') !== -1) ? 1 : '';
-      let created = key.created ? (key.created.getTime() / 1000) : '';
+    } else if (['index', 'vindex'].indexOf(params.op) !== -1) {
+      const VERSION = 1;
+      const COUNT = 1; // number of keys
+      const fp = key.fingerprint.toUpperCase();
+      const algo = (key.algorithm.indexOf('rsa') !== -1) ? 1 : '';
+      const created = key.created ? (key.created.getTime() / 1000) : '';
 
-      ctx.body = 'info:' + VERSION + ':' + COUNT + '\n' +
-        'pub:' + fp + ':' + algo + ':' + key.keySize + ':' + created + '::\n';
+      ctx.body = `info:${VERSION}:${COUNT}\n` +
+        `pub:${fp}:${algo}:${key.keySize}:${created}::\n`;
 
-      for (let uid of key.userIds) {
-        ctx.body += 'uid:' + encodeURIComponent(uid.name + ' <' + uid.email + '>') + ':::\n';
+      for (const uid of key.userIds) {
+        ctx.body += `uid:${encodeURIComponent(`${uid.name} <${uid.email}>`)}:::\n`;
       }
     }
   }
-
 }
 
 module.exports = HKP;

@@ -23,7 +23,6 @@ const MongoClient = require('mongodb').MongoClient;
  * A simple wrapper around the official MongoDB client.
  */
 class Mongo {
-
   /**
    * Initializes the database client by connecting to the MongoDB.
    * @param {String} uri    The mongodb uri
@@ -31,8 +30,8 @@ class Mongo {
    * @param {String} pass   The database user's password
    * @yield {undefined}
    */
-  *init({ uri, user, pass }) {
-    let url = 'mongodb://' + user + ':' + pass + '@' + uri;
+  *init({uri, user, pass}) {
+    const url = `mongodb://${user}:${pass}@${uri}`;
     this._db = yield MongoClient.connect(url);
   }
 
@@ -51,7 +50,7 @@ class Mongo {
    * @yield {Object}            The operation result
    */
   create(document, type) {
-    let col = this._db.collection(type);
+    const col = this._db.collection(type);
     return col.insertOne(document);
   }
 
@@ -62,7 +61,7 @@ class Mongo {
    * @yield {Object}             The operation result
    */
   batch(documents, type) {
-    let col = this._db.collection(type);
+    const col = this._db.collection(type);
     return col.insertMany(documents);
   }
 
@@ -74,8 +73,8 @@ class Mongo {
    * @yield {Object}         The operation result
    */
   update(query, diff, type) {
-    let col = this._db.collection(type);
-    return col.updateOne(query, { $set:diff });
+    const col = this._db.collection(type);
+    return col.updateOne(query, {$set: diff});
   }
 
   /**
@@ -85,7 +84,7 @@ class Mongo {
    * @yield {Object}         The document object
    */
   get(query, type) {
-    let col = this._db.collection(type);
+    const col = this._db.collection(type);
     return col.findOne(query);
   }
 
@@ -96,7 +95,7 @@ class Mongo {
    * @yield {Array}          An array of document objects
    */
   list(query, type) {
-    let col = this._db.collection(type);
+    const col = this._db.collection(type);
     return col.find(query).toArray();
   }
 
@@ -107,7 +106,7 @@ class Mongo {
    * @yield {Object}         The operation result
    */
   remove(query, type) {
-    let col = this._db.collection(type);
+    const col = this._db.collection(type);
     return col.deleteMany(query);
   }
 
@@ -117,10 +116,9 @@ class Mongo {
    * @yield {Object}        The operation result
    */
   clear(type) {
-    let col = this._db.collection(type);
+    const col = this._db.collection(type);
     return col.deleteMany({});
   }
-
 }
 
 module.exports = Mongo;

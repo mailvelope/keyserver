@@ -31,7 +31,12 @@ const PublicKey = require('./service/public-key');
 const HKP = require('./route/hkp');
 const REST = require('./route/rest');
 
-let mongo, email, pgp, publicKey, hkp, rest;
+let mongo;
+let email;
+let pgp;
+let publicKey;
+let hkp;
+let rest;
 
 //
 // Configure koa HTTP server
@@ -59,7 +64,7 @@ router.del('/api/v1/key', function *() {
 // Redirect all http traffic to https
 app.use(function *(next) {
   if (util.isTrue(config.server.httpsUpgrade) && util.checkHTTP(this)) {
-    this.redirect('https://' + this.hostname + this.url);
+    this.redirect(`https://${this.hostname}${this.url}`);
   } else {
     yield next;
   }
@@ -73,7 +78,7 @@ app.use(function *(next) {
   }
   // HPKP
   if (config.server.httpsKeyPin && config.server.httpsKeyPinBackup) {
-    this.set('Public-Key-Pins', 'pin-sha256="' + config.server.httpsKeyPin + '"; pin-sha256="' + config.server.httpsKeyPinBackup + '"; max-age=16070400');
+    this.set('Public-Key-Pins', `pin-sha256="${config.server.httpsKeyPin}"; pin-sha256="${config.server.httpsKeyPinBackup}"; max-age=16070400`);
   }
   // CSP
   this.set('Content-Security-Policy', "default-src 'self'; object-src 'none'; script-src 'self' code.jquery.com; style-src 'self' maxcdn.bootstrapcdn.com; font-src 'self' maxcdn.bootstrapcdn.com");
@@ -91,7 +96,7 @@ app.use(router.routes());
 app.use(router.allowedMethods());
 
 // serve static files
-app.use(serve(__dirname + '/static'));
+app.use(serve(`${__dirname}/static`));
 
 app.on('error', (error, ctx) => {
   if (error.status) {
@@ -120,9 +125,9 @@ function injectDependencies() {
 
 if (!global.testing) { // don't automatically start server in tests
   co(function *() {
-    let app = yield init();
+    const app = yield init();
     app.listen(config.server.port);
-    log.info('app', 'Ready to rock! Listening on http://localhost:' + config.server.port);
+    log.info('app', `Ready to rock! Listening on http://localhost:${config.server.port}`);
   }).catch(err => log.error('app', 'Initialization failed!', err));
 }
 
