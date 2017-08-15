@@ -5,6 +5,7 @@ const Mongo = require('../../src/dao/mongo');
 const nodemailer = require('nodemailer');
 const config = require('config');
 const fs = require('fs');
+const log = require('npmlog');
 
 describe('Koa App (HTTP Server) Integration Tests', function() {
   this.timeout(20000);
@@ -35,6 +36,8 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       use() {}
     });
 
+    sinon.stub(log);
+
     global.testing = true;
     const init = require('../../src/app');
     app = yield init();
@@ -47,6 +50,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
   });
 
   after(function *() {
+    sinon.restore(log);
     nodemailer.createTransport.restore();
     yield mongo.clear(DB_TYPE_PUB_KEY);
     yield mongo.clear(DB_TYPE_USER_ID);
