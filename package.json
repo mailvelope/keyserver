@@ -11,9 +11,8 @@
   },
   "scripts": {
     "start": ": ${NODE_ENV=development} && node index.js",
-    "test": ": ${NODE_ENV=development} && npm run test:jshint && npm run test:jscs && npm run test:unit && npm run test:integration",
-    "test:jshint": "jshint *.js src/**/*.js test/**/*.js",
-    "test:jscs": "jscs *.js src/**/*.js test/**/*.js",
+    "test": ": ${NODE_ENV=development} && npm run test:lint && npm run test:unit && npm run test:integration",
+    "test:lint": "eslint config src test *.js",
     "test:unit": "mocha --opts test/mocha.opts ./test/unit/",
     "test:integration": "mocha --opts test/mocha.opts ./test/integration",
     "release": "npm run release:install && npm run release:archive",
@@ -37,8 +36,7 @@
   "devDependencies": {
     "chai": "^4.1.1",
     "co-mocha": "^1.1.2",
-    "jscs": "^3.0.7",
-    "jshint": "^2.9.4",
+    "eslint": "^4.4.1",
     "mocha": "^3.2.0",
     "sinon": "^1.17.4",
     "supertest": "^3.0.0"
