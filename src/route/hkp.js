@@ -129,8 +129,7 @@ class HKP {
       const algo = (key.algorithm.indexOf('rsa') !== -1) ? 1 : '';
       const created = key.created ? (key.created.getTime() / 1000) : '';
 
-      ctx.body = `info:${VERSION}:${COUNT}\n` +
-        `pub:${fp}:${algo}:${key.keySize}:${created}::\n`;
+      ctx.body = `info:${VERSION}:${COUNT}\npub:${fp}:${algo}:${key.keySize}:${created}::\n`;
 
       for (const uid of key.userIds) {
         ctx.body += `uid:${encodeURIComponent(`${uid.name} <${uid.email}>`)}:::\n`;
