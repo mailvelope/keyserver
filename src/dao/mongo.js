@@ -30,9 +30,9 @@ class Mongo {
    * @param {String} pass   The database user's password
    * @yield {undefined}
    */
-  *init({uri, user, pass}) {
+  async init({uri, user, pass}) {
     const url = `mongodb://${user}:${pass}@${uri}`;
-    this._db = yield MongoClient.connect(url);
+    this._db = await MongoClient.connect(url);
   }
 
   /**
