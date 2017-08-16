@@ -36,12 +36,13 @@
     "chai": "^4.1.1",
     "eslint": "^4.4.1",
     "mocha": "^3.2.0",
-    "sinon": "^3.2.0",
+    "sinon": "^1.17.4",
     "supertest": "^3.0.0"
   },
   "greenkeeper": {
     "ignore": [
-      "nodemailer"
+      "nodemailer",
+      "sinon"
     ]
   }
 }
