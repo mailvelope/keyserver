@@ -61,7 +61,7 @@ describe('Email Unit Tests', () => {
 
   describe("send", () => {
     beforeEach(() => {
-      sandbox.stub(email, '_sendHelper').resolves({response: '250'});
+      sandbox.stub(email, '_sendHelper').returns(Promise.resolve({response: '250'}));
     });
 
     it('should work', async() => {
@@ -73,7 +73,7 @@ describe('Email Unit Tests', () => {
 
   describe("_sendHelper", () => {
     it('should work', async() => {
-      sendFnStub.resolves({response: '250'});
+      sendFnStub.returns(Promise.resolve({response: '250'}));
 
       const info = await email._sendHelper(mailOptions);
 
@@ -81,7 +81,7 @@ describe('Email Unit Tests', () => {
     });
 
     it('should log warning for reponse error', async() => {
-      sendFnStub.resolves({response: '554'});
+      sendFnStub.returns(Promise.resolve({response: '554'}));
 
       const info = await email._sendHelper(mailOptions);
 
@@ -90,7 +90,7 @@ describe('Email Unit Tests', () => {
     });
 
     it('should fail', async() => {
-      sendFnStub.rejects(new Error('boom'));
+      sendFnStub.returns(Promise.reject(new Error('boom')));
 
       try {
         await email._sendHelper(mailOptions);
