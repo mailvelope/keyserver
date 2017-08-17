@@ -54,7 +54,7 @@ router.get('/api/v1/key', ctx => rest.query(ctx));
 router.del('/api/v1/key', ctx => rest.remove(ctx));
 
 // Redirect all http traffic to https
-app.use(async(ctx, next) => {
+app.use(async (ctx, next) => {
   if (util.isTrue(config.server.httpsUpgrade) && util.checkHTTP(ctx)) {
     ctx.redirect(`https://${ctx.hostname}${ctx.url}`);
   } else {
@@ -63,7 +63,7 @@ app.use(async(ctx, next) => {
 });
 
 // Set HTTP response headers
-app.use(async(ctx, next) => {
+app.use(async (ctx, next) => {
   // HSTS
   if (util.isTrue(config.server.httpsUpgrade)) {
     ctx.set('Strict-Transport-Security', 'max-age=16070400');
@@ -121,7 +121,7 @@ function injectDependencies() {
 //
 
 if (!global.testing) { // don't automatically start server in tests
-  (async() => {
+  (async () => {
     try {
       const app = await init();
       app.listen(config.server.port);

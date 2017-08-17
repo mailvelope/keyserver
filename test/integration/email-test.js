@@ -36,7 +36,7 @@ describe('Email Integration Tests', function() {
   });
 
   describe("_sendHelper", () => {
-    it('should work', async() => {
+    it('should work', async () => {
       const mailOptions = {
         from: email._sender,
         to: recipient,
@@ -50,23 +50,23 @@ describe('Email Integration Tests', function() {
   });
 
   describe("send verifyKey template", () => {
-    it('should send plaintext email', async() => {
+    it('should send plaintext email', async () => {
       delete userId.publicKeyArmored;
       await email.send({template: tpl.verifyKey, userId, keyId, origin});
     });
 
-    it('should send pgp encrypted email', async() => {
+    it('should send pgp encrypted email', async () => {
       await email.send({template: tpl.verifyKey, userId, keyId, origin});
     });
   });
 
   describe("send verifyRemove template", () => {
-    it('should send plaintext email', async() => {
+    it('should send plaintext email', async () => {
       delete userId.publicKeyArmored;
       await email.send({template: tpl.verifyRemove, userId, keyId, origin});
     });
 
-    it('should send pgp encrypted email', async() => {
+    it('should send pgp encrypted email', async () => {
       await email.send({template: tpl.verifyRemove, userId, keyId, origin});
     });
   });

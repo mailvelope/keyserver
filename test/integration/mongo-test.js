@@ -9,27 +9,27 @@ describe('Mongo Integration Tests', function() {
   const DB_TYPE = 'apple';
   let mongo;
 
-  before(async() => {
+  before(async () => {
     mongo = new Mongo();
     await mongo.init(config.mongo);
   });
 
-  beforeEach(async() => {
+  beforeEach(async () => {
     await mongo.clear(DB_TYPE);
   });
 
-  after(async() => {
+  after(async () => {
     await mongo.clear(DB_TYPE);
     await mongo.disconnect();
   });
 
   describe("create", () => {
-    it('should insert a document', async() => {
+    it('should insert a document', async () => {
       const r = await mongo.create({_id: '0'}, DB_TYPE);
       expect(r.insertedCount).to.equal(1);
     });
 
-    it('should fail if two with the same ID are inserted', async() => {
+    it('should fail if two with the same ID are inserted', async () => {
       let r = await mongo.create({_id: '0'}, DB_TYPE);
       expect(r.insertedCount).to.equal(1);
       try {
@@ -41,12 +41,12 @@ describe('Mongo Integration Tests', function() {
   });
 
   describe("batch", () => {
-    it('should insert a document', async() => {
+    it('should insert a document', async () => {
       const r = await mongo.batch([{_id: '0'}, {_id: '1'}], DB_TYPE);
       expect(r.insertedCount).to.equal(2);
     });
 
-    it('should fail if docs with the same ID are inserted', async() => {
+    it('should fail if docs with the same ID are inserted', async () => {
       let r = await mongo.batch([{_id: '0'}, {_id: '1'}], DB_TYPE);
       expect(r.insertedCount).to.equal(2);
       try {
@@ -58,7 +58,7 @@ describe('Mongo Integration Tests', function() {
   });
 
   describe("update", () => {
-    it('should update a document', async() => {
+    it('should update a document', async () => {
       let r = await mongo.create({_id: '0'}, DB_TYPE);
       r = await mongo.update({_id: '0'}, {foo: 'bar'}, DB_TYPE);
       expect(r.modifiedCount).to.equal(1);
@@ -68,7 +68,7 @@ describe('Mongo Integration Tests', function() {
   });
 
   describe("get", () => {
-    it('should get a document', async() => {
+    it('should get a document', async () => {
       let r = await mongo.create({_id: '0'}, DB_TYPE);
       r = await mongo.get({_id: '0'}, DB_TYPE);
       expect(r).to.exist;
@@ -76,7 +76,7 @@ describe('Mongo Integration Tests', function() {
   });
 
   describe("list", () => {
-    it('should list documents', async() => {
+    it('should list documents', async () => {
       let r = await mongo.batch([{_id: '0', foo: 'bar'}, {_id: '1', foo: 'bar'}], DB_TYPE);
       r = await mongo.list({foo: 'bar'}, DB_TYPE);
       expect(r).to.deep.equal([{_id: '0', foo: 'bar'}, {_id: '1', foo: 'bar'}], DB_TYPE);
@@ -84,7 +84,7 @@ describe('Mongo Integration Tests', function() {
   });
 
   describe("remove", () => {
-    it('should remove a document', async() => {
+    it('should remove a document', async () => {
       let r = await mongo.create({_id: '0'}, DB_TYPE);
       r = await mongo.remove({_id: '0'}, DB_TYPE);
       r = await mongo.get({_id: '0'}, DB_TYPE);

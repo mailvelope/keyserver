@@ -22,7 +22,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
   const primaryEmail = 'safewithme.testuser@gmail.com';
   const fingerprint = '4277257930867231CE393FB8DBC0B3D92B1B86E9';
 
-  before(async() => {
+  before(async () => {
     sandbox = sinon.sandbox.create();
 
     publicKeyArmored = fs.readFileSync(`${__dirname}/../key1.asc`, 'utf8');
@@ -46,13 +46,13 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
     app = await init();
   });
 
-  beforeEach(async() => {
+  beforeEach(async () => {
     await mongo.clear(DB_TYPE_PUB_KEY);
     await mongo.clear(DB_TYPE_USER_ID);
     emailParams = null;
   });
 
-  after(async() => {
+  after(async () => {
     sandbox.restore();
     await mongo.clear(DB_TYPE_PUB_KEY);
     await mongo.clear(DB_TYPE_USER_ID);
