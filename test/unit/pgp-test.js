@@ -6,47 +6,50 @@ const openpgp = require('openpgp');
 const PGP = require('../../src/service/pgp');
 
 describe('PGP Unit Tests', () => {
+  let sandbox;
   let pgp;
   let key1Armored;
   let key2Armored;
   let key3Armored;
 
   beforeEach(() => {
+    sandbox = sinon.sandbox.create();
+    sandbox.stub(log);
+
     key1Armored = fs.readFileSync(`${__dirname}/../key1.asc`, 'utf8');
     key2Armored = fs.readFileSync(`${__dirname}/../key2.asc`, 'utf8');
     key3Armored = fs.readFileSync(`${__dirname}/../key3.asc`, 'utf8');
     pgp = new PGP();
   });
 
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   describe('parseKey', () => {
     it('should should throw error on key parsing', () => {
-      const readStub = sinon.stub(openpgp.key, 'readArmored').returns({err: [new Error()]});
-      sinon.stub(log, 'error');
+      sandbox.stub(openpgp.key, 'readArmored').returns({err: [new Error()]});
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/Failed to parse/);
       expect(log.error.calledOnce).to.be.true;
-      log.error.restore();
-      readStub.restore();
     });
 
     it('should should throw error when more than one key', () => {
-      const readStub = sinon.stub(openpgp.key, 'readArmored').returns({keys: [{}, {}]});
+      sandbox.stub(openpgp.key, 'readArmored').returns({keys: [{}, {}]});
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/only one key/);
-      readStub.restore();
     });
 
     it('should should throw error when more than one key', () => {
-      const readStub = sinon.stub(openpgp.key, 'readArmored').returns({
+      sandbox.stub(openpgp.key, 'readArmored').returns({
         keys: [{
           primaryKey: {},
           verifyPrimaryKey() { return false; }
         }]
       });
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/primary key verification/);
-      readStub.restore();
     });
 
     it('should only accept 16 char key id', () => {
-      const readStub = sinon.stub(openpgp.key, 'readArmored').returns({
+      sandbox.stub(openpgp.key, 'readArmored').returns({
         keys: [{
           primaryKey: {
             fingerprint: '4277257930867231ce393fb8dbc0b3d92b1b86e9',
@@ -60,11 +63,10 @@ describe('PGP Unit Tests', () => {
         }]
       });
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/only v4 keys/);
-      readStub.restore();
     });
 
     it('should only accept version 4 fingerprint', () => {
-      const readStub = sinon.stub(openpgp.key, 'readArmored').returns({
+      sandbox.stub(openpgp.key, 'readArmored').returns({
         keys: [{
           primaryKey: {
             fingerprint: '4277257930867231ce393fb8dbc0b3d92b1b86e',
@@ -78,11 +80,10 @@ describe('PGP Unit Tests', () => {
         }]
       });
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/only v4 keys/);
-      readStub.restore();
     });
 
     it('should only accept valid user ids', () => {
-      sinon.stub(pgp, 'parseUserIds').returns([]);
+      sandbox.stub(pgp, 'parseUserIds').returns([]);
       expect(pgp.parseKey.bind(pgp, key3Armored)).to.throw(/invalid user ids/);
     });
 
@@ -182,11 +183,10 @@ describe('PGP Unit Tests', () => {
     });
 
     it('should throw for a invalid email address', () => {
-      const verifyStub = sinon.stub(key.users[0], 'isValidSelfCertificate').returns(true);
+      sandbox.stub(key.users[0], 'isValidSelfCertificate').returns(true);
       key.users[0].userId.userid = 'safewithme testuser <safewithme.testusergmail.com>';
       const parsed = pgp.parseUserIds(key.users, key.primaryKey);
       expect(parsed.length).to.equal(0);
-      verifyStub.restore();
     });
   });
 });

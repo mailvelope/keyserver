@@ -17,8 +17,8 @@
 
 'use strict';
 
-const co = require('co');
-const app = require('koa')();
+const Koa = require('koa');
+const koaBody = require('koa-body');
 const log = require('npmlog');
 const config = require('config');
 const serve = require('koa-static');
@@ -30,6 +30,8 @@ const PGP = require('./service/pgp');
 const PublicKey = require('./service/public-key');
 const HKP = require('./route/hkp');
 const REST = require('./route/rest');
+
+const app = new Koa();
 
 let mongo;
 let email;
@@ -43,54 +45,49 @@ let rest;
 //
 
 // HKP routes
-router.post('/pks/add', function *() {
-  yield hkp.add(this);
-});
-router.get('/pks/lookup', function *() {
-  yield hkp.lookup(this);
-});
+router.post('/pks/add', ctx => hkp.add(ctx));
+router.get('/pks/lookup', ctx => hkp.lookup(ctx));
 
 // REST api routes
-router.post('/api/v1/key', function *() {
-  yield rest.create(this);
-});
-router.get('/api/v1/key', function *() {
-  yield rest.query(this);
-});
-router.del('/api/v1/key', function *() {
-  yield rest.remove(this);
-});
+router.post('/api/v1/key', ctx => rest.create(ctx));
+router.get('/api/v1/key', ctx => rest.query(ctx));
+router.del('/api/v1/key', ctx => rest.remove(ctx));
 
 // Redirect all http traffic to https
-app.use(function *(next) {
-  if (util.isTrue(config.server.httpsUpgrade) && util.checkHTTP(this)) {
-    this.redirect(`https://${this.hostname}${this.url}`);
+app.use(async (ctx, next) => {
+  if (util.isTrue(config.server.httpsUpgrade) && util.checkHTTP(ctx)) {
+    ctx.redirect(`https://${ctx.hostname}${ctx.url}`);
   } else {
-    yield next;
+    await next();
   }
 });
 
 // Set HTTP response headers
-app.use(function *(next) {
+app.use(async (ctx, next) => {
   // HSTS
   if (util.isTrue(config.server.httpsUpgrade)) {
-    this.set('Strict-Transport-Security', 'max-age=16070400');
+    ctx.set('Strict-Transport-Security', 'max-age=16070400');
   }
   // HPKP
   if (config.server.httpsKeyPin && config.server.httpsKeyPinBackup) {
-    this.set('Public-Key-Pins', `pin-sha256="${config.server.httpsKeyPin}"; pin-sha256="${config.server.httpsKeyPinBackup}"; max-age=16070400`);
+    ctx.set('Public-Key-Pins', `pin-sha256="${config.server.httpsKeyPin}"; pin-sha256="${config.server.httpsKeyPinBackup}"; max-age=16070400`);
   }
   // CSP
-  this.set('Content-Security-Policy', "default-src 'self'; object-src 'none'; script-src 'self' code.jquery.com; style-src 'self' maxcdn.bootstrapcdn.com; font-src 'self' maxcdn.bootstrapcdn.com");
+  ctx.set('Content-Security-Policy', "default-src 'self'; object-src 'none'; script-src 'self' code.jquery.com; style-src 'self' maxcdn.bootstrapcdn.com; font-src 'self' maxcdn.bootstrapcdn.com");
   // Prevent rendering website in foreign iframe (Clickjacking)
-  this.set('X-Frame-Options', 'DENY');
+  ctx.set('X-Frame-Options', 'DENY');
   // CORS
-  this.set('Access-Control-Allow-Origin', '*');
-  this.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  this.set('Access-Control-Allow-Headers', 'Content-Type');
-  this.set('Connection', 'keep-alive');
-  yield next;
+  ctx.set('Access-Control-Allow-Origin', '*');
+  ctx.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  ctx.set('Access-Control-Allow-Headers', 'Content-Type');
+  ctx.set('Connection', 'keep-alive');
+  await next();
 });
+
+app.use(koaBody({
+  multipart: true,
+  formLimit: '1mb'
+}));
 
 app.use(router.routes());
 app.use(router.allowedMethods());
@@ -124,19 +121,23 @@ function injectDependencies() {
 //
 
 if (!global.testing) { // don't automatically start server in tests
-  co(function *() {
-    const app = yield init();
-    app.listen(config.server.port);
-    log.info('app', `Ready to rock! Listening on http://localhost:${config.server.port}`);
-  }).catch(err => log.error('app', 'Initialization failed!', err));
+  (async () => {
+    try {
+      const app = await init();
+      app.listen(config.server.port);
+      log.info('app', `Ready to rock! Listening on http://localhost:${config.server.port}`);
+    } catch (err) {
+      log.error('app', 'Initialization failed!', err);
+    }
+  })();
 }
 
-function *init() {
+async function init() {
   log.level = config.log.level; // set log level depending on process.env.NODE_ENV
   injectDependencies();
   email.init(config.email);
   log.info('app', 'Connecting to MongoDB ...');
-  yield mongo.init(config.mongo);
+  await mongo.init(config.mongo);
   return app;
 }
 

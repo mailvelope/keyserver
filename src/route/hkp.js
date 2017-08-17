@@ -17,7 +17,6 @@
 
 'use strict';
 
-const parse = require('co-body');
 const util = require('../service/util');
 
 /**
@@ -37,13 +36,13 @@ class HKP {
    * Public key upload via http POST
    * @param  {Object} ctx   The koa request/response context
    */
-  *add(ctx) {
-    const {keytext: publicKeyArmored} = yield parse.form(ctx, {limit: '1mb'});
+  async add(ctx) {
+    const publicKeyArmored = ctx.request.body.keytext;
     if (!publicKeyArmored) {
       ctx.throw(400, 'Invalid request!');
     }
     const origin = util.origin(ctx);
-    yield this._publicKey.put({publicKeyArmored, origin});
+    await this._publicKey.put({publicKeyArmored, origin});
     ctx.body = 'Upload successful. Check your inbox to verify your email address.';
     ctx.status = 201;
   }
@@ -52,9 +51,9 @@ class HKP {
    * Public key lookup via http GET
    * @param  {Object} ctx   The koa request/response context
    */
-  *lookup(ctx) {
+  async lookup(ctx) {
     const params = this.parseQueryString(ctx);
-    const key = yield this._publicKey.get(params);
+    const key = await this._publicKey.get(params);
     this.setGetHeaders(ctx, params);
     this.setGetBody(ctx, params, key);
   }

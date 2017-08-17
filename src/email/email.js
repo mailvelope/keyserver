@@ -58,7 +58,7 @@ class Email {
    * @param {Object} origin     origin of the server
    * @yield {Object}            send response from the SMTP server
    */
-  *send({template, userId, keyId, origin}) {
+  async send({template, userId, keyId, origin}) {
     const message = {
       from: this._sender,
       to: userId,
@@ -72,7 +72,7 @@ class Email {
         nonce: userId.nonce
       }
     };
-    return yield this._sendHelper(message);
+    return this._sendHelper(message);
   }
 
   /**
@@ -85,7 +85,7 @@ class Email {
    * @param {Object} params    (optional) nodermailer template parameters
    * @yield {Object}           reponse object containing SMTP info
    */
-  *_sendHelper({from, to, subject, text, html, params = {}}) {
+  async _sendHelper({from, to, subject, text, html, params = {}}) {
     const template = {
       subject,
       text,
@@ -107,7 +107,7 @@ class Email {
 
     try {
       const sendFn = this._transport.templateSender(template, sender);
-      const info = yield sendFn(recipient, params);
+      const info = await sendFn(recipient, params);
       if (!this._checkResponse(info)) {
         log.warn('email', 'Message may not have been received.', info);
       }

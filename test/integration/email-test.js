@@ -36,7 +36,7 @@ describe('Email Integration Tests', function() {
   });
 
   describe("_sendHelper", () => {
-    it('should work', function *() {
+    it('should work', async () => {
       const mailOptions = {
         from: email._sender,
         to: recipient,
@@ -44,30 +44,30 @@ describe('Email Integration Tests', function() {
         text: 'Hello world 🐴', // plaintext body
         html: '<b>Hello world 🐴</b>' // html body
       };
-      const info = yield email._sendHelper(mailOptions);
+      const info = await email._sendHelper(mailOptions);
       expect(info).to.exist;
     });
   });
 
   describe("send verifyKey template", () => {
-    it('should send plaintext email', function *() {
+    it('should send plaintext email', async () => {
       delete userId.publicKeyArmored;
-      yield email.send({template: tpl.verifyKey, userId, keyId, origin});
+      await email.send({template: tpl.verifyKey, userId, keyId, origin});
     });
 
-    it('should send pgp encrypted email', function *() {
-      yield email.send({template: tpl.verifyKey, userId, keyId, origin});
+    it('should send pgp encrypted email', async () => {
+      await email.send({template: tpl.verifyKey, userId, keyId, origin});
     });
   });
 
   describe("send verifyRemove template", () => {
-    it('should send plaintext email', function *() {
+    it('should send plaintext email', async () => {
       delete userId.publicKeyArmored;
-      yield email.send({template: tpl.verifyRemove, userId, keyId, origin});
+      await email.send({template: tpl.verifyRemove, userId, keyId, origin});
     });
 
-    it('should send pgp encrypted email', function *() {
-      yield email.send({template: tpl.verifyRemove, userId, keyId, origin});
+    it('should send pgp encrypted email', async () => {
+      await email.send({template: tpl.verifyRemove, userId, keyId, origin});
     });
   });
 });

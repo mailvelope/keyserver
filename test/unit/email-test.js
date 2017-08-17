@@ -5,6 +5,7 @@ const Email = require('../../src/email/email');
 const nodemailer = require('nodemailer');
 
 describe('Email Unit Tests', () => {
+  let sandbox;
   let email;
   let sendFnStub;
 
@@ -36,13 +37,14 @@ describe('Email Unit Tests', () => {
   };
 
   beforeEach(() => {
+    sandbox = sinon.sandbox.create();
+
     sendFnStub = sinon.stub();
-    sinon.stub(nodemailer, 'createTransport').returns({
+    sandbox.stub(nodemailer, 'createTransport').returns({
       templateSender: () => sendFnStub
     });
 
-    sinon.stub(log, 'warn');
-    sinon.stub(log, 'error');
+    sandbox.stub(log);
 
     email = new Email(nodemailer);
     email.init({
@@ -54,50 +56,44 @@ describe('Email Unit Tests', () => {
   });
 
   afterEach(() => {
-    nodemailer.createTransport.restore();
-    log.warn.restore();
-    log.error.restore();
+    sandbox.restore();
   });
 
   describe("send", () => {
     beforeEach(() => {
-      sinon.stub(email, '_sendHelper').returns(Promise.resolve({response: '250'}));
+      sandbox.stub(email, '_sendHelper').returns(Promise.resolve({response: '250'}));
     });
 
-    afterEach(() => {
-      email._sendHelper.restore();
-    });
-
-    it('should work', function *() {
-      const info = yield email.send({template, userId: userId1, keyId, origin});
+    it('should work', async () => {
+      const info = await email.send({template, userId: userId1, keyId, origin});
 
       expect(info.response).to.match(/^250/);
     });
   });
 
   describe("_sendHelper", () => {
-    it('should work', function *() {
+    it('should work', async () => {
       sendFnStub.returns(Promise.resolve({response: '250'}));
 
-      const info = yield email._sendHelper(mailOptions);
+      const info = await email._sendHelper(mailOptions);
 
       expect(info.response).to.match(/^250/);
     });
 
-    it('should log warning for reponse error', function *() {
+    it('should log warning for reponse error', async () => {
       sendFnStub.returns(Promise.resolve({response: '554'}));
 
-      const info = yield email._sendHelper(mailOptions);
+      const info = await email._sendHelper(mailOptions);
 
       expect(info.response).to.match(/^554/);
       expect(log.warn.calledOnce).to.be.true;
     });
 
-    it('should fail', function *() {
+    it('should fail', async () => {
       sendFnStub.returns(Promise.reject(new Error('boom')));
 
       try {
-        yield email._sendHelper(mailOptions);
+        await email._sendHelper(mailOptions);
       } catch (e) {
         expect(log.error.calledOnce).to.be.true;
         expect(e.status).to.equal(500);
