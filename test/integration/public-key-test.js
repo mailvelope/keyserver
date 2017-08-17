@@ -1,5 +1,6 @@
 'use strict';
 
+const log = require('npmlog');
 const config = require('config');
 const nodemailer = require('nodemailer');
 const Email = require('../../src/email/email');
@@ -28,6 +29,7 @@ describe('Public Key Integration Tests', function() {
   before(async () => {
     publicKeyArmored = require('fs').readFileSync(`${__dirname}/../key3.asc`, 'utf8');
     publicKeyArmored2 = require('fs').readFileSync(`${__dirname}/../key4.asc`, 'utf8');
+    sinon.stub(log, 'info');
     mongo = new Mongo();
     await mongo.init(config.mongo);
   });
@@ -67,6 +69,7 @@ describe('Public Key Integration Tests', function() {
   after(async () => {
     await mongo.clear(DB_TYPE);
     await mongo.disconnect();
+    log.info.restore();
   });
 
   describe('put', () => {

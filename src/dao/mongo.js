@@ -17,6 +17,7 @@
 
 'use strict';
 
+const log = require('npmlog');
 const MongoClient = require('mongodb').MongoClient;
 
 /**
@@ -31,6 +32,7 @@ class Mongo {
    * @yield {undefined}
    */
   async init({uri, user, pass}) {
+    log.info('mongo', 'Connecting to MongoDB ...');
     const url = `mongodb://${user}:${pass}@${uri}`;
     this._db = await MongoClient.connect(url);
   }

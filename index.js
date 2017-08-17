@@ -22,7 +22,7 @@ const numCPUs = require('os').cpus().length;
 const config = require('config');
 const log = require('npmlog');
 
-log.level = config.log.level; // set log level depending on process.env.NODE_ENV
+log.level = config.log.level;
 
 //
 // Start worker cluster depending on number of CPUs
@@ -32,13 +32,13 @@ if (cluster.isMaster) {
   for (let i = 0; i < numCPUs; i++) {
     cluster.fork();
   }
-  cluster.on('fork', worker => log.info('cluster', 'Forked worker #%s [pid:%s]', worker.id, worker.process.pid));
+  cluster.on('fork', worker => log.info('cluster', `Forked worker #${worker.id} [pid:${worker.process.pid}]`));
   cluster.on('exit', worker => {
-    log.warn('cluster', 'Worker #%s [pid:%s] died', worker.id, worker.process.pid);
+    log.warn('cluster', `Worker #${worker.id} [pid:${worker.process.pid}] died`);
     setTimeout(() => cluster.fork(), 5000);
   });
 } else {
-  require('./src/app');
+  require('./src');
 }
 
 //
