@@ -155,7 +155,7 @@ GET /api/v1/key?op=verifyRemove&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b1
 
 # Development
 
-The server is written is in JavaScript ES6 and runs on [Node.js](https://nodejs.org/) v4+. It uses [MongoDB](https://www.mongodb.com/) v2.4+ as its database.
+The server is written is in JavaScript ES7 and runs on [Node.js](https://nodejs.org/) v8+. It uses [MongoDB](https://www.mongodb.com/) v3.2+ as its database.
 
 ## Install Node.js (Mac OS)
 
