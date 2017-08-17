@@ -25,6 +25,8 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
   before(async () => {
     sandbox = sinon.sandbox.create();
 
+    sandbox.stub(log);
+
     publicKeyArmored = fs.readFileSync(`${__dirname}/../key1.asc`, 'utf8');
     mongo = new Mongo();
     await mongo.init(config.mongo);
@@ -39,9 +41,6 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       use() {}
     });
 
-    sandbox.stub(log);
-
-    global.testing = true;
     const init = require('../../src/app');
     app = await init();
   });

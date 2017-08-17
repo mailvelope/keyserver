@@ -1,5 +1,6 @@
 'use strict';
 
+const log = require('npmlog');
 const config = require('config');
 const Mongo = require('../../src/dao/mongo');
 
@@ -7,9 +8,13 @@ describe('Mongo Integration Tests', function() {
   this.timeout(20000);
 
   const DB_TYPE = 'apple';
+  let sandbox;
   let mongo;
 
   before(async () => {
+    sandbox = sinon.sandbox.create();
+    sandbox.stub(log);
+
     mongo = new Mongo();
     await mongo.init(config.mongo);
   });
@@ -19,6 +24,7 @@ describe('Mongo Integration Tests', function() {
   });
 
   after(async () => {
+    sandbox.restore();
     await mongo.clear(DB_TYPE);
     await mongo.disconnect();
   });
