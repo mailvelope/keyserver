@@ -10,6 +10,7 @@ const log = require('npmlog');
 describe('Koa App (HTTP Server) Integration Tests', function() {
   this.timeout(20000);
 
+  let sandbox;
   let app;
   let mongo;
   let sendEmailStub;
@@ -21,40 +22,41 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
   const primaryEmail = 'safewithme.testuser@gmail.com';
   const fingerprint = '4277257930867231CE393FB8DBC0B3D92B1B86E9';
 
-  before(function *() {
+  before(async() => {
+    sandbox = sinon.sandbox.create();
+
     publicKeyArmored = fs.readFileSync(`${__dirname}/../key1.asc`, 'utf8');
     mongo = new Mongo();
-    yield mongo.init(config.mongo);
+    await mongo.init(config.mongo);
 
-    sendEmailStub = sinon.stub().returns(Promise.resolve({response: '250'}));
+    sendEmailStub = sandbox.stub().returns(Promise.resolve({response: '250'}));
     sendEmailStub.withArgs(sinon.match(recipient => recipient.to.address === primaryEmail), sinon.match(params => {
       emailParams = params;
       return Boolean(params.nonce);
     }));
-    sinon.stub(nodemailer, 'createTransport').returns({
+    sandbox.stub(nodemailer, 'createTransport').returns({
       templateSender: () => sendEmailStub,
       use() {}
     });
 
-    sinon.stub(log);
+    sandbox.stub(log);
 
     global.testing = true;
     const init = require('../../src/app');
-    app = yield init();
+    app = await init();
   });
 
-  beforeEach(function *() {
-    yield mongo.clear(DB_TYPE_PUB_KEY);
-    yield mongo.clear(DB_TYPE_USER_ID);
+  beforeEach(async() => {
+    await mongo.clear(DB_TYPE_PUB_KEY);
+    await mongo.clear(DB_TYPE_USER_ID);
     emailParams = null;
   });
 
-  after(function *() {
-    sinon.restore(log);
-    nodemailer.createTransport.restore();
-    yield mongo.clear(DB_TYPE_PUB_KEY);
-    yield mongo.clear(DB_TYPE_USER_ID);
-    yield mongo.disconnect();
+  after(async() => {
+    sandbox.restore();
+    await mongo.clear(DB_TYPE_PUB_KEY);
+    await mongo.clear(DB_TYPE_USER_ID);
+    await mongo.disconnect();
   });
 
   describe('REST api', () => {
