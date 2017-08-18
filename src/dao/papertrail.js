@@ -19,14 +19,18 @@
 
 const log = require('winston');
 const config = require('config');
-const init = require('./app');
+require('winston-papertrail');
 
-(async () => {
-  try {
-    const app = await init();
-    app.listen(config.server.port);
-    log.info('app', `Listening on http://localhost:${config.server.port}`);
-  } catch (err) {
-    log.error('app', 'Initialization failed!', err);
+log.exitOnError = false;
+log.level = config.log.level;
+
+exports.init = function({host, port}) {
+  if (!host || !port) {
+    return;
   }
-})();
+  log.add(log.transports.Papertrail, {
+    level: config.log.level,
+    host,
+    port
+  });
+};

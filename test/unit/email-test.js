@@ -1,6 +1,6 @@
 'use strict';
 
-const log = require('npmlog');
+const log = require('winston');
 const Email = require('../../src/email/email');
 const nodemailer = require('nodemailer');
 

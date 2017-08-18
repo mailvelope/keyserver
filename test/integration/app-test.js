@@ -5,7 +5,7 @@ const Mongo = require('../../src/dao/mongo');
 const nodemailer = require('nodemailer');
 const config = require('config');
 const fs = require('fs');
-const log = require('npmlog');
+const log = require('winston');
 
 describe('Koa App (HTTP Server) Integration Tests', function() {
   this.timeout(20000);

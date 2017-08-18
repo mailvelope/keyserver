@@ -17,7 +17,7 @@
 
 'use strict';
 
-const log = require('npmlog');
+const log = require('winston');
 const util = require('../service/util');
 const nodemailer = require('nodemailer');
 const openpgpEncrypt = require('nodemailer-openpgp').openpgpEncrypt;
