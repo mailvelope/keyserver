@@ -6,6 +6,11 @@ module.exports = {
     level: process.env.LOG_LEVEL || 'silly'
   },
 
+  papertrail: {
+    host: process.env.PAPERTRAIL_HOST,
+    port: process.env.PAPERTRAIL_PORT
+  },
+
   server: {
     port: process.env.PORT || 8888,
     httpsUpgrade: process.env.HTTPS_UPGRADE,

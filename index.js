@@ -21,8 +21,10 @@ const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
 const config = require('config');
 const log = require('winston');
+const papertrail = require('./src/dao/papertrail');
 
 log.level = config.log.level;
+papertrail.init(config.papertrail);
 
 //
 // Start worker cluster depending on number of CPUs
