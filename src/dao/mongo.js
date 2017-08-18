@@ -17,7 +17,7 @@
 
 'use strict';
 
-const log = require('npmlog');
+const log = require('winston');
 const MongoClient = require('mongodb').MongoClient;
 
 /**

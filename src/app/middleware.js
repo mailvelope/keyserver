@@ -17,7 +17,7 @@
 
 'use strict';
 
-const log = require('npmlog');
+const log = require('winston');
 const config = require('config');
 const koaBody = require('koa-body');
 const util = require('../service/util');
@@ -58,7 +58,7 @@ exports.parseBody = () => koaBody({
 
 exports.logUnknownError = function(error, ctx) {
   if (error.status) {
-    log.verbose('middleware', 'Request faild: %s, %s', error.status, error.message);
+    log.verbose('middleware', `Request failed: ${error.status} ${error.message}`);
   } else {
     log.error('middleware', 'Unknown error', error, ctx);
   }

@@ -3,7 +3,7 @@
 module.exports = {
 
   log: {
-    level: 'silly'
+    level: process.env.LOG_LEVEL || 'silly'
   },
 
   server: {

@@ -1,6 +1,6 @@
 'use strict';
 
-const log = require('npmlog');
+const log = require('winston');
 const config = require('config');
 const Mongo = require('../../src/dao/mongo');
 

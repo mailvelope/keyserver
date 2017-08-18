@@ -17,7 +17,7 @@
 
 'use strict';
 
-const log = require('npmlog');
+const log = require('winston');
 const config = require('config');
 const init = require('./app');
 

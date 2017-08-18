@@ -20,7 +20,7 @@
 const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
 const config = require('config');
-const log = require('npmlog');
+const log = require('winston');
 
 log.level = config.log.level;
 
