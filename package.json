@@ -10,8 +10,8 @@
     "node": ">=8"
   },
   "scripts": {
-    "start": ": ${NODE_ENV=development} && node index.js",
-    "test": ": ${NODE_ENV=development} && npm run test:lint && npm run test:unit && npm run test:integration",
+    "start": "node index.js",
+    "test": "npm run test:lint && npm run test:unit && npm run test:integration",
     "test:lint": "eslint config src test *.js",
     "test:unit": "mocha --opts test/mocha.opts ./test/unit/",
     "test:integration": "mocha --opts test/mocha.opts ./test/integration",
