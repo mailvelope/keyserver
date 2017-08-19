@@ -3,6 +3,7 @@
 const request = require('supertest');
 const Mongo = require('../../src/dao/mongo');
 const nodemailer = require('nodemailer');
+const templates = require('../../src/email/templates');
 const config = require('config');
 const fs = require('fs');
 const log = require('winston');
@@ -31,14 +32,17 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
     mongo = new Mongo();
     await mongo.init(config.mongo);
 
-    sendEmailStub = sandbox.stub().returns(Promise.resolve({response: '250'}));
-    sendEmailStub.withArgs(sinon.match(recipient => recipient.to.address === primaryEmail), sinon.match(params => {
+    const paramMatcher = sinon.match(params => {
       emailParams = params;
       return Boolean(params.nonce);
-    }));
+    });
+    sandbox.spy(templates, 'verifyKey').withArgs(paramMatcher);
+    sandbox.spy(templates, 'verifyRemove').withArgs(paramMatcher);
+
+    sendEmailStub = sandbox.stub().returns(Promise.resolve({response: '250'}));
+    sendEmailStub.withArgs(sinon.match(sendOptions => sendOptions.to.address === primaryEmail));
     sandbox.stub(nodemailer, 'createTransport').returns({
-      templateSender: () => sendEmailStub,
-      use() {}
+      sendMail: sendEmailStub
     });
 
     const init = require('../../src/app');
