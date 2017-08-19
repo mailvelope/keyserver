@@ -9,11 +9,11 @@ describe('Email Unit Tests', () => {
   let email;
   let sendFnStub;
 
-  const template = {
+  const template = () => ({
     subject: 'foo',
     text: 'bar',
     html: '<strong>bar</strong>'
-  };
+  });
   const sender = {
     name: 'Foo Bar',
     email: 'foo@bar.com'
@@ -41,7 +41,7 @@ describe('Email Unit Tests', () => {
 
     sendFnStub = sinon.stub();
     sandbox.stub(nodemailer, 'createTransport').returns({
-      templateSender: () => sendFnStub
+      sendMail: sendFnStub
     });
 
     sandbox.stub(log);
