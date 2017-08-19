@@ -77,7 +77,7 @@ class Email {
 
   /**
    * Encrypt the message body using OpenPGP.js
-   * @param  {string} plaintext          the plaintex message body
+   * @param  {string} plaintext          the plaintext message body
    * @param  {string} publicKeyArmored   the recipient's public key
    * @return {string}                    the encrypted PGP message block
    */
