@@ -7,6 +7,7 @@ const Email = require('../../src/email/email');
 const Mongo = require('../../src/dao/mongo');
 const PGP = require('../../src/service/pgp');
 const PublicKey = require('../../src/service/public-key');
+const templates = require('../../src/email/templates');
 
 describe('Public Key Integration Tests', function() {
   this.timeout(20000);
@@ -38,19 +39,24 @@ describe('Public Key Integration Tests', function() {
     sandbox = sinon.sandbox.create();
 
     await mongo.clear(DB_TYPE);
+
     mailsSent = [];
-    sendEmailStub = sinon.stub().returns(Promise.resolve({response: '250'}));
-    sendEmailStub.withArgs(sinon.match(recipient => {
-      mailsSent[mailsSent.length] = {to: recipient.to.address};
-      return true;
-    }), sinon.match(params => {
-      mailsSent[mailsSent.length - 1].params = params;
+    const paramMatcher = sinon.match(params => {
+      mailsSent[mailsSent.length] = {params};
       expect(params.nonce).to.exist;
       expect(params.keyId).to.exist;
       return true;
+    });
+    sandbox.spy(templates, 'verifyKey').withArgs(paramMatcher);
+    sandbox.spy(templates, 'verifyRemove').withArgs(paramMatcher);
+
+    sendEmailStub = sinon.stub().returns(Promise.resolve({response: '250'}));
+    sendEmailStub.withArgs(sinon.match(sendOptions => {
+      mailsSent[mailsSent.length - 1].to = sendOptions.to.address;
+      return true;
     }));
     sandbox.stub(nodemailer, 'createTransport').returns({
-      templateSender: () => sendEmailStub
+      sendMail: sendEmailStub
     });
     email = new Email(nodemailer);
     email.init({
