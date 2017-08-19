@@ -19,7 +19,7 @@
 
 const config = require('config');
 const util = require('./util');
-const tpl = require('../email/templates.json');
+const tpl = require('../email/templates');
 
 /**
  * Database documents have the format:
