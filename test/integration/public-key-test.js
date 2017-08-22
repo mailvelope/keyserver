@@ -144,16 +144,8 @@ describe('Public Key Integration Tests', function() {
       expect(r.deletedCount).to.equal(1);
     });
 
-    it('should remove an unverified key with no uploaded attribute', async () => {
-      delete key.uploaded;
-      await publicKey._persisKey(key);
-      const r = await publicKey._purgeOldUnverified();
-      expect(r.deletedCount).to.equal(1);
-    });
-
     it('should not remove a verified key with no uploaded attribute', async () => {
       key.userIds[0].verified = true;
-      delete key.uploaded;
       await publicKey._persisKey(key);
       const r = await publicKey._purgeOldUnverified();
       expect(r.deletedCount).to.equal(0);

@@ -83,8 +83,7 @@ class PublicKey {
   }
 
   /**
-   * Delete all keys where no user id has been verified after x days or where the
-   * 'uploaded' attribute is yet not available (to support legacy key documents).
+   * Delete all keys where no user id has been verified after x days.
    * @yield {undefined}
    */
   async _purgeOldUnverified() {
@@ -94,10 +93,7 @@ class PublicKey {
     // remove unverified keys older than x days (or no 'uploaded' attribute)
     const query = {
       'userIds.verified': {$ne: true},
-      $or: [
-        {uploaded: {$exists: false}},
-        {uploaded: {$lt: xDaysAgo}}
-      ]
+      uploaded: {$lt: xDaysAgo}
     };
     return this._mongo.remove(query, DB_TYPE);
   }
