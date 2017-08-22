@@ -72,6 +72,7 @@ class PGP {
       fingerprint,
       userIds,
       created: primaryKey.created,
+      uploaded: new Date(),
       algorithm: primaryKey.algorithm,
       keySize: primaryKey.getBitSize(),
       publicKeyArmored

@@ -104,6 +104,47 @@ describe('Public Key Integration Tests', function() {
     });
   });
 
+  describe('_purgeOldUnverified', () => {
+    let key;
+
+    beforeEach(async () => {
+      key = pgp.parseKey(publicKeyArmored);
+    });
+
+    it('should work for no keys', async () => {
+      const r = await publicKey._purgeOldUnverified();
+      expect(r.deletedCount).to.equal(0);
+    });
+
+    it('should not remove a current unverified key', async () => {
+      await publicKey._persisKey(key);
+      const r = await publicKey._purgeOldUnverified();
+      expect(r.deletedCount).to.equal(0);
+    });
+
+    it('should not remove a current verified key', async () => {
+      key.userIds[0].verified = true;
+      await publicKey._persisKey(key);
+      const r = await publicKey._purgeOldUnverified();
+      expect(r.deletedCount).to.equal(0);
+    });
+
+    it('should not remove an old verified key', async () => {
+      key.uploaded.setDate(key.uploaded.getDate() - 31);
+      key.userIds[0].verified = true;
+      await publicKey._persisKey(key);
+      const r = await publicKey._purgeOldUnverified();
+      expect(r.deletedCount).to.equal(0);
+    });
+
+    it('should remove an old unverified key', async () => {
+      key.uploaded.setDate(key.uploaded.getDate() - 31);
+      await publicKey._persisKey(key);
+      const r = await publicKey._purgeOldUnverified();
+      expect(r.deletedCount).to.equal(1);
+    });
+  });
+
   describe('verify', () => {
     it('should update the document', async () => {
       await publicKey.put({publicKeyArmored, primaryEmail, origin});
