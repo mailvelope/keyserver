@@ -94,6 +94,7 @@ describe('PGP Unit Tests', () => {
       expect(params.userIds[0].name).to.equal('safewithme testuser');
       expect(params.userIds[0].email).to.equal('safewithme.testuser@gmail.com');
       expect(params.created.getTime()).to.exist;
+      expect(params.uploaded.getTime()).to.exist;
       expect(params.algorithm).to.equal('rsa_encrypt_sign');
       expect(params.keySize).to.equal(2048);
       expect(params.publicKeyArmored).to.equal(key1Armored);
@@ -105,6 +106,7 @@ describe('PGP Unit Tests', () => {
       expect(params.fingerprint).to.equal('e3317db04d3958fd5f662c37b8e4105cc9dedc77');
       expect(params.userIds.length).to.equal(1);
       expect(params.created.getTime()).to.exist;
+      expect(params.uploaded.getTime()).to.exist;
       expect(params.algorithm).to.equal('rsa_encrypt_sign');
       expect(params.keySize).to.equal(4096);
       expect(params.publicKeyArmored).to.equal(pgp.trimKey(key2Armored));
@@ -116,6 +118,7 @@ describe('PGP Unit Tests', () => {
       expect(params.fingerprint).to.equal('04062c70b446e33016e219a74001a127a90de8e1');
       expect(params.userIds.length).to.equal(4);
       expect(params.created.getTime()).to.exist;
+      expect(params.uploaded.getTime()).to.exist;
       expect(params.algorithm).to.equal('rsa_encrypt_sign');
       expect(params.keySize).to.equal(4096);
       expect(params.publicKeyArmored).to.equal(pgp.trimKey(key3Armored));
