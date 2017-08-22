@@ -38,6 +38,10 @@ module.exports = {
       name: process.env.SENDER_NAME,
       email: process.env.SENDER_EMAIL
     }
+  },
+
+  publicKey: {
+    purgeTimeInDays: process.env.PUBLIC_KEY_PURGE_TIME || 30
   }
 
 };

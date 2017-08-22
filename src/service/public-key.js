@@ -17,6 +17,7 @@
 
 'use strict';
 
+const config = require('config');
 const util = require('./util');
 const tpl = require('../email/templates.json');
 
@@ -66,6 +67,8 @@ class PublicKey {
    * @yield {undefined}
    */
   async put({publicKeyArmored, primaryEmail, origin}) {
+    // lazily purge old/unverified keys on every key upload
+    await this._purgeOldUnverified();
     // parse key block
     const key = this._pgp.parseKey(publicKeyArmored);
     // check for existing verfied key by id or email addresses
@@ -77,6 +80,26 @@ class PublicKey {
     await this._persisKey(key);
     // send mails to verify user ids (send only one if primary email is provided)
     await this._sendVerifyEmail(key, primaryEmail, origin);
+  }
+
+  /**
+   * Delete all keys where no user id has been verified after x days or where the
+   * 'uploaded' attribute is yet not available (to support legacy key documents).
+   * @yield {undefined}
+   */
+  async _purgeOldUnverified() {
+    // create date in the past to compare with
+    const xDaysAgo = new Date();
+    xDaysAgo.setDate(xDaysAgo.getDate() - config.publicKey.purgeTimeInDays);
+    // remove unverified keys older than x days (or no 'uploaded' attribute)
+    const query = {
+      'userIds.verified': {$ne: true},
+      $or: [
+        {uploaded: {$exists: false}},
+        {uploaded: {$lt: xDaysAgo}}
+      ]
+    };
+    return this._mongo.remove(query, DB_TYPE);
   }
 
   /**
