@@ -37,12 +37,12 @@ class REST {
    * @param  {Object} ctx   The koa request/response context
    */
   async create(ctx) {
-    const {publicKeyArmored, primaryEmail} = ctx.request.body;
-    if (!publicKeyArmored || (primaryEmail && !util.isEmail(primaryEmail))) {
+    const {publicKeyArmored} = ctx.request.body;
+    if (!publicKeyArmored) {
       ctx.throw(400, 'Invalid request!');
     }
     const origin = util.origin(ctx);
-    await this._publicKey.put({publicKeyArmored, primaryEmail, origin});
+    await this._publicKey.put({publicKeyArmored, origin});
     ctx.body = 'Upload successful. Check your inbox to verify your email address.';
     ctx.status = 201;
   }

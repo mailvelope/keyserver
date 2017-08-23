@@ -68,26 +68,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
         .end(done);
       });
 
-      it('should return 400 for an invalid primaryEmail', done => {
-        request(app.listen())
-        .post('/api/v1/key')
-        .send({publicKeyArmored, primaryEmail: 'foo'})
-        .expect(400)
-        .end(done);
-      });
-
-      it('should return 201 with primaryEmail', done => {
-        request(app.listen())
-        .post('/api/v1/key')
-        .send({publicKeyArmored, primaryEmail})
-        .expect(201)
-        .end(() => {
-          expect(emailParams).to.exist;
-          done();
-        });
-      });
-
-      it('should return 201 without primaryEmail', done => {
+      it('should return 201', done => {
         request(app.listen())
         .post('/api/v1/key')
         .send({publicKeyArmored})
@@ -103,7 +84,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       beforeEach(done => {
         request(app.listen())
         .post('/api/v1/key')
-        .send({publicKeyArmored, primaryEmail})
+        .send({publicKeyArmored})
         .expect(201)
         .end(done);
       });
@@ -134,7 +115,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       beforeEach(done => {
         request(app.listen())
         .post('/api/v1/key')
-        .send({publicKeyArmored, primaryEmail})
+        .send({publicKeyArmored})
         .expect(201)
         .end(done);
       });
@@ -196,7 +177,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       beforeEach(done => {
         request(app.listen())
         .post('/api/v1/key')
-        .send({publicKeyArmored, primaryEmail})
+        .send({publicKeyArmored})
         .expect(201)
         .end(done);
       });
@@ -234,7 +215,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       beforeEach(done => {
         request(app.listen())
         .post('/api/v1/key')
-        .send({publicKeyArmored, primaryEmail})
+        .send({publicKeyArmored})
         .expect(201)
         .end(() => {
           request(app.listen())
