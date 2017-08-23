@@ -124,13 +124,11 @@ POST /api/v1/key
 
 ```json
 {
-  "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----",
-  "primaryEmail": "user@example.com"
+  "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----"
 }
 ```
 
 * **publicKeyArmored**: The ascii armored public PGP key to be uploaded
-* **primaryEmail (optional)**: The ascii armored block is parsed to check for user ids, so this parameter is purely optional. Normally a verification email is sent to every user id found in the pgp key. To prevent this behaviour, user agents can specify the user's primary email address to send out only one email.
 
 
 ### Verify uploaded key (via link in email)
