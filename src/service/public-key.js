@@ -36,6 +36,7 @@ const tpl = require('../email/templates.json');
  *     }
  *   ],
  *   created: Sat Oct 17 2015 12:17:03 GMT+0200 (CEST), // key creation time as JavaScript Date
+ *   uploaded: Sat Oct 17 2015 12:17:03 GMT+0200 (CEST), // time of key upload as JavaScript Date
  *   algorithm: 'rsa_encrypt_sign', // primary key alogrithm
  *   keySize: 4096, // key length in bits
  *   publicKeyArmored: '-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----'
