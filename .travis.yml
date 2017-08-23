@@ -4,7 +4,7 @@ node_js:
   - "8"
 
 env:
-  - NODE_ENV=integration MONGO_URI=127.0.0.1:27017/test_db MONGO_USER=travis MONGO_PASS=test
+  - NODE_ENV=integration LOG_LEVEL=warn MONGO_URI=127.0.0.1:27017/test_db MONGO_USER=travis MONGO_PASS=test
 
 notifications:
   email:
