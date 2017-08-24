@@ -71,10 +71,10 @@ class PublicKey {
     await this._purgeOldUnverified();
     // parse key block
     const key = this._pgp.parseKey(publicKeyArmored);
-    // check for existing verfied key by id or email addresses
-    const verified = await this.getVerified(key);
+    // check for existing verified key with same id
+    const verified = await this.getVerified({keyId: key.keyId});
     if (verified) {
-      util.throw(304, 'Key for this user already exists');
+      util.throw(304, 'Key with this key id already exists');
     }
     // store key in database
     await this._persisKey(key);
@@ -144,16 +144,21 @@ class PublicKey {
     if (!key) {
       util.throw(404, 'User id not found');
     }
-    // check if user ids of this key have already been verified in another key
-    const verified = await this.getVerified(key);
-    if (verified && verified.keyId !== keyId) {
-      util.throw(304, 'Key for this user already exists');
-    }
+    await this._removeKeysWithSameEmail(key, nonce);
     // flag the user id as verified
     await this._mongo.update(query, {
       'userIds.$.verified': true,
       'userIds.$.nonce': null
     }, DB_TYPE);
+  }
+
+  async _removeKeysWithSameEmail({keyId, userIds}, nonce) {
+    const {email} = userIds.find(uid => uid.nonce === nonce);
+    const keys = await this._mongo.list({
+      keyId: {$ne: keyId},
+      'userIds.email': email
+    }, DB_TYPE);
+    await Promise.all(keys.map(({_id}) => this._mongo.remove({_id}, DB_TYPE)));
   }
 
   /**

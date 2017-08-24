@@ -23,7 +23,6 @@ describe('Public Key Integration Tests', function() {
 
   const DB_TYPE = 'publickey';
   const primaryEmail = 'test1@example.com';
-  const primaryEmail2 = 'test2@example.com';
   const origin = {host: 'localhost', protocol: 'http'};
 
   before(async () => {
@@ -94,6 +93,13 @@ describe('Public Key Integration Tests', function() {
       } catch (e) {
         expect(e.status).to.equal(304);
       }
+    });
+
+    it('should work for a key with an existing/verified email address to allow key update without an extra delete step in between', async () => {
+      await publicKey.put({publicKeyArmored, origin});
+      await publicKey.verify(mailsSent[1].params);
+      await publicKey.put({publicKeyArmored: publicKeyArmored2, origin});
+      expect(mailsSent.length).to.equal(5);
     });
   });
 
@@ -166,23 +172,28 @@ describe('Public Key Integration Tests', function() {
       expect(gotten.userIds[1].nonce).to.exist;
     });
 
-    it('should not verify a second key for already verified user id of another key', async () => {
+    it('should verify a second key for an already verified user id and delete the old key', async () => {
       await publicKey.put({publicKeyArmored, origin});
-      expect(mailsSent.length).to.equal(4);
+      await publicKey.verify(mailsSent[1].params);
+      let firstKey = await publicKey.getVerified({keyId: mailsSent[1].params.keyId});
+      expect(firstKey).to.exist;
       await publicKey.put({publicKeyArmored: publicKeyArmored2, origin});
-      expect(mailsSent.length).to.equal(5);
       await publicKey.verify(mailsSent[4].params);
+      firstKey = await publicKey.getVerified({keyId: mailsSent[1].params.keyId});
+      expect(firstKey).to.not.exist;
+      const secondKey = await publicKey.getVerified({keyId: mailsSent[4].params.keyId});
+      expect(secondKey).to.exist;
+    });
 
-      try {
-        await publicKey.verify(mailsSent[0].params);
-        expect(true).to.be.false;
-      } catch (e) {
-        expect(e.status).to.equal(304);
-      }
-      const gotten = await mongo.get({keyId: mailsSent[0].params.keyId}, DB_TYPE);
-      expect(gotten.userIds[1].email).to.equal(primaryEmail2);
-      expect(gotten.userIds[1].verified).to.be.false;
-      expect(gotten.userIds[1].nonce).to.equal(mailsSent[1].params.nonce);
+    it('should delete other keys with the same user id when verifying', async () => {
+      await publicKey.put({publicKeyArmored, origin});
+      await publicKey.put({publicKeyArmored: publicKeyArmored2, origin});
+      expect(mailsSent[1].to).to.equal(mailsSent[4].to);
+      await publicKey.verify(mailsSent[1].params);
+      const firstKey = await publicKey.getVerified({keyId: mailsSent[1].params.keyId});
+      expect(firstKey).to.exist;
+      const secondKey = await mongo.get({keyId: mailsSent[4].params.keyId}, DB_TYPE);
+      expect(secondKey).to.not.exist;
     });
 
     it('should be able to verify multiple user ids', async () => {
