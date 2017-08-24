@@ -36,6 +36,7 @@ const tpl = require('../email/templates.json');
  *     }
  *   ],
  *   created: Sat Oct 17 2015 12:17:03 GMT+0200 (CEST), // key creation time as JavaScript Date
+ *   uploaded: Sat Oct 17 2015 12:17:03 GMT+0200 (CEST), // time of key upload as JavaScript Date
  *   algorithm: 'rsa_encrypt_sign', // primary key alogrithm
  *   keySize: 4096, // key length in bits
  *   publicKeyArmored: '-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----'
@@ -62,11 +63,10 @@ class PublicKey {
   /**
    * Persist a new public key
    * @param {String} publicKeyArmored   The ascii armored pgp key block
-   * @param {String} primaryEmail       (optional) The key's primary email address
    * @param {Object} origin             Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
    * @yield {undefined}
    */
-  async put({publicKeyArmored, primaryEmail, origin}) {
+  async put({publicKeyArmored, origin}) {
     // lazily purge old/unverified keys on every key upload
     await this._purgeOldUnverified();
     // parse key block
@@ -79,7 +79,7 @@ class PublicKey {
     // store key in database
     await this._persisKey(key);
     // send mails to verify user ids (send only one if primary email is provided)
-    await this._sendVerifyEmail(key, primaryEmail, origin);
+    await this._sendVerifyEmail(key, origin);
   }
 
   /**
@@ -121,17 +121,10 @@ class PublicKey {
    * Send verification emails to the public keys user ids for verification.
    * If a primary email address is provided only one email will be sent.
    * @param {Array}  userIds            user id documents containg the verification nonces
-   * @param {string} primaryEmail       the public key's primary email address
    * @param {Object} origin             the server's origin (required for email links)
    * @yield {undefined}
    */
-  async _sendVerifyEmail({userIds, keyId, publicKeyArmored}, primaryEmail, origin) {
-    // check for primary email (send only one email)
-    const primaryUserId = userIds.find(uid => uid.email === primaryEmail);
-    if (primaryUserId) {
-      userIds = [primaryUserId];
-    }
-    // send emails
+  async _sendVerifyEmail({userIds, keyId, publicKeyArmored}, origin) {
     for (const userId of userIds) {
       userId.publicKeyArmored = publicKeyArmored; // set key for encryption
       await this._email.send({template: tpl.verifyKey, userId, keyId, origin});

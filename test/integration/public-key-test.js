@@ -73,30 +73,23 @@ describe('Public Key Integration Tests', function() {
   });
 
   describe('put', () => {
-    it('should persist key and send verification email with primaryEmail', async () => {
-      await publicKey.put({publicKeyArmored, primaryEmail, origin});
-      expect(mailsSent.length).to.equal(1);
-      expect(mailsSent[0].to).to.equal(primaryEmail);
-      expect(mailsSent[0].params.keyId).to.exist;
-      expect(mailsSent[0].params.nonce).to.exist;
-    });
-    it('should persist key and send verification email without primaryEmail', async () => {
+    it('should persist key and send verification email', async () => {
       await publicKey.put({publicKeyArmored, origin});
       expect(mailsSent.length).to.equal(4);
     });
 
     it('should work twice if not yet verified', async () => {
-      await publicKey.put({publicKeyArmored, primaryEmail, origin});
-      expect(mailsSent.length).to.equal(1);
-      await publicKey.put({publicKeyArmored, primaryEmail, origin});
-      expect(mailsSent.length).to.equal(2);
+      await publicKey.put({publicKeyArmored, origin});
+      expect(mailsSent.length).to.equal(4);
+      await publicKey.put({publicKeyArmored, origin});
+      expect(mailsSent.length).to.equal(8);
     });
 
     it('should throw 304 if key already exists', async () => {
-      await publicKey.put({publicKeyArmored, primaryEmail, origin});
+      await publicKey.put({publicKeyArmored, origin});
       await publicKey.verify(mailsSent[0].params);
       try {
-        await publicKey.put({publicKeyArmored, primaryEmail, origin});
+        await publicKey.put({publicKeyArmored, origin});
         expect(false).to.be.true;
       } catch (e) {
         expect(e.status).to.equal(304);
@@ -147,7 +140,7 @@ describe('Public Key Integration Tests', function() {
 
   describe('verify', () => {
     it('should update the document', async () => {
-      await publicKey.put({publicKeyArmored, primaryEmail, origin});
+      await publicKey.put({publicKeyArmored, origin});
       const emailParams = mailsSent[0].params;
       await publicKey.verify(emailParams);
       const gotten = await mongo.get({keyId: emailParams.keyId}, DB_TYPE);
@@ -158,7 +151,7 @@ describe('Public Key Integration Tests', function() {
     });
 
     it('should not find the document', async () => {
-      await publicKey.put({publicKeyArmored, primaryEmail, origin});
+      await publicKey.put({publicKeyArmored, origin});
       const emailParams = mailsSent[0].params;
       try {
         await publicKey.verify({keyId: emailParams.keyId, nonce: 'fake_nonce'});
@@ -174,11 +167,11 @@ describe('Public Key Integration Tests', function() {
     });
 
     it('should not verify a second key for already verified user id of another key', async () => {
-      await publicKey.put({publicKeyArmored, primaryEmail: primaryEmail2, origin});
-      expect(mailsSent.length).to.equal(1);
-      await publicKey.put({publicKeyArmored: publicKeyArmored2, primaryEmail: primaryEmail2, origin});
-      expect(mailsSent.length).to.equal(2);
-      await publicKey.verify(mailsSent[1].params);
+      await publicKey.put({publicKeyArmored, origin});
+      expect(mailsSent.length).to.equal(4);
+      await publicKey.put({publicKeyArmored: publicKeyArmored2, origin});
+      expect(mailsSent.length).to.equal(5);
+      await publicKey.verify(mailsSent[4].params);
 
       try {
         await publicKey.verify(mailsSent[0].params);
@@ -189,7 +182,7 @@ describe('Public Key Integration Tests', function() {
       const gotten = await mongo.get({keyId: mailsSent[0].params.keyId}, DB_TYPE);
       expect(gotten.userIds[1].email).to.equal(primaryEmail2);
       expect(gotten.userIds[1].verified).to.be.false;
-      expect(gotten.userIds[1].nonce).to.equal(mailsSent[0].params.nonce);
+      expect(gotten.userIds[1].nonce).to.equal(mailsSent[1].params.nonce);
     });
 
     it('should be able to verify multiple user ids', async () => {
@@ -213,7 +206,7 @@ describe('Public Key Integration Tests', function() {
     describe('should find a verified key', () => {
       beforeEach(async () => {
         key = pgp.parseKey(publicKeyArmored);
-        await publicKey.put({publicKeyArmored, primaryEmail, origin});
+        await publicKey.put({publicKeyArmored, origin});
         await publicKey.verify(mailsSent[0].params);
       });
 
@@ -281,7 +274,7 @@ describe('Public Key Integration Tests', function() {
     let emailParams;
 
     beforeEach(async () => {
-      await publicKey.put({publicKeyArmored, primaryEmail, origin});
+      await publicKey.put({publicKeyArmored, origin});
       emailParams = mailsSent[0].params;
     });
 
@@ -337,24 +330,24 @@ describe('Public Key Integration Tests', function() {
     let keyId;
 
     beforeEach(async () => {
-      await publicKey.put({publicKeyArmored, primaryEmail, origin});
+      await publicKey.put({publicKeyArmored, origin});
       keyId = mailsSent[0].params.keyId;
     });
 
     it('should work for verified key', async () => {
       await publicKey.verify(mailsSent[0].params);
       await publicKey.requestRemove({keyId, origin});
-      expect(mailsSent.length).to.equal(5);
+      expect(mailsSent.length).to.equal(8);
     });
 
     it('should work for unverified key', async () => {
       await publicKey.requestRemove({keyId, origin});
-      expect(mailsSent.length).to.equal(5);
+      expect(mailsSent.length).to.equal(8);
     });
 
     it('should work by email address', async () => {
       await publicKey.requestRemove({email: primaryEmail, origin});
-      expect(mailsSent.length).to.equal(2);
+      expect(mailsSent.length).to.equal(5);
     });
 
     it('should throw 404 for no key', async () => {
@@ -372,13 +365,13 @@ describe('Public Key Integration Tests', function() {
     let keyId;
 
     beforeEach(async () => {
-      await publicKey.put({publicKeyArmored, primaryEmail, origin});
+      await publicKey.put({publicKeyArmored, origin});
       keyId = mailsSent[0].params.keyId;
       await publicKey.requestRemove({keyId, origin});
     });
 
     it('should remove key', async () => {
-      await publicKey.verifyRemove(mailsSent[1].params);
+      await publicKey.verifyRemove(mailsSent[4].params);
       const key = await mongo.get({keyId}, DB_TYPE);
       expect(key).to.not.exist;
     });
