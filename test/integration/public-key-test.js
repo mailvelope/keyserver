@@ -171,7 +171,7 @@ describe('Public Key Integration Tests', function() {
       expect(mailsSent.length).to.equal(4);
       await publicKey.put({publicKeyArmored: publicKeyArmored2, origin});
       expect(mailsSent.length).to.equal(5);
-      await publicKey.verify(mailsSent[1].params);
+      await publicKey.verify(mailsSent[4].params);
 
       try {
         await publicKey.verify(mailsSent[0].params);
@@ -182,7 +182,7 @@ describe('Public Key Integration Tests', function() {
       const gotten = await mongo.get({keyId: mailsSent[0].params.keyId}, DB_TYPE);
       expect(gotten.userIds[1].email).to.equal(primaryEmail2);
       expect(gotten.userIds[1].verified).to.be.false;
-      expect(gotten.userIds[1].nonce).to.equal(mailsSent[0].params.nonce);
+      expect(gotten.userIds[1].nonce).to.equal(mailsSent[1].params.nonce);
     });
 
     it('should be able to verify multiple user ids', async () => {
