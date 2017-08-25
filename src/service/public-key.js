@@ -91,11 +91,10 @@ class PublicKey {
     const xDaysAgo = new Date();
     xDaysAgo.setDate(xDaysAgo.getDate() - config.publicKey.purgeTimeInDays);
     // remove unverified keys older than x days (or no 'uploaded' attribute)
-    const query = {
+    return this._mongo.remove({
       'userIds.verified': {$ne: true},
       uploaded: {$lt: xDaysAgo}
-    };
-    return this._mongo.remove(query, DB_TYPE);
+    }, DB_TYPE);
   }
 
   /**
