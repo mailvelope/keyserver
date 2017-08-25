@@ -152,12 +152,10 @@ class PublicKey {
   }
 
   async _removeKeysWithSameEmail({keyId, userIds}, nonce) {
-    const {email} = userIds.find(uid => uid.nonce === nonce);
-    const keys = await this._mongo.list({
+    return this._mongo.remove({
       keyId: {$ne: keyId},
-      'userIds.email': email
+      'userIds.email': userIds.find(u => u.nonce === nonce).email
     }, DB_TYPE);
-    await Promise.all(keys.map(({_id}) => this._mongo.remove({_id}, DB_TYPE)));
   }
 
   /**
