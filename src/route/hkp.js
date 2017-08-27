@@ -17,6 +17,7 @@
 
 'use strict';
 
+const parse = require('co-body');
 const util = require('../service/util');
 
 /**
@@ -37,7 +38,7 @@ class HKP {
    * @param  {Object} ctx   The koa request/response context
    */
   async add(ctx) {
-    const publicKeyArmored = ctx.request.body.keytext;
+    const {keytext: publicKeyArmored} = await parse.form(ctx, {limit: '1mb'});
     if (!publicKeyArmored) {
       ctx.throw(400, 'Invalid request!');
     }

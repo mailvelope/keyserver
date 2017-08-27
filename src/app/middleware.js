@@ -19,7 +19,6 @@
 
 const log = require('winston');
 const config = require('config');
-const koaBody = require('koa-body');
 const util = require('../service/util');
 
 exports.upgradeToHTTPS = async function(ctx, next) {
@@ -50,11 +49,6 @@ exports.setHTTPResponseHeaders = async function(ctx, next) {
   ctx.set('Connection', 'keep-alive');
   await next();
 };
-
-exports.parseBody = () => koaBody({
-  multipart: true,
-  formLimit: '1mb'
-});
 
 exports.logUnknownError = function(error, ctx) {
   if (error.status) {
