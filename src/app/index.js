@@ -45,7 +45,6 @@ router.del('/api/v1/key', ctx => rest.remove(ctx));
 app.on('error', middleware.logUnknownError);
 app.use(middleware.upgradeToHTTPS);
 app.use(middleware.setHTTPResponseHeaders);
-app.use(middleware.parseBody());
 app.use(router.routes());
 app.use(router.allowedMethods());
 app.use(serve(`${__dirname}/../static`));
