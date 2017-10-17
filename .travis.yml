@@ -10,7 +10,7 @@ services:
   - mongodb
 
 before_script:
-  - mongo test_db --eval 'db.addUser("travis", "test");'
+  - mongo test_db --eval 'db.createUser({user:"travis",pwd:"test",roles:["readWrite"]});'
 
 before_deploy:
   - npm run release
