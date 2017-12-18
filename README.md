@@ -89,17 +89,17 @@ GET /api/v1/key?email=user@example.com
     {
       "name": "Jon Smith",
       "email": "jon@smith.com",
-      "verified": "true"
+      "verified": true
     },
     {
       "name": "Jon Smith",
       "email": "jon@organization.com",
-      "verified": "false"
+      "verified": false
     }
   ],
   "created": "Sat Oct 17 2015 12:17:03 GMT+0200 (CEST)",
   "algorithm": "rsa_encrypt_sign",
-  "keySize": "4096",
+  "keySize": 4096,
   "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----"
 }
 ```
