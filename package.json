@@ -25,7 +25,7 @@
     "config": "^1.20.4",
     "koa": "^2.3.0",
     "koa-router": "^7.2.1",
-    "koa-static": "^4.0.1",
+    "koa-static": "^5.0.0",
     "mongodb": "^2.2.31",
     "nodemailer": "^2.4.2",
     "nodemailer-openpgp": "^1.0.2",
