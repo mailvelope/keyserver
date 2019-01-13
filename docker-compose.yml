@@ -1,0 +1,22 @@
+version: '3.3'
+
+services:
+  db:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: keyserver
+      MONGO_INITDB_ROOT_PASSWORD: keyserver
+      MONGO_INITDB_DATABASE: keyserver
+  keyserver:
+    image: jaxxstorm/mailvelope-keyserver:latest
+    env_file:
+      - .smtp.env
+    environment:
+      MONGO_URI: db:27017/keyserver?authSource=admin
+      MONGO_USER: keyserver
+      MONGO_PASS: keyserver
+      PORT: 8080
+    depends_on:
+      - "db"
+    ports:
+      - "8080:8080"

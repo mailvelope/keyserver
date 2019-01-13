@@ -39,3 +39,5 @@ node_modules
 package-lock.json
 
 config/development.js
+
+.*.env
