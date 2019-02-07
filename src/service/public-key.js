@@ -70,7 +70,7 @@ class PublicKey {
     // lazily purge old/unverified keys on every key upload
     await this._purgeOldUnverified();
     // parse key block
-    const key = this._pgp.parseKey(publicKeyArmored);
+    const key = await this._pgp.parseKey(publicKeyArmored);
     // check for existing verified key with same id
     const verified = await this.getVerified({keyId: key.keyId});
     if (verified) {

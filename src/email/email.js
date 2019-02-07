@@ -37,7 +37,7 @@ class Email {
    * @param {boolean} pgp        (optional) if outgoing emails are encrypted to the user's public key.
    */
   init({host, port = 465, auth, tls, starttls, pgp, sender}) {
-    this._transport = nodemailer.createTransport({
+    const transporter = nodemailer.createTransport({
       host,
       port,
       auth,

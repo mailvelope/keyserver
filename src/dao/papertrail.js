@@ -18,19 +18,36 @@
 'use strict';
 
 const log = require('winston');
+const {SPLAT} = require('triple-beam');
 const config = require('config');
 require('winston-papertrail');
 
 log.exitOnError = false;
 log.level = config.log.level;
 
+
+// Reformat logging text, due to deprecated logger usage
+const formatLogs = log.format(info => {
+  info.message = `${info.message} -> ${info[SPLAT].join(', ')}`;
+  return info;
+});
+
 exports.init = function({host, port}) {
   if (!host || !port) {
+    if (process.env.NODE_ENV !== 'production') {
+      log.add(new log.transports.Console({
+        format: log.format.combine(
+          formatLogs(),
+          log.format.simple()
+        )
+      }));
+    }
     return;
   }
-  log.add(log.transports.Papertrail, {
+  log.add(new log.transports.Papertrail({
+    format: formatLogs(),
     level: config.log.level,
     host,
     port
-  });
+  }));
 };
