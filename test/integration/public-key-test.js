@@ -12,7 +12,7 @@ const templates = require('../../src/email/templates');
 describe('Public Key Integration Tests', function() {
   this.timeout(20000);
 
-  let sandbox;
+  const sandbox = sinon.createSandbox();
   let publicKey;
   let email;
   let mongo;
@@ -35,8 +35,6 @@ describe('Public Key Integration Tests', function() {
   });
 
   beforeEach(async () => {
-    sandbox = sinon.sandbox.create();
-
     await mongo.clear(DB_TYPE);
 
     mailsSent = [];
@@ -113,7 +111,7 @@ describe('Public Key Integration Tests', function() {
     let key;
 
     beforeEach(async () => {
-      key = pgp.parseKey(publicKeyArmored);
+      key = await pgp.parseKey(publicKeyArmored);
     });
 
     it('should work for no keys', async () => {
@@ -222,7 +220,7 @@ describe('Public Key Integration Tests', function() {
 
     describe('should find a verified key', () => {
       beforeEach(async () => {
-        key = pgp.parseKey(publicKeyArmored);
+        key = await pgp.parseKey(publicKeyArmored);
         await publicKey.put({publicKeyArmored, origin});
         await publicKey.verify(mailsSent[0].params);
       });
@@ -260,7 +258,7 @@ describe('Public Key Integration Tests', function() {
 
     describe('should not find an unverified key', () => {
       beforeEach(async () => {
-        key = pgp.parseKey(publicKeyArmored);
+        key = await pgp.parseKey(publicKeyArmored);
         key.userIds[0].verified = false;
         await mongo.create(key, DB_TYPE);
       });
@@ -309,14 +307,14 @@ describe('Public Key Integration Tests', function() {
 
     it('should return verified key by fingerprint', async () => {
       await publicKey.verify(emailParams);
-      const fingerprint = pgp.parseKey(publicKeyArmored).fingerprint;
+      const fingerprint = (await pgp.parseKey(publicKeyArmored)).fingerprint;
       const key = await publicKey.get({fingerprint});
       expect(key.publicKeyArmored).to.exist;
     });
 
     it('should return verified key by fingerprint (uppercase)', async () => {
       await publicKey.verify(emailParams);
-      const fingerprint = pgp.parseKey(publicKeyArmored).fingerprint.toUpperCase();
+      const fingerprint = (await pgp.parseKey(publicKeyArmored)).fingerprint.toUpperCase();
       const key = await publicKey.get({fingerprint});
       expect(key.publicKeyArmored).to.exist;
     });

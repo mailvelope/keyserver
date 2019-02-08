@@ -37,7 +37,7 @@ class Email {
    * @param {boolean} pgp        (optional) if outgoing emails are encrypted to the user's public key.
    */
   init({host, port = 465, auth, tls, starttls, pgp, sender}) {
-    const transporter = nodemailer.createTransport({
+    this._transporter = nodemailer.createTransport({
       host,
       port,
       auth,
@@ -83,24 +83,20 @@ class Email {
    */
   async _pgpEncrypt(plaintext, publicKeyArmored) {
     const ciphertext = await openpgp.encrypt({
-      data: plaintext,
-      publicKeys: openpgp.key.readArmored(publicKeyArmored).keys,
+      message: openpgp.message.fromText(plaintext),
+      publicKeys: (await openpgp.key.readArmored(publicKeyArmored)).keys,
     });
     return ciphertext.data;
   }
 
   /**
    * A generic method to send an email message via nodemailer.
-   * @param {Object} from      sender object: { name:'Jon Smith', address:'j@smith.com' }
-   * @param {Object} to        recipient object: { name:'Jon Smith', address:'j@smith.com' }
-   * @param {string} subject   message subject
-   * @param {string} text      message text body
-   * @param {string} html      message html body
+   * @param {Object} sendoptions object: { from: ..., to: ..., subject: ..., text: ... }
    * @yield {Object}           reponse object containing SMTP info
    */
   async _sendHelper(sendOptions) {
     try {
-      const info = await this._transport.sendMail(sendOptions);
+      const info = await this._transporter.sendMail(sendOptions);
       if (!this._checkResponse(info)) {
         log.warn('email', 'Message may not have been received.', info);
       }

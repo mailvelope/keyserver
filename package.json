@@ -14,7 +14,7 @@
     "test": "npm run test:lint && npm run test:unit && npm run test:integration",
     "test:lint": "eslint config src test *.js",
     "test:unit": "mocha --opts test/mocha.opts ./test/unit/",
-    "test:integration": "mocha --opts test/mocha.opts ./test/integration",
+    "test:integration": "mocha --exit --opts test/mocha.opts ./test/integration",
     "release": "npm run release:install && npm run release:archive",
     "release:install": "rm -rf node_modules/ && npm install --production",
     "release:archive": "zip -rq release.zip package.json package-lock.json node_modules/ *.js src/ config/"
@@ -23,8 +23,6 @@
     "addressparser": "^1.0.1",
     "co-body": "^6.0.0",
     "config": "^3.0.1",
-    "ejs": "^2.6.1",
-    "email-templates": "^5.0.3",
     "koa": "^2.3.0",
     "koa-router": "^7.2.1",
     "koa-static": "^5.0.0",
@@ -36,14 +34,10 @@
   },
   "devDependencies": {
     "chai": "^4.1.1",
+    "chai-as-promised": "^7.1.1",
     "eslint": "^5.13.0",
     "mocha": "^5.2.0",
     "sinon": "^7.2.3",
     "supertest": "^3.0.0"
-  },
-  "greenkeeper": {
-    "ignore": [
-      "sinon"
-    ]
   }
 }

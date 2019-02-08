@@ -8,11 +8,10 @@ describe('Mongo Integration Tests', function() {
   this.timeout(20000);
 
   const DB_TYPE = 'apple';
-  let sandbox;
+  const sandbox = sinon.createSandbox();
   let mongo;
 
   before(async () => {
-    sandbox = sinon.sandbox.create();
     sandbox.stub(log);
 
     mongo = new Mongo();

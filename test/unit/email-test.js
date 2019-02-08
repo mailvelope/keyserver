@@ -5,7 +5,7 @@ const Email = require('../../src/email/email');
 const nodemailer = require('nodemailer');
 
 describe('Email Unit Tests', () => {
-  let sandbox;
+  const sandbox = sinon.createSandbox();
   let email;
   let sendFnStub;
 
@@ -37,9 +37,7 @@ describe('Email Unit Tests', () => {
   };
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
-
-    sendFnStub = sinon.stub();
+    sendFnStub = sandbox.stub();
     sandbox.stub(nodemailer, 'createTransport').returns({
       sendMail: sendFnStub
     });

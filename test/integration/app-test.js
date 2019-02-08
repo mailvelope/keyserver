@@ -11,7 +11,7 @@ const log = require('winston');
 describe('Koa App (HTTP Server) Integration Tests', function() {
   this.timeout(20000);
 
-  let sandbox;
+  const sandbox = sinon.createSandbox();
   let app;
   let mongo;
   let sendEmailStub;
@@ -24,8 +24,6 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
   const fingerprint = '4277257930867231CE393FB8DBC0B3D92B1B86E9';
 
   before(async () => {
-    sandbox = sinon.sandbox.create();
-
     sandbox.stub(log);
 
     publicKeyArmored = fs.readFileSync(`${__dirname}/../key1.asc`, 'utf8');
