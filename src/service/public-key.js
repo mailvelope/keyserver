@@ -43,6 +43,7 @@ const tpl = require('../email/templates');
  * }
  */
 const DB_TYPE = 'publickey';
+const KEY_STATUS_VALID = 3;
 
 /**
  * A service that handlers PGP public keys queries to the database
@@ -62,29 +63,47 @@ class PublicKey {
 
   /**
    * Persist a new public key
+   * @param {Array} emails              (optional) The emails to upload/update
    * @param {String} publicKeyArmored   The ascii armored pgp key block
    * @param {Object} origin             Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
-   * @yield {undefined}
+   * @return {Promise}
    */
-  async put({publicKeyArmored, origin}) {
+  async put({emails, publicKeyArmored, origin}) {
     // lazily purge old/unverified keys on every key upload
     await this._purgeOldUnverified();
     // parse key block
     const key = await this._pgp.parseKey(publicKeyArmored);
+    // if emails array is empty, all userIds of the key will be submitted
+    if (emails.length) {
+      // keep submitted user IDs only
+      key.userIds = key.userIds.filter(({email}) => emails.includes(email));
+      if (key.userIds.length !== emails.length) {
+        util.throw(400, 'Provided email address does not match a valid user ID of the key');
+      }
+    }
     // check for existing verified key with same id
     const verified = await this.getVerified({keyId: key.keyId});
     if (verified) {
-      util.throw(304, 'Key with this key id already exists');
+      key.userIds = await this._mergeUsers(verified.userIds, key.userIds, key.publicKeyArmored);
+      // reduce new key to verified user IDs
+      const filteredPublicKeyArmored = await this._pgp.filterKeyByUserIds(key.userIds.filter(({verified}) => verified), key.publicKeyArmored);
+      // update verified key with new key
+      key.publicKeyArmored = await this._pgp.updateKey(verified.publicKeyArmored, filteredPublicKeyArmored);
+    } else {
+      key.userIds = key.userIds.filter(userId => userId.status === KEY_STATUS_VALID);
+      await this._addKeyArmored(key.userIds, key.publicKeyArmored);
+      // new key, set armored to null
+      key.publicKeyArmored = null;
     }
-    // store key in database
-    await this._persisKey(key);
-    // send mails to verify user ids (send only one if primary email is provided)
+    // send mails to verify user ids
     await this._sendVerifyEmail(key, origin);
+    // store key in database
+    await this._persistKey(key);
   }
 
   /**
    * Delete all keys where no user id has been verified after x days.
-   * @yield {undefined}
+   * @return {Promise}
    */
   async _purgeOldUnverified() {
     // create date in the past to compare with
@@ -98,16 +117,73 @@ class PublicKey {
   }
 
   /**
+   * Merge existing and new user IDs
+   * @param  {Array} existingUsers     source user IDs
+   * @param  {Array} newUsers          new user IDs
+   * @param  {String} publicKeyArmored armored key block of new user IDs
+   * @return {Array}                   merged user IDs
+   */
+  async _mergeUsers(existingUsers, newUsers, publicKeyArmored) {
+    const result = [];
+    // existing verified valid or revoked users
+    const verifiedUsers = existingUsers.filter(userId => userId.verified);
+    // valid new users which are not yet verified
+    const validUsers = newUsers.filter(userId => userId.status === KEY_STATUS_VALID && !this._includeEmail(verifiedUsers, userId));
+    // pending users are not verified, not newly submitted
+    const pendingUsers = existingUsers.filter(userId => !userId.verified && !this._includeEmail(validUsers, userId));
+    await this._addKeyArmored(validUsers, publicKeyArmored);
+    result.push(...validUsers, ...pendingUsers, ...verifiedUsers);
+    return result;
+  }
+
+  /**
+   * Create amored key block which contains the corresponding user ID only and add it to the user ID object
+   * @param {Array} userIds           user IDs to be extended
+   * @param {String} PublicKeyArmored armored key block to be filtered
+   * @return {Promise}
+   */
+  async _addKeyArmored(userIds, publicKeyArmored) {
+    for (const userId of userIds) {
+      userId.publicKeyArmored = await this._pgp.filterKeyByUserIds([userId], publicKeyArmored);
+      userId.notify = true;
+    }
+  }
+
+  _includeEmail(users, user) {
+    return users.find(({email}) => email === user.email);
+  }
+
+  /**
+   * Send verification emails to the public keys user ids for verification.
+   * If a primary email address is provided only one email will be sent.
+   * @param {Array}  userIds            user id documents containg the verification nonces
+   * @param {Object} origin             the server's origin (required for email links)
+   * @return {Promise}
+   */
+  async _sendVerifyEmail({userIds, keyId}, origin) {
+    for (const userId of userIds) {
+      if (userId.notify && userId.notify === true) {
+        // generate nonce for verification
+        userId.nonce = util.random();
+        await this._email.send({template: tpl.verifyKey, userId, keyId, origin, publicKeyArmored: userId.publicKeyArmored});
+      }
+    }
+  }
+
+  /**
    * Persist the public key and its user ids in the database.
    * @param {Object} key   public key parameters
-   * @yield {undefined}    The persisted user id documents
+   * @return {Promise}
    */
-  async _persisKey(key) {
+  async _persistKey(key) {
     // delete old/unverified key
     await this._mongo.remove({keyId: key.keyId}, DB_TYPE);
     // generate nonces for verification
-    for (const uid of key.userIds) {
-      uid.nonce = util.random();
+    for (const userId of key.userIds) {
+      // remove status from user
+      delete userId.status;
+      // remove notify flag from user
+      delete userId.notify;
     }
     // persist new key
     const r = await this._mongo.create(key, DB_TYPE);
@@ -117,24 +193,10 @@ class PublicKey {
   }
 
   /**
-   * Send verification emails to the public keys user ids for verification.
-   * If a primary email address is provided only one email will be sent.
-   * @param {Array}  userIds            user id documents containg the verification nonces
-   * @param {Object} origin             the server's origin (required for email links)
-   * @yield {undefined}
-   */
-  async _sendVerifyEmail({userIds, keyId, publicKeyArmored}, origin) {
-    for (const userId of userIds) {
-      userId.publicKeyArmored = publicKeyArmored; // set key for encryption
-      await this._email.send({template: tpl.verifyKey, userId, keyId, origin});
-    }
-  }
-
-  /**
    * Verify a user id by proving knowledge of the nonce.
    * @param {string} keyId   Correspronding public key id
    * @param {string} nonce   The verification nonce proving email address ownership
-   * @yield {undefined}
+   * @return {Promise}
    */
   async verify({keyId, nonce}) {
     // look for verification nonce in database
@@ -144,13 +206,27 @@ class PublicKey {
       util.throw(404, 'User id not found');
     }
     await this._removeKeysWithSameEmail(key, nonce);
+    let {publicKeyArmored} = key.userIds.find(userId => userId.nonce === nonce);
+    // update armored key
+    if (key.publicKeyArmored) {
+      publicKeyArmored = await this._pgp.updateKey(key.publicKeyArmored, publicKeyArmored);
+    }
     // flag the user id as verified
     await this._mongo.update(query, {
+      publicKeyArmored,
       'userIds.$.verified': true,
-      'userIds.$.nonce': null
+      'userIds.$.nonce': null,
+      'userIds.$.publicKeyArmored': null
     }, DB_TYPE);
   }
 
+  /**
+   * Removes keys with the same email address
+   * @param  {String} options.keyId   source key ID
+   * @param  {Array} options.userIds  user IDs of source key
+   * @param  {Array} nonce            relevant nonce
+   * @return {Promise}
+   */
   async _removeKeysWithSameEmail({keyId, userIds}, nonce) {
     return this._mongo.remove({
       keyId: {$ne: keyId},
@@ -165,7 +241,7 @@ class PublicKey {
    * @param {Array}  userIds       A list of user ids to check
    * @param {string} fingerprint   The public key fingerprint
    * @param {string} keyId         (optional) The public key id
-   * @yield {Object}               The verified key document
+   * @return {Object}               The verified key document
    */
   async getVerified({userIds, fingerprint, keyId}) {
     let queries = [];
@@ -203,7 +279,7 @@ class PublicKey {
    * @param {string} fingerprint   (optional) The public key fingerprint
    * @param {string} keyId         (optional) The public key id
    * @param {String} email         (optional) The user's email address
-   * @yield {Object}               The public key document
+   * @return {Object}               The public key document
    */
   async get({fingerprint, keyId, email}) {
     // look for verified key
@@ -230,7 +306,7 @@ class PublicKey {
    * @param {String} keyId    (optional) The public key id
    * @param {String} email    (optional) The user's email address
    * @param {Object} origin   Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
-   * @yield {undefined}
+   * @return {Promise}
    */
   async requestRemove({keyId, email, origin}) {
     // flag user ids for removal
@@ -250,7 +326,7 @@ class PublicKey {
    * saving it. Either a key id or email address must be provided
    * @param {String} keyId   (optional) The public key id
    * @param {String} email   (optional) The user's email address
-   * @yield {Array}          A list of user ids with nonces
+   * @return {Array}          A list of user ids with nonces
    */
   async _flagForRemove(keyId, email) {
     const query = email ? {'userIds.email': email} : {keyId};
@@ -282,7 +358,7 @@ class PublicKey {
    * Also deletes all user id documents of that key id.
    * @param {string} keyId   public key id
    * @param {string} nonce   The verification nonce proving email address ownership
-   * @yield {undefined}
+   * @return {Promise}
    */
   async verifyRemove({keyId, nonce}) {
     // check if key exists in database
@@ -290,8 +366,22 @@ class PublicKey {
     if (!flagged) {
       util.throw(404, 'User id not found');
     }
-    // delete the key
-    await this._mongo.remove({keyId}, DB_TYPE);
+    if (flagged.userIds.length === 1) {
+      // delete the key
+      return this._mongo.remove({keyId}, DB_TYPE);
+    }
+    // update the key
+    const rmIdx = flagged.userIds.findIndex(userId => userId.nonce === nonce);
+    const rmUserId = flagged.userIds[rmIdx];
+    if (rmUserId.verified) {
+      if (flagged.userIds.filter(({verified}) => verified).length > 1) {
+        flagged.publicKeyArmored = await this._pgp.removeUserId(rmUserId.email, flagged.publicKeyArmored);
+      } else {
+        flagged.publicKeyArmored = null;
+      }
+    }
+    flagged.userIds.splice(rmIdx, 1);
+    await this._mongo.update({keyId}, flagged, DB_TYPE);
   }
 }
 

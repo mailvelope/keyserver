@@ -56,15 +56,15 @@ class Email {
    * @param {Object} origin     origin of the server
    * @yield {Object}            reponse object containing SMTP info
    */
-  async send({template, userId, keyId, origin}) {
+  async send({template, userId, keyId, origin, publicKeyArmored}) {
     const compiled = template({
       name: userId.name,
       baseUrl: util.url(origin),
       keyId,
       nonce: userId.nonce
     });
-    if (this._usePGPEncryption && userId.publicKeyArmored) {
-      compiled.text = await this._pgpEncrypt(compiled.text, userId.publicKeyArmored);
+    if (this._usePGPEncryption && publicKeyArmored) {
+      compiled.text = await this._pgpEncrypt(compiled.text, publicKeyArmored);
     }
     const sendOptions = {
       from: {name: this._sender.name, address: this._sender.email},

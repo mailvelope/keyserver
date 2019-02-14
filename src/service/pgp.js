@@ -124,16 +124,55 @@ class PGP {
       if (userStatus !== openpgp.enums.keyStatus.invalid && user.userId && user.userId.userid) {
         const uid = addressparser(user.userId.userid)[0];
         if (util.isEmail(uid.address)) {
-          result.push(uid);
+          // map to local user id object format
+          result.push({
+            status: userStatus,
+            name: uid.name,
+            email: uid.address.toLowerCase(),
+            verified: false
+          });
         }
       }
     }
-    // map to local user id object format
-    return result.map(uid => ({
-      name: uid.name,
-      email: uid.address.toLowerCase(),
-      verified: false
-    }));
+    return result;
+  }
+
+  /**
+   * Remove user IDs from armored key block which are not in array of user IDs
+   * @param  {Array} userIds  user IDs to be kept
+   * @param  {String} armored armored key block to be filtered
+   * @return {String}         filtered amored key block
+   */
+  async filterKeyByUserIds(userIds, armored) {
+    const emails = userIds.map(({email}) => email);
+    const {keys: [key]} = await openpgp.key.readArmored(armored);
+    key.users = key.users.filter(({userId: {email}}) => emails.includes(email));
+    return key.armor();
+  }
+
+  /**
+   * Merge (update) armored key blocks
+   * @param  {String} srcArmored source amored key block
+   * @param  {String} dstArmored destination armored key block
+   * @return {String}            merged armored key block
+   */
+  async updateKey(srcArmored, dstArmored) {
+    const {keys: [srcKey]} = await openpgp.key.readArmored(srcArmored);
+    const {keys: [dstKey]} = await openpgp.key.readArmored(dstArmored);
+    await dstKey.update(srcKey);
+    return dstKey.armor();
+  }
+
+  /**
+   * Remove user ID from armored key block
+   * @param  {String} email            email of user ID to be removed
+   * @param  {String} publicKeyArmored amored key block to be filtered
+   * @return {String}                  filtered armored key block
+   */
+  async removeUserId(email, publicKeyArmored) {
+    const {keys: [key]} = await openpgp.key.readArmored(publicKeyArmored);
+    key.users = key.users.filter(({userId}) => userId.email !== email);
+    return key.armor();
   }
 }
 

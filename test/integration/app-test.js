@@ -301,21 +301,21 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
         it('should return 200 for key id', done => {
           request(app.listen())
           .get(`/pks/lookup?op=get&search=0x${emailParams.keyId}`)
-          .expect(200, publicKeyArmored)
+          .expect(200)
           .end(done);
         });
 
         it('should return 200 for fingerprint', done => {
           request(app.listen())
           .get(`/pks/lookup?op=get&search=0x${fingerprint}`)
-          .expect(200, publicKeyArmored)
+          .expect(200)
           .end(done);
         });
 
         it('should return 200 for correct email address', done => {
           request(app.listen())
           .get(`/pks/lookup?op=get&search=${primaryEmail}`)
-          .expect(200, publicKeyArmored)
+          .expect(200)
           .end(done);
         });
 
@@ -324,7 +324,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           .get(`/pks/lookup?op=get&options=mr&search=${primaryEmail}`)
           .expect('Content-Type', 'application/pgp-keys; charset=utf-8')
           .expect('Content-Disposition', 'attachment; filename=openpgpkey.asc')
-          .expect(200, publicKeyArmored)
+          .expect(200)
           .end(done);
         });
 

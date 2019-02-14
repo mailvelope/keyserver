@@ -33,21 +33,21 @@ const formatLogs = log.format(info => {
 });
 
 exports.init = function({host, port}) {
-  if (!host || !port) {
-    if (process.env.NODE_ENV !== 'production') {
-      log.add(new log.transports.Console({
-        format: log.format.combine(
-          formatLogs(),
-          log.format.simple()
-        )
-      }));
-    }
+  if (host && port) {
+    log.add(new log.transports.Papertrail({
+      format: formatLogs(),
+      level: config.log.level,
+      host,
+      port
+    }));
     return;
   }
-  log.add(new log.transports.Papertrail({
-    format: formatLogs(),
-    level: config.log.level,
-    host,
-    port
-  }));
+  if (process.env.NODE_ENV !== 'production') {
+    log.add(new log.transports.Console({
+      format: log.format.combine(
+        formatLogs(),
+        log.format.simple()
+      )
+    }));
+  }
 };
