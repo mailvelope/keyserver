@@ -5,15 +5,15 @@ const Email = require('../../src/email/email');
 const nodemailer = require('nodemailer');
 
 describe('Email Unit Tests', () => {
-  let sandbox;
+  const sandbox = sinon.createSandbox();
   let email;
   let sendFnStub;
 
-  const template = {
+  const template = () => ({
     subject: 'foo',
     text: 'bar',
     html: '<strong>bar</strong>'
-  };
+  });
   const sender = {
     name: 'Foo Bar',
     email: 'foo@bar.com'
@@ -37,11 +37,9 @@ describe('Email Unit Tests', () => {
   };
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
-
-    sendFnStub = sinon.stub();
+    sendFnStub = sandbox.stub();
     sandbox.stub(nodemailer, 'createTransport').returns({
-      templateSender: () => sendFnStub
+      sendMail: sendFnStub
     });
 
     sandbox.stub(log);

@@ -1,7 +1,10 @@
 'use strict';
 
-const expect = require('chai').expect;
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
 const sinon = require('sinon');
 
-global.expect = expect;
+chai.use(chaiAsPromised);
+
+global.expect = chai.expect;
 global.sinon = sinon;

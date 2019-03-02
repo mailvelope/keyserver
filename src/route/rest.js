@@ -34,16 +34,16 @@ class REST {
   }
 
   /**
-   * Public key upload via http POST
+   * Public key / user ID upload via http POST
    * @param  {Object} ctx   The koa request/response context
    */
   async create(ctx) {
-    const {publicKeyArmored} = await parse.json(ctx, {limit: '1mb'});
+    const {emails, publicKeyArmored} = await parse.json(ctx, {limit: '1mb'});
     if (!publicKeyArmored) {
       ctx.throw(400, 'Invalid request!');
     }
     const origin = util.origin(ctx);
-    await this._publicKey.put({publicKeyArmored, origin});
+    await this._publicKey.put({emails: emails ? emails : [], publicKeyArmored, origin});
     ctx.body = 'Upload successful. Check your inbox to verify your email address.';
     ctx.status = 201;
   }
@@ -91,7 +91,7 @@ class REST {
       ctx.throw(400, 'Invalid request!');
     }
     await this._publicKey.requestRemove(q);
-    ctx.body = 'Check your inbox to verify the removal of your key.';
+    ctx.body = 'Check your inbox to verify the removal of your email address.';
     ctx.status = 202;
   }
 
@@ -105,7 +105,7 @@ class REST {
       ctx.throw(400, 'Invalid request!');
     }
     await this._publicKey.verifyRemove(q);
-    ctx.body = 'Key successfully removed!';
+    ctx.body = 'Email address successfully removed!';
   }
 }
 

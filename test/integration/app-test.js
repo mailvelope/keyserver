@@ -3,6 +3,7 @@
 const request = require('supertest');
 const Mongo = require('../../src/dao/mongo');
 const nodemailer = require('nodemailer');
+const templates = require('../../src/email/templates');
 const config = require('config');
 const fs = require('fs');
 const log = require('winston');
@@ -10,7 +11,7 @@ const log = require('winston');
 describe('Koa App (HTTP Server) Integration Tests', function() {
   this.timeout(20000);
 
-  let sandbox;
+  const sandbox = sinon.createSandbox();
   let app;
   let mongo;
   let sendEmailStub;
@@ -23,22 +24,23 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
   const fingerprint = '4277257930867231CE393FB8DBC0B3D92B1B86E9';
 
   before(async () => {
-    sandbox = sinon.sandbox.create();
-
     sandbox.stub(log);
 
     publicKeyArmored = fs.readFileSync(`${__dirname}/../key1.asc`, 'utf8');
     mongo = new Mongo();
     await mongo.init(config.mongo);
 
-    sendEmailStub = sandbox.stub().returns(Promise.resolve({response: '250'}));
-    sendEmailStub.withArgs(sinon.match(recipient => recipient.to.address === primaryEmail), sinon.match(params => {
+    const paramMatcher = sinon.match(params => {
       emailParams = params;
       return Boolean(params.nonce);
-    }));
+    });
+    sandbox.spy(templates, 'verifyKey').withArgs(paramMatcher);
+    sandbox.spy(templates, 'verifyRemove').withArgs(paramMatcher);
+
+    sendEmailStub = sandbox.stub().returns(Promise.resolve({response: '250'}));
+    sendEmailStub.withArgs(sinon.match(sendOptions => sendOptions.to.address === primaryEmail));
     sandbox.stub(nodemailer, 'createTransport').returns({
-      templateSender: () => sendEmailStub,
-      use() {}
+      sendMail: sendEmailStub
     });
 
     const init = require('../../src/app');
@@ -299,21 +301,21 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
         it('should return 200 for key id', done => {
           request(app.listen())
           .get(`/pks/lookup?op=get&search=0x${emailParams.keyId}`)
-          .expect(200, publicKeyArmored)
+          .expect(200)
           .end(done);
         });
 
         it('should return 200 for fingerprint', done => {
           request(app.listen())
           .get(`/pks/lookup?op=get&search=0x${fingerprint}`)
-          .expect(200, publicKeyArmored)
+          .expect(200)
           .end(done);
         });
 
         it('should return 200 for correct email address', done => {
           request(app.listen())
           .get(`/pks/lookup?op=get&search=${primaryEmail}`)
-          .expect(200, publicKeyArmored)
+          .expect(200)
           .end(done);
         });
 
@@ -322,7 +324,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
           .get(`/pks/lookup?op=get&options=mr&search=${primaryEmail}`)
           .expect('Content-Type', 'application/pgp-keys; charset=utf-8')
           .expect('Content-Disposition', 'attachment; filename=openpgpkey.asc')
-          .expect(200, publicKeyArmored)
+          .expect(200)
           .end(done);
         });
 

@@ -2,7 +2,7 @@
 
 const config = require('config');
 const Email = require('../../src/email/email');
-const tpl = require('../../src/email/templates.json');
+const tpl = require('../../src/email/templates');
 
 describe('Email Integration Tests', function() {
   this.timeout(20000);
@@ -38,8 +38,8 @@ describe('Email Integration Tests', function() {
   describe("_sendHelper", () => {
     it('should work', async () => {
       const mailOptions = {
-        from: email._sender,
-        to: recipient,
+        from: {name: email._sender.name, address: email._sender.email},
+        to: {name: recipient.name, address: recipient.email},
         subject: 'Hello ✔', // Subject line
         text: 'Hello world 🐴', // plaintext body
         html: '<b>Hello world 🐴</b>' // html body

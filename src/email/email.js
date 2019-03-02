@@ -19,8 +19,8 @@
 
 const log = require('winston');
 const util = require('../service/util');
+const openpgp = require('openpgp');
 const nodemailer = require('nodemailer');
-const openpgpEncrypt = require('nodemailer-openpgp').openpgpEncrypt;
 
 /**
  * A simple wrapper around Nodemailer to send verification emails
@@ -37,77 +37,66 @@ class Email {
    * @param {boolean} pgp        (optional) if outgoing emails are encrypted to the user's public key.
    */
   init({host, port = 465, auth, tls, starttls, pgp, sender}) {
-    this._transport = nodemailer.createTransport({
+    this._transporter = nodemailer.createTransport({
       host,
       port,
       auth,
       secure: (tls !== undefined) ? util.isTrue(tls) : true,
       requireTLS: (starttls !== undefined) ? util.isTrue(starttls) : true,
     });
-    if (util.isTrue(pgp)) {
-      this._transport.use('stream', openpgpEncrypt());
-    }
+    this._usePGPEncryption = util.isTrue(pgp);
     this._sender = sender;
   }
 
   /**
    * Send the verification email to the user using a template.
-   * @param {Object} template   the email template to use
-   * @param {Object} userId     user id document
+   * @param {Object} template   the email template function to use
+   * @param {Object} userId     recipient user id object: { name:'Jon Smith', email:'j@smith.com', publicKeyArmored:'...' }
    * @param {string} keyId      key id of public key
    * @param {Object} origin     origin of the server
-   * @yield {Object}            send response from the SMTP server
+   * @yield {Object}            reponse object containing SMTP info
    */
-  async send({template, userId, keyId, origin}) {
-    const message = {
-      from: this._sender,
-      to: userId,
-      subject: template.subject,
-      text: template.text,
-      html: template.html,
-      params: {
-        name: userId.name,
-        baseUrl: util.url(origin),
-        keyId,
-        nonce: userId.nonce
-      }
+  async send({template, userId, keyId, origin, publicKeyArmored}) {
+    const compiled = template({
+      name: userId.name,
+      baseUrl: util.url(origin),
+      keyId,
+      nonce: userId.nonce
+    });
+    if (this._usePGPEncryption && publicKeyArmored) {
+      compiled.text = await this._pgpEncrypt(compiled.text, publicKeyArmored);
+    }
+    const sendOptions = {
+      from: {name: this._sender.name, address: this._sender.email},
+      to: {name: userId.name, address: userId.email},
+      subject: compiled.subject,
+      text: compiled.text
     };
-    return this._sendHelper(message);
+    return this._sendHelper(sendOptions);
+  }
+
+  /**
+   * Encrypt the message body using OpenPGP.js
+   * @param  {string} plaintext          the plaintext message body
+   * @param  {string} publicKeyArmored   the recipient's public key
+   * @return {string}                    the encrypted PGP message block
+   */
+  async _pgpEncrypt(plaintext, publicKeyArmored) {
+    const ciphertext = await openpgp.encrypt({
+      message: openpgp.message.fromText(plaintext),
+      publicKeys: (await openpgp.key.readArmored(publicKeyArmored)).keys,
+    });
+    return ciphertext.data;
   }
 
   /**
    * A generic method to send an email message via nodemailer.
-   * @param {Object} from      sender user id object: { name:'Jon Smith', email:'j@smith.com' }
-   * @param {Object} to        recipient user id object: { name:'Jon Smith', email:'j@smith.com' }
-   * @param {string} subject   message subject
-   * @param {string} text      message plaintext body template
-   * @param {string} html      message html body template
-   * @param {Object} params    (optional) nodermailer template parameters
+   * @param {Object} sendoptions object: { from: ..., to: ..., subject: ..., text: ... }
    * @yield {Object}           reponse object containing SMTP info
    */
-  async _sendHelper({from, to, subject, text, html, params = {}}) {
-    const template = {
-      subject,
-      text,
-      html,
-      encryptionKeys: [to.publicKeyArmored]
-    };
-    const sender = {
-      from: {
-        name: from.name,
-        address: from.email
-      }
-    };
-    const recipient = {
-      to: {
-        name: to.name,
-        address: to.email
-      }
-    };
-
+  async _sendHelper(sendOptions) {
     try {
-      const sendFn = this._transport.templateSender(template, sender);
-      const info = await sendFn(recipient, params);
+      const info = await this._transporter.sendMail(sendOptions);
       if (!this._checkResponse(info)) {
         log.warn('email', 'Message may not have been received.', info);
       }
