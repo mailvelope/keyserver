@@ -35,7 +35,4 @@ node_modules
 # Optional REPL history
 .node_repl_history
 
-# npm v5+ lockfile
-package-lock.json
-
 config/development.js

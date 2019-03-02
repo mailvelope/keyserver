@@ -7,7 +7,8 @@
     "url": "https://github.com/mailvelope/keyserver.git"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=10",
+    "npm": ">=6"
   },
   "scripts": {
     "start": "node index.js",
@@ -20,24 +21,24 @@
     "release:archive": "zip -rq release.zip package.json package-lock.json node_modules/ *.js src/ config/"
   },
   "dependencies": {
-    "addressparser": "^1.0.1",
-    "co-body": "^6.0.0",
-    "config": "^3.0.1",
-    "koa": "^2.3.0",
-    "koa-router": "^7.2.1",
-    "koa-static": "^5.0.0",
-    "mongodb": "^3.1.13",
-    "nodemailer": "^5.1.1",
-    "openpgp": "^4.4.6",
-    "winston": "^3.2.1",
-    "winston-papertrail": "^1.0.5"
+    "addressparser": "1.0.1",
+    "co-body": "6.0.0",
+    "config": "3.0.1",
+    "koa": "2.7.0",
+    "koa-router": "7.4.0",
+    "koa-static": "5.0.0",
+    "mongodb": "3.1.13",
+    "nodemailer": "5.1.1",
+    "openpgp": "4.4.9",
+    "winston": "3.2.1",
+    "winston-papertrail": "1.0.5"
   },
   "devDependencies": {
     "chai": "^4.1.1",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^5.13.0",
+    "eslint": "^5.15.0",
     "mocha": "^5.2.0",
-    "sinon": "^7.2.3",
+    "sinon": "^7.2.6",
     "supertest": "^3.0.0"
   }
 }

@@ -1,7 +1,7 @@
 sudo: false
 language: node_js
 node_js:
-  - "8"
+  - "10"
 
 env:
   - NODE_ENV=integration LOG_LEVEL=warn MONGO_URI=127.0.0.1:27017/test_db MONGO_USER=travis MONGO_PASS=test
