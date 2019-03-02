@@ -29,6 +29,10 @@ const KEY_END = '-----END PGP PUBLIC KEY BLOCK-----';
  * A simple wrapper around OpenPGP.js
  */
 class PGP {
+  constructor() {
+    openpgp.config.show_version = false;
+    openpgp.config.show_comment = false;
+  }
   /**
    * Parse an ascii armored pgp key block and get its parameters.
    * @param  {String} publicKeyArmored   ascii armored pgp key block
