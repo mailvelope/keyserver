@@ -1,4 +1,3 @@
-sudo: false
 language: node_js
 node_js:
   - "10"
@@ -20,11 +19,11 @@ deploy:
   provider: elasticbeanstalk
   access_key_id: $AWS_ACCESS_KEY
   secret_access_key: $AWS_SECRET_ACCESS_KEY
-  region: eu-west-1
-  app: keyserver
-  env: keyserver-prod
+  region: eu-central-1
+  app: mailvelope-key-server
+  env: MailvelopeKeyServer-env
   zip_file: release.zip
-  bucket_name: elasticbeanstalk-eu-west-1-936909551620
+  bucket_name: elasticbeanstalk-eu-central-1-936909551620
   bucket_path: keyserver
   on:
     repo: mailvelope/keyserver
