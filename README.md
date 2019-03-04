@@ -31,18 +31,18 @@ Try out the server here: [https://keys.mailvelope.com](https://keys.mailvelope.c
 
 
 
-# Api
+# API
 
-The key server provides a modern RESTful api, but is also backwards compatible to the OpenPGP HTTP Keyserver Protocol (HKP). The following properties are enforced by the key server to enable reliable automatic key look in user agents:
+The key server provides a modern RESTful API, but is also backwards compatible to the OpenPGP HTTP Keyserver Protocol (HKP). The following properties are enforced by the key server to enable reliable automatic key look in user agents:
 
 * Only public keys with at least one verified email address are served
 * There can be only one public key per verified email address at a given time
 * A key ID specified in a query must be at least 16 hex characters (64-bit long key ID)
 * Key ID collisions are checked upon key upload to prevent collision attacks
 
-## HKP api
+## HKP API
 
-The HKP apis are not documented here. Please refer to the [HKP specification](https://tools.ietf.org/html/draft-shaw-openpgp-hkp-00) to learn more. The server generally implements the full specification, but has some constraints to improve the security for automatic key lookup:
+The HKP APIs are not documented here. Please refer to the [HKP specification](https://tools.ietf.org/html/draft-shaw-openpgp-hkp-00) to learn more. The server generally implements the full specification, but has some constraints to improve the security for automatic key lookup:
 
 #### Accepted `search` parameters
 * Email addresses
@@ -57,7 +57,7 @@ The HKP apis are not documented here. Please refer to the [HKP specification](ht
 #### Accepted `options` parameters
 * mr
 
-## REST api
+## REST API
 
 ### Lookup a key
 
