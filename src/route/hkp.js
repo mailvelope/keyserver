@@ -43,7 +43,7 @@ class HKP {
       ctx.throw(400, 'Invalid request!');
     }
     const origin = util.origin(ctx);
-    await this._publicKey.put({emails: [], publicKeyArmored, origin});
+    await this._publicKey.put({publicKeyArmored, origin});
     ctx.body = 'Upload successful. Check your inbox to verify your email address.';
     ctx.status = 201;
   }

@@ -79,6 +79,18 @@ exports.isEmail = function(data) {
 };
 
 /**
+ * Normalize email address to lowercase.
+ * @param  {string} email   The email address
+ * @return {string}       lowercase email address
+ */
+exports.normalizeEmail = function(email) {
+  if (email) {
+    email = email.toLowerCase();
+  }
+  return email;
+};
+
+/**
  * Create an error with a custom status attribute e.g. for http codes.
  * @param  {number} status    The error's http status code
  * @param  {string} message   The error message

@@ -136,7 +136,7 @@ class PGP {
           result.push({
             status: userStatus,
             name: uid.name,
-            email: uid.address.toLowerCase(),
+            email: util.normalizeEmail(uid.address),
             verified: false
           });
         }
@@ -154,7 +154,7 @@ class PGP {
   async filterKeyByUserIds(userIds, armored) {
     const emails = userIds.map(({email}) => email);
     const {keys: [key]} = await openpgp.key.readArmored(armored);
-    key.users = key.users.filter(({userId: {email}}) => emails.includes(email));
+    key.users = key.users.filter(({userId: {email}}) => emails.includes(util.normalizeEmail(email)));
     return key.armor();
   }
 
@@ -187,7 +187,7 @@ class PGP {
    */
   async removeUserId(email, publicKeyArmored) {
     const {keys: [key]} = await openpgp.key.readArmored(publicKeyArmored);
-    key.users = key.users.filter(({userId}) => userId.email !== email);
+    key.users = key.users.filter(({userId}) => util.normalizeEmail(userId.email) !== email);
     return key.armor();
   }
 }

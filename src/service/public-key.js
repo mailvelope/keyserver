@@ -68,7 +68,8 @@ class PublicKey {
    * @param {Object} origin             Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
    * @return {Promise}
    */
-  async put({emails, publicKeyArmored, origin}) {
+  async put({emails = [], publicKeyArmored, origin}) {
+    emails = emails.map(util.normalizeEmail);
     // lazily purge old/unverified keys on every key upload
     await this._purgeOldUnverified();
     // parse key block
@@ -267,7 +268,7 @@ class PublicKey {
       queries = queries.concat(userIds.map(uid => ({
         userIds: {
           $elemMatch: {
-            'email': uid.email.toLowerCase(),
+            'email': util.normalizeEmail(uid.email),
             'verified': true
           }
         }
@@ -332,6 +333,7 @@ class PublicKey {
    * @return {Array}          A list of user ids with nonces
    */
   async _flagForRemove(keyId, email) {
+    email = util.normalizeEmail(email);
     const query = email ? {'userIds.email': email} : {keyId};
     const key = await this._mongo.get(query, DB_TYPE);
     if (!key) {
