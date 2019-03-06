@@ -35,7 +35,7 @@ describe('Email Integration Tests', function() {
     };
   });
 
-  describe("_sendHelper", () => {
+  describe('_sendHelper', () => {
     it('should work', async () => {
       const mailOptions = {
         from: {name: email._sender.name, address: email._sender.email},
@@ -49,7 +49,7 @@ describe('Email Integration Tests', function() {
     });
   });
 
-  describe("send verifyKey template", () => {
+  describe('send verifyKey template', () => {
     it('should send plaintext email', async () => {
       delete userId.publicKeyArmored;
       await email.send({template: tpl.verifyKey, userId, keyId, origin});
@@ -60,7 +60,7 @@ describe('Email Integration Tests', function() {
     });
   });
 
-  describe("send verifyRemove template", () => {
+  describe('send verifyRemove template', () => {
     it('should send plaintext email', async () => {
       delete userId.publicKeyArmored;
       await email.send({template: tpl.verifyRemove, userId, keyId, origin});

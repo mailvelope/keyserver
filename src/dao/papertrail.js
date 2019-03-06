@@ -25,7 +25,6 @@ require('winston-papertrail');
 log.exitOnError = false;
 log.level = config.log.level;
 
-
 // Reformat logging text, due to deprecated logger usage
 const formatLogs = log.format(info => {
   info.message = `${info.message} -> ${info[SPLAT].join(', ')}`;

@@ -33,6 +33,7 @@ class PGP {
     openpgp.config.show_version = false;
     openpgp.config.show_comment = false;
   }
+
   /**
    * Parse an ascii armored pgp key block and get its parameters.
    * @param  {String} publicKeyArmored   ascii armored pgp key block

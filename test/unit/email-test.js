@@ -57,7 +57,7 @@ describe('Email Unit Tests', () => {
     sandbox.restore();
   });
 
-  describe("send", () => {
+  describe('send', () => {
     beforeEach(() => {
       sandbox.stub(email, '_sendHelper').returns(Promise.resolve({response: '250'}));
     });
@@ -69,7 +69,7 @@ describe('Email Unit Tests', () => {
     });
   });
 
-  describe("_sendHelper", () => {
+  describe('_sendHelper', () => {
     it('should work', async () => {
       sendFnStub.returns(Promise.resolve({response: '250'}));
 

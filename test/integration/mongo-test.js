@@ -28,7 +28,7 @@ describe('Mongo Integration Tests', function() {
     await mongo.disconnect();
   });
 
-  describe("create", () => {
+  describe('create', () => {
     it('should insert a document', async () => {
       const r = await mongo.create({_id: '0'}, DB_TYPE);
       expect(r.insertedCount).to.equal(1);
@@ -45,7 +45,7 @@ describe('Mongo Integration Tests', function() {
     });
   });
 
-  describe("batch", () => {
+  describe('batch', () => {
     it('should insert a document', async () => {
       const r = await mongo.batch([{_id: '0'}, {_id: '1'}], DB_TYPE);
       expect(r.insertedCount).to.equal(2);
@@ -62,7 +62,7 @@ describe('Mongo Integration Tests', function() {
     });
   });
 
-  describe("update", () => {
+  describe('update', () => {
     it('should update a document', async () => {
       let r = await mongo.create({_id: '0'}, DB_TYPE);
       r = await mongo.update({_id: '0'}, {foo: 'bar'}, DB_TYPE);
@@ -72,7 +72,7 @@ describe('Mongo Integration Tests', function() {
     });
   });
 
-  describe("get", () => {
+  describe('get', () => {
     it('should get a document', async () => {
       let r = await mongo.create({_id: '0'}, DB_TYPE);
       r = await mongo.get({_id: '0'}, DB_TYPE);
@@ -80,7 +80,7 @@ describe('Mongo Integration Tests', function() {
     });
   });
 
-  describe("list", () => {
+  describe('list', () => {
     it('should list documents', async () => {
       let r = await mongo.batch([{_id: '0', foo: 'bar'}, {_id: '1', foo: 'bar'}], DB_TYPE);
       r = await mongo.list({foo: 'bar'}, DB_TYPE);
@@ -88,7 +88,7 @@ describe('Mongo Integration Tests', function() {
     });
   });
 
-  describe("remove", () => {
+  describe('remove', () => {
     it('should remove a document', async () => {
       let r = await mongo.create({_id: '0'}, DB_TYPE);
       r = await mongo.remove({_id: '0'}, DB_TYPE);
