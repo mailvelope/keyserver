@@ -53,6 +53,9 @@ class PGP {
     // verify primary key
     const key = r.keys[0];
     const primaryKey = key.primaryKey;
+    if (primaryKey.created > new Date()) {
+      log.error('pgp', 'Key creation date is in the future', primaryKey.created);
+    }
     if (await key.verifyPrimaryKey() !== openpgp.enums.keyStatus.valid) {
       util.throw(400, 'Invalid PGP key: primary key verification failed');
     }
@@ -67,7 +70,7 @@ class PGP {
     // check for at least one valid user id
     const userIds = await this.parseUserIds(key.users, primaryKey);
     if (!userIds.length) {
-      util.throw(400, 'Invalid PGP key: invalid user ids');
+      util.throw(400, 'Invalid PGP key: invalid user IDs');
     }
 
     // get algorithm details from primary key
@@ -119,7 +122,7 @@ class PGP {
    */
   async parseUserIds(users, primaryKey) {
     if (!users || !users.length) {
-      util.throw(400, 'Invalid PGP key: no user id found');
+      util.throw(400, 'Invalid PGP key: no user ID found');
     }
     // at least one user id must be valid, revoked or expired
     const result = [];
@@ -161,8 +164,16 @@ class PGP {
    * @return {String}            merged armored key block
    */
   async updateKey(srcArmored, dstArmored) {
-    const {keys: [srcKey]} = await openpgp.key.readArmored(srcArmored);
-    const {keys: [dstKey]} = await openpgp.key.readArmored(dstArmored);
+    const {keys: [srcKey], err: srcErr} = await openpgp.key.readArmored(srcArmored);
+    if (srcErr) {
+      log.error('pgp', 'Failed to parse source PGP key for update:\n%s', srcArmored, srcErr);
+      util.throw(500, 'Failed to parse PGP key');
+    }
+    const {keys: [dstKey], err: dstErr} = await openpgp.key.readArmored(dstArmored);
+    if (dstErr) {
+      log.error('pgp', 'Failed to parse destination PGP key for update:\n%s', dstArmored, dstErr);
+      util.throw(500, 'Failed to parse PGP key');
+    }
     await dstKey.update(srcKey);
     return dstKey.armor();
   }

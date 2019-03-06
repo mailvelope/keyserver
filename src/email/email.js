@@ -82,9 +82,13 @@ class Email {
    * @return {string}                    the encrypted PGP message block
    */
   async _pgpEncrypt(plaintext, publicKeyArmored) {
+    const {keys, err} = await openpgp.key.readArmored(publicKeyArmored);
+    if (err) {
+      log.error('email', 'Reading armored key failed.', err, publicKeyArmored);
+    }
     const ciphertext = await openpgp.encrypt({
       message: openpgp.message.fromText(plaintext),
-      publicKeys: (await openpgp.key.readArmored(publicKeyArmored)).keys,
+      publicKeys: keys,
     });
     return ciphertext.data;
   }

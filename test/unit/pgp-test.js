@@ -87,7 +87,7 @@ describe('PGP Unit Tests', () => {
 
     it('should only accept valid user ids', () => {
       sandbox.stub(pgp, 'parseUserIds').returns([]);
-      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/invalid user ids/);
+      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/invalid user IDs/);
     });
 
     it('should be able to parse RSA key', async () => {
@@ -180,7 +180,7 @@ describe('PGP Unit Tests', () => {
     });
 
     it('should throw for an empty user ids array', () =>
-      expect(pgp.parseUserIds([], key.primaryKey)).to.eventually.be.rejectedWith(/no user id/)
+      expect(pgp.parseUserIds([], key.primaryKey)).to.eventually.be.rejectedWith(/no user ID/)
     );
 
     it('should return no user id for an invalid signature', async () => {

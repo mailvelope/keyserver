@@ -91,6 +91,9 @@ class PublicKey {
       key.publicKeyArmored = await this._pgp.updateKey(verified.publicKeyArmored, filteredPublicKeyArmored);
     } else {
       key.userIds = key.userIds.filter(userId => userId.status === KEY_STATUS_VALID);
+      if (!key.userIds.length) {
+        util.throw(400, 'Invalid PGP key: no valid user IDs found');
+      }
       await this._addKeyArmored(key.userIds, key.publicKeyArmored);
       // new key, set armored to null
       key.publicKeyArmored = null;
@@ -203,7 +206,7 @@ class PublicKey {
     const query = {keyId, 'userIds.nonce': nonce};
     const key = await this._mongo.get(query, DB_TYPE);
     if (!key) {
-      util.throw(404, 'User id not found');
+      util.throw(404, 'User ID not found');
     }
     await this._removeKeysWithSameEmail(key, nonce);
     let {publicKeyArmored} = key.userIds.find(userId => userId.nonce === nonce);
@@ -312,7 +315,7 @@ class PublicKey {
     // flag user ids for removal
     const key = await this._flagForRemove(keyId, email);
     if (!key) {
-      util.throw(404, 'User id not found');
+      util.throw(404, 'User ID not found');
     }
     // send verification mails
     keyId = key.keyId; // get keyId in case request was by email
@@ -364,7 +367,7 @@ class PublicKey {
     // check if key exists in database
     const flagged = await this._mongo.get({keyId, 'userIds.nonce': nonce}, DB_TYPE);
     if (!flagged) {
-      util.throw(404, 'User id not found');
+      util.throw(404, 'User ID not found');
     }
     if (flagged.userIds.length === 1) {
       // delete the key
