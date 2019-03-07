@@ -39,7 +39,7 @@ exports.setHTTPResponseHeaders = async function(ctx, next) {
     ctx.set('Public-Key-Pins', `pin-sha256="${config.server.httpsKeyPin}"; pin-sha256="${config.server.httpsKeyPinBackup}"; max-age=16070400`);
   }
   // CSP
-  ctx.set('Content-Security-Policy', "default-src 'self'; object-src 'none'; script-src 'self' code.jquery.com; style-src 'self' stackpath.bootstrapcdn.com; font-src 'self' stackpath.bootstrapcdn.com");
+  ctx.set('Content-Security-Policy', "default-src 'self'; object-src 'none'; script-src 'self' code.jquery.com; style-src 'self' stackpath.bootstrapcdn.com 'unsafe-inline'; font-src 'self' stackpath.bootstrapcdn.com");
   // Prevent rendering website in foreign iframe (Clickjacking)
   ctx.set('X-Frame-Options', 'DENY');
   // CORS

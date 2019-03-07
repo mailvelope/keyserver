@@ -54,10 +54,9 @@ class PGP {
     // verify primary key
     const key = r.keys[0];
     const primaryKey = key.primaryKey;
-    if (primaryKey.created > new Date()) {
-      log.error('pgp', 'Key creation date is in the future', primaryKey.created);
-    }
-    if (await key.verifyPrimaryKey() !== openpgp.enums.keyStatus.valid) {
+    const now = new Date();
+    const verifyDate = primaryKey.created > now ? primaryKey.created : now;
+    if (await key.verifyPrimaryKey(verifyDate) !== openpgp.enums.keyStatus.valid) {
       util.throw(400, 'Invalid PGP key: primary key verification failed');
     }
 
@@ -69,7 +68,7 @@ class PGP {
     }
 
     // check for at least one valid user id
-    const userIds = await this.parseUserIds(key.users, primaryKey);
+    const userIds = await this.parseUserIds(key.users, primaryKey, verifyDate);
     if (!userIds.length) {
       util.throw(400, 'Invalid PGP key: invalid user IDs');
     }
@@ -119,16 +118,18 @@ class PGP {
   /**
    * Parse an array of user ids and verify signatures
    * @param  {Array} users   A list of openpgp.js user objects
+   * @param {Object} primaryKey The primary key packet of the key
+   * @param {Date} verifyDate Verify user IDs at this point in time
    * @return {Array}         An array of user id objects
    */
-  async parseUserIds(users, primaryKey) {
+  async parseUserIds(users, primaryKey, verifyDate = new Date()) {
     if (!users || !users.length) {
       util.throw(400, 'Invalid PGP key: no user ID found');
     }
     // at least one user id must be valid, revoked or expired
     const result = [];
     for (const user of users) {
-      const userStatus = await user.verify(primaryKey);
+      const userStatus = await user.verify(primaryKey, verifyDate);
       if (userStatus !== openpgp.enums.keyStatus.invalid && user.userId && user.userId.userid) {
         const uid = addressparser(user.userId.userid)[0];
         if (util.isEmail(uid.address)) {

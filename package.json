@@ -29,7 +29,7 @@
     "koa-static": "5.0.0",
     "mongodb": "3.1.13",
     "nodemailer": "5.1.1",
-    "openpgp": "4.4.9",
+    "openpgp": "github:mailvelope/openpgpjs#fix_user_verify_dist",
     "winston": "3.2.1",
     "winston-papertrail": "1.0.5"
   },

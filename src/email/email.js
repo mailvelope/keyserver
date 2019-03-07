@@ -82,13 +82,17 @@ class Email {
    * @return {string}                    the encrypted PGP message block
    */
   async _pgpEncrypt(plaintext, publicKeyArmored) {
-    const {keys, err} = await openpgp.key.readArmored(publicKeyArmored);
+    const {keys : [key], err} = await openpgp.key.readArmored(publicKeyArmored);
     if (err) {
       log.error('email', 'Reading armored key failed.', err, publicKeyArmored);
     }
+    const now = new Date();
+    // set message creation date if key has been created with future creation date
+    const msgCreationDate = key.primaryKey.created > now ? key.primaryKey.created : now;
     const ciphertext = await openpgp.encrypt({
       message: openpgp.message.fromText(plaintext),
-      publicKeys: keys,
+      publicKeys: key,
+      date: msgCreationDate
     });
     return ciphertext.data;
   }
