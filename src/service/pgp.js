@@ -20,7 +20,6 @@
 const log = require('winston');
 const util = require('./util');
 const openpgp = require('openpgp');
-const addressparser = require('addressparser');
 
 const KEY_BEGIN = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
 const KEY_END = '-----END PGP PUBLIC KEY BLOCK-----';
@@ -131,16 +130,18 @@ class PGP {
     for (const user of users) {
       const userStatus = await user.verify(primaryKey, verifyDate);
       if (userStatus !== openpgp.enums.keyStatus.invalid && user.userId && user.userId.userid) {
-        const uid = addressparser(user.userId.userid)[0];
-        if (util.isEmail(uid.address)) {
-          // map to local user id object format
-          result.push({
-            status: userStatus,
-            name: uid.name,
-            email: util.normalizeEmail(uid.address),
-            verified: false
-          });
-        }
+        try {
+          const uid = openpgp.util.parseUserId(user.userId.userid);
+          if (util.isEmail(uid.email)) {
+            // map to local user id object format
+            result.push({
+              status: userStatus,
+              name: uid.name,
+              email: util.normalizeEmail(uid.email),
+              verified: false
+            });
+          }
+        } catch (e) {}
       }
     }
     return result;

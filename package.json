@@ -21,7 +21,6 @@
     "release:archive": "zip -rq release.zip package.json package-lock.json node_modules/ *.js src/ config/"
   },
   "dependencies": {
-    "addressparser": "1.0.1",
     "co-body": "6.0.0",
     "config": "3.0.1",
     "koa": "2.7.0",
