@@ -156,7 +156,7 @@ class PGP {
   async filterKeyByUserIds(userIds, armored) {
     const emails = userIds.map(({email}) => email);
     const {keys: [key]} = await openpgp.key.readArmored(armored);
-    key.users = key.users.filter(({userId: {email}}) => emails.includes(util.normalizeEmail(email)));
+    key.users = key.users.filter(({userId}) => !userId || emails.includes(util.normalizeEmail(userId.email)));
     return key.armor();
   }
 
@@ -189,7 +189,7 @@ class PGP {
    */
   async removeUserId(email, publicKeyArmored) {
     const {keys: [key]} = await openpgp.key.readArmored(publicKeyArmored);
-    key.users = key.users.filter(({userId}) => util.normalizeEmail(userId.email) !== email);
+    key.users = key.users.filter(({userId}) => !userId || util.normalizeEmail(userId.email) !== email);
     return key.armor();
   }
 }

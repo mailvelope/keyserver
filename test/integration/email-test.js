@@ -16,7 +16,7 @@ describe('Email Integration Tests', function() {
   const recipient = {name: 'Test User', email: 'safewithme.testuser@gmail.com'};
 
   before(() => {
-    publicKeyArmored = require('fs').readFileSync(`${__dirname}/../key1.asc`, 'utf8');
+    publicKeyArmored = require('fs').readFileSync(`${__dirname}/../fixtures/key1.asc`, 'utf8');
     origin = {
       protocol: 'http',
       host: `localhost:${config.server.port}`

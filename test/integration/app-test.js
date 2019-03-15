@@ -26,7 +26,7 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
   before(async () => {
     sandbox.stub(log);
 
-    publicKeyArmored = fs.readFileSync(`${__dirname}/../key1.asc`, 'utf8');
+    publicKeyArmored = fs.readFileSync(`${__dirname}/../fixtures/key1.asc`, 'utf8');
     mongo = new Mongo();
     await mongo.init(config.mongo);
 

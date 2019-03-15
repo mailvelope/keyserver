@@ -11,13 +11,17 @@ describe('PGP Unit Tests', () => {
   let key1Armored;
   let key2Armored;
   let key3Armored;
+  let key5Armored;
+
+  before(() => {
+    key1Armored = fs.readFileSync(`${__dirname}/../fixtures/key1.asc`, 'utf8');
+    key2Armored = fs.readFileSync(`${__dirname}/../fixtures/key2.asc`, 'utf8');
+    key3Armored = fs.readFileSync(`${__dirname}/../fixtures/key3.asc`, 'utf8');
+    key5Armored = fs.readFileSync(`${__dirname}/../fixtures/key5.asc`, 'utf8');
+  });
 
   beforeEach(() => {
     sandbox.stub(log);
-
-    key1Armored = fs.readFileSync(`${__dirname}/../key1.asc`, 'utf8');
-    key2Armored = fs.readFileSync(`${__dirname}/../key2.asc`, 'utf8');
-    key3Armored = fs.readFileSync(`${__dirname}/../key3.asc`, 'utf8');
     pgp = new PGP();
   });
 
@@ -193,6 +197,51 @@ describe('PGP Unit Tests', () => {
       key.users[0].userId.userid = 'safewithme testuser <safewithme.testusergmail.com>';
       const parsed = await pgp.parseUserIds(key.users, key.primaryKey);
       expect(parsed.length).to.equal(0);
+    });
+  });
+
+  describe('filterKeyByUserIds', () => {
+    it('should filter user IDs', async () => {
+      const email = 'test1@example.com';
+      const {keys: [key]} = await openpgp.key.readArmored(key3Armored);
+      expect(key.users.length).to.equal(4);
+      const filtered = await pgp.filterKeyByUserIds([{email}], key3Armored);
+      const {keys: [filteredKey]} = await openpgp.key.readArmored(filtered);
+      expect(filteredKey.users.length).to.equal(1);
+      expect(filteredKey.users[0].userId.email).to.equal(email);
+    });
+
+    it('should not filter user attributes', async () => {
+      const email = 'test@example.com';
+      const {keys: [key]} = await openpgp.key.readArmored(key5Armored);
+      expect(key.users.length).to.equal(2);
+      const filtered = await pgp.filterKeyByUserIds([{email}], key5Armored);
+      const {keys: [filteredKey]} = await openpgp.key.readArmored(filtered);
+      expect(filteredKey.users.length).to.equal(2);
+      expect(filteredKey.users[0].userId).to.exist;
+      expect(filteredKey.users[1].userAttribute).to.exist;
+    });
+  });
+
+  describe('removeUserId', () => {
+    it('should remove user IDs', async () => {
+      const email = 'test1@example.com';
+      const {keys: [key]} = await openpgp.key.readArmored(key3Armored);
+      expect(key.users.length).to.equal(4);
+      const reduced = await pgp.removeUserId(email, key3Armored);
+      const {keys: [reducedKey]} = await openpgp.key.readArmored(reduced);
+      expect(reducedKey.users.length).to.equal(3);
+      expect(reducedKey.users.includes(({userId}) => userId.email === email)).to.be.false;
+    });
+
+    it('should not remove user attributes', async () => {
+      const email = 'test@example.com';
+      const {keys: [key]} = await openpgp.key.readArmored(key5Armored);
+      expect(key.users.length).to.equal(2);
+      const reduced = await pgp.removeUserId(email, key5Armored);
+      const {keys: [reducedKey]} = await openpgp.key.readArmored(reduced);
+      expect(reducedKey.users.length).to.equal(1);
+      expect(reducedKey.users[0].userAttribute).to.exist;
     });
   });
 });

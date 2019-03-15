@@ -27,8 +27,8 @@ describe('Public Key Integration Tests', function() {
   const origin = {host: 'localhost', protocol: 'http'};
 
   before(async () => {
-    publicKeyArmored = require('fs').readFileSync(`${__dirname}/../key3.asc`, 'utf8');
-    publicKeyArmored2 = require('fs').readFileSync(`${__dirname}/../key4.asc`, 'utf8');
+    publicKeyArmored = require('fs').readFileSync(`${__dirname}/../fixtures/key3.asc`, 'utf8');
+    publicKeyArmored2 = require('fs').readFileSync(`${__dirname}/../fixtures/key4.asc`, 'utf8');
     sinon.stub(log, 'info');
     mongo = new Mongo();
     await mongo.init(config.mongo);
