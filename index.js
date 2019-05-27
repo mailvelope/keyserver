@@ -37,7 +37,7 @@ if (cluster.isMaster) {
   cluster.on('fork', worker => log.info('cluster', `Forked worker #${worker.id} [pid:${worker.process.pid}]`));
   cluster.on('exit', worker => {
     log.warn('cluster', `Worker #${worker.id} [pid:${worker.process.pid}] died`);
-    setTimeout(() => cluster.fork(), 5000);
+    cluster.fork();
   });
 } else {
   require('./src');
