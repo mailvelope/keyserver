@@ -43,7 +43,7 @@ class REST {
       ctx.throw(400, 'Invalid request!');
     }
     const origin = util.origin(ctx);
-    await this._publicKey.put({emails, publicKeyArmored, origin});
+    await this._publicKey.put({emails, publicKeyArmored, origin}, ctx);
     ctx.body = 'Upload successful. Check your inbox to verify your email address.';
     ctx.status = 201;
   }
@@ -62,7 +62,7 @@ class REST {
     if (!util.isKeyId(q.keyId) && !util.isFingerPrint(q.fingerprint) && !util.isEmail(q.email)) {
       ctx.throw(400, 'Invalid request!');
     }
-    ctx.body = await this._publicKey.get(q);
+    ctx.body = await this._publicKey.get(q, ctx);
   }
 
   /**
@@ -74,10 +74,10 @@ class REST {
     if (!util.isKeyId(q.keyId) || !util.isString(q.nonce)) {
       ctx.throw(400, 'Invalid request!');
     }
-    await this._publicKey.verify(q);
+    const {email} = await this._publicKey.verify(q);
     // create link for sharing
-    const link = util.url(util.origin(ctx), `/pks/lookup?op=get&search=0x${q.keyId.toUpperCase()}`);
-    ctx.body = `<p>Email address successfully verified!</p><p>Link to share your key: <a href="${link}" target="_blank">${link}</a></p>`;
+    const link = util.url(util.origin(ctx), `/pks/lookup?op=get&search=${email}`);
+    ctx.body = ctx.__('verify_success', [email, link]);
     ctx.set('Content-Type', 'text/html; charset=utf-8');
   }
 
@@ -90,7 +90,7 @@ class REST {
     if (!util.isKeyId(q.keyId) && !util.isEmail(q.email)) {
       ctx.throw(400, 'Invalid request!');
     }
-    await this._publicKey.requestRemove(q);
+    await this._publicKey.requestRemove(q, ctx);
     ctx.body = 'Check your inbox to verify the removal of your email address.';
     ctx.status = 202;
   }

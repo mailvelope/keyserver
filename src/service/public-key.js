@@ -66,9 +66,10 @@ class PublicKey {
    * @param {Array} emails              (optional) The emails to upload/update
    * @param {String} publicKeyArmored   The ascii armored pgp key block
    * @param {Object} origin             Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
+   * @param {Object} ctx                Context
    * @return {Promise}
    */
-  async put({emails = [], publicKeyArmored, origin}) {
+  async put({emails = [], publicKeyArmored, origin}, ctx) {
     emails = emails.map(util.normalizeEmail);
     // lazily purge old/unverified keys on every key upload
     await this._purgeOldUnverified();
@@ -100,7 +101,7 @@ class PublicKey {
       key.publicKeyArmored = null;
     }
     // send mails to verify user ids
-    await this._sendVerifyEmail(key, origin);
+    await this._sendVerifyEmail(key, origin, ctx);
     // store key in database
     await this._persistKey(key);
   }
@@ -162,14 +163,15 @@ class PublicKey {
    * If a primary email address is provided only one email will be sent.
    * @param {Array}  userIds            user id documents containg the verification nonces
    * @param {Object} origin             the server's origin (required for email links)
+   * @param {Object} ctx                Context
    * @return {Promise}
    */
-  async _sendVerifyEmail({userIds, keyId}, origin) {
+  async _sendVerifyEmail({userIds, keyId}, origin, ctx) {
     for (const userId of userIds) {
       if (userId.notify && userId.notify === true) {
         // generate nonce for verification
         userId.nonce = util.random();
-        await this._email.send({template: tpl.verifyKey, userId, keyId, origin, publicKeyArmored: userId.publicKeyArmored});
+        await this._email.send({template: tpl.verifyKey.bind(null, ctx), userId, keyId, origin, publicKeyArmored: userId.publicKeyArmored});
       }
     }
   }
@@ -200,7 +202,7 @@ class PublicKey {
    * Verify a user id by proving knowledge of the nonce.
    * @param {string} keyId   Correspronding public key id
    * @param {string} nonce   The verification nonce proving email address ownership
-   * @return {Promise}
+   * @return {Promise}       The email that has been verified
    */
   async verify({keyId, nonce}) {
     // look for verification nonce in database
@@ -210,7 +212,7 @@ class PublicKey {
       util.throw(404, 'User ID not found');
     }
     await this._removeKeysWithSameEmail(key, nonce);
-    let {publicKeyArmored} = key.userIds.find(userId => userId.nonce === nonce);
+    let {publicKeyArmored, email} = key.userIds.find(userId => userId.nonce === nonce);
     // update armored key
     if (key.publicKeyArmored) {
       publicKeyArmored = await this._pgp.updateKey(key.publicKeyArmored, publicKeyArmored);
@@ -222,6 +224,7 @@ class PublicKey {
       'userIds.$.nonce': null,
       'userIds.$.publicKeyArmored': null
     }, DB_TYPE);
+    return {email};
   }
 
   /**
@@ -283,14 +286,15 @@ class PublicKey {
    * @param {string} fingerprint   (optional) The public key fingerprint
    * @param {string} keyId         (optional) The public key id
    * @param {String} email         (optional) The user's email address
+   * @param {Object} ctx           Context
    * @return {Object}               The public key document
    */
-  async get({fingerprint, keyId, email}) {
+  async get({fingerprint, keyId, email}, ctx) {
     // look for verified key
     const userIds = email ? [{email}] : undefined;
     const key = await this.getVerified({keyId, fingerprint, userIds});
     if (!key) {
-      util.throw(404, 'Key not found');
+      util.throw(404, ctx.__('key_not_found'));
     }
     // clean json return value (_id, nonce)
     delete key._id;
@@ -310,9 +314,10 @@ class PublicKey {
    * @param {String} keyId    (optional) The public key id
    * @param {String} email    (optional) The user's email address
    * @param {Object} origin   Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
+   * @param {Object} ctx      Context
    * @return {Promise}
    */
-  async requestRemove({keyId, email, origin}) {
+  async requestRemove({keyId, email, origin}, ctx) {
     // flag user ids for removal
     const key = await this._flagForRemove(keyId, email);
     if (!key) {
@@ -321,7 +326,7 @@ class PublicKey {
     // send verification mails
     keyId = key.keyId; // get keyId in case request was by email
     for (const userId of key.userIds) {
-      await this._email.send({template: tpl.verifyRemove, userId, keyId, origin});
+      await this._email.send({template: tpl.verifyRemove.bind(null, ctx), userId, keyId, origin});
     }
   }
 

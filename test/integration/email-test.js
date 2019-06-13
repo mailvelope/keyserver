@@ -15,6 +15,8 @@ describe('Email Integration Tests', function() {
 
   const recipient = {name: 'Test User', email: 'safewithme.testuser@gmail.com'};
 
+  const ctx = {__: key => key};
+
   before(() => {
     publicKeyArmored = require('fs').readFileSync(`${__dirname}/../fixtures/key1.asc`, 'utf8');
     origin = {
@@ -52,22 +54,22 @@ describe('Email Integration Tests', function() {
   describe('send verifyKey template', () => {
     it('should send plaintext email', async () => {
       delete userId.publicKeyArmored;
-      await email.send({template: tpl.verifyKey, userId, keyId, origin});
+      await email.send({template: tpl.verifyKey.bind(null, ctx), userId, keyId, origin});
     });
 
     it('should send pgp encrypted email', async () => {
-      await email.send({template: tpl.verifyKey, userId, keyId, origin});
+      await email.send({template: tpl.verifyKey.bind(null, ctx), userId, keyId, origin});
     });
   });
 
   describe('send verifyRemove template', () => {
     it('should send plaintext email', async () => {
       delete userId.publicKeyArmored;
-      await email.send({template: tpl.verifyRemove, userId, keyId, origin});
+      await email.send({template: tpl.verifyRemove.bind(null, ctx), userId, keyId, origin});
     });
 
     it('should send pgp encrypted email', async () => {
-      await email.send({template: tpl.verifyRemove, userId, keyId, origin});
+      await email.send({template: tpl.verifyRemove.bind(null, ctx), userId, keyId, origin});
     });
   });
 });

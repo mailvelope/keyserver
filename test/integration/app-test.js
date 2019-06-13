@@ -34,8 +34,9 @@ describe('Koa App (HTTP Server) Integration Tests', function() {
       emailParams = params;
       return Boolean(params.nonce);
     });
-    sandbox.spy(templates, 'verifyKey').withArgs(paramMatcher);
-    sandbox.spy(templates, 'verifyRemove').withArgs(paramMatcher);
+    const ctxMatcher = sinon.match(ctx => Boolean(ctx));
+    sandbox.spy(templates, 'verifyKey').withArgs(ctxMatcher, paramMatcher);
+    sandbox.spy(templates, 'verifyRemove').withArgs(ctxMatcher, paramMatcher);
 
     sendEmailStub = sandbox.stub().returns(Promise.resolve({response: '250'}));
     sendEmailStub.withArgs(sinon.match(sendOptions => sendOptions.to.address === primaryEmail));

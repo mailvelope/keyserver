@@ -58,10 +58,9 @@ class Email {
    */
   async send({template, userId, keyId, origin, publicKeyArmored}) {
     const compiled = template({
-      name: userId.name,
-      baseUrl: util.url(origin),
-      keyId,
-      nonce: userId.nonce
+      ...userId,
+      origin,
+      keyId
     });
     if (this._usePGPEncryption && publicKeyArmored) {
       compiled.text = await this._pgpEncrypt(compiled.text, publicKeyArmored);

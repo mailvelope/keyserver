@@ -43,7 +43,7 @@ class HKP {
       ctx.throw(400, 'Invalid request!');
     }
     const origin = util.origin(ctx);
-    await this._publicKey.put({publicKeyArmored, origin});
+    await this._publicKey.put({publicKeyArmored, origin}, ctx);
     ctx.body = 'Upload successful. Check your inbox to verify your email address.';
     ctx.status = 201;
   }
@@ -54,7 +54,7 @@ class HKP {
    */
   async lookup(ctx) {
     const params = this.parseQueryString(ctx);
-    const key = await this._publicKey.get(params);
+    const key = await this._publicKey.get(params, ctx);
     this.setGetHeaders(ctx, params);
     this.setGetBody(ctx, params, key);
   }

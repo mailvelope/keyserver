@@ -18,18 +18,20 @@
 'use strict';
 
 const Koa = require('koa');
-const config = require('config');
 const serve = require('koa-static');
 const router = require('koa-router')();
+const locales = require('koa-locales');
+const config = require('config');
 const middleware = require('./middleware');
 const Mongo = require('../dao/mongo');
 const Email = require('../email/email');
-const PGP = require('../service/pgp');
-const PublicKey = require('../service/public-key');
 const HKP = require('../route/hkp');
 const REST = require('../route/rest');
+const PGP = require('../service/pgp');
+const PublicKey = require('../service/public-key');
 
 const app = new Koa();
+locales(app);
 
 let hkp;
 let rest;

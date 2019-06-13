@@ -1,0 +1,8 @@
+{
+  "key_not_found": "Key not found",
+  "verify_key_subject": "Verify your email address",
+  "verify_key_text": "Hello {0},\n\nplease verify your email address {1} by clicking on the following link:\n\n{2}\n\nAfter verification of your email address your public key is available in our key directory.\n\nYou can find more info at {3}.\n\nGreetings from the Mailvelope Team",
+  "verify_success": "<h1>Mailvelope Key Server keys.mailvelope.com</h1><h2>Email address {0} successfully verified!</h2><p>Your public OpenPGP key is now available at the following link: <a href=\"{1}\" target=\"_blank\">{1}</a></p>",
+  "verify_removal_subject": "Verify key removal",
+  "verify_removal_text": "Hello {0},\n\nplease verify removal of your email address {1} from our key server ({2}) by clicking on the following link:\n\n{3}\n\nGreetings from the Mailvelope Team"
+}

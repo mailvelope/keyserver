@@ -1,11 +1,21 @@
 'use strict';
 
-exports.verifyKey = ({name, baseUrl, keyId, nonce}) => ({
-  subject: 'Verify Your Key',
-  text: `Hello ${name},\n\nplease click here to verify your email address:\n\n${baseUrl}/api/v1/key?op=verify&keyId=${keyId}&nonce=${nonce}`,
-});
+const util = require('../service/util');
 
-exports.verifyRemove = ({name, baseUrl, keyId, nonce}) => ({
-  subject: 'Verify Key Removal',
-  text: `Hello ${name},\n\nplease click here to verify the removal of your email address:\n\n${baseUrl}/api/v1/key?op=verifyRemove&keyId=${keyId}&nonce=${nonce}`,
-});
+function verifyKey(ctx, {name, email, nonce, origin, keyId}) {
+  const link = `${util.url(origin)}/api/v1/key?op=verify&keyId=${keyId}&nonce=${nonce}`;
+  return {
+    subject: ctx.__('verify_key_subject'),
+    text: ctx.__('verify_key_text', [name, email, link, origin.host])
+  };
+}
+
+function verifyRemove(ctx, {name, email, nonce, origin, keyId}) {
+  const link = `${util.url(origin)}/api/v1/key?op=verifyRemove&keyId=${keyId}&nonce=${nonce}`;
+  return {
+    subject: ctx.__('verify_removal_subject'),
+    text: ctx.__('verify_removal_text', [name, email, origin.host, link])
+  };
+}
+
+module.exports = {verifyKey, verifyRemove};
