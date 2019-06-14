@@ -13,7 +13,7 @@
   "scripts": {
     "start": "node index.js",
     "test": "npm run test:lint && npm run test:unit && npm run test:integration",
-    "test:lint": "eslint config src test *.js",
+    "test:lint": "eslint --ignore-pattern \"**/*.min.js\" config src test *.js",
     "test:unit": "mocha --opts test/mocha.opts ./test/unit/",
     "test:integration": "mocha --exit --opts test/mocha.opts ./test/integration",
     "release": "npm run release:install && npm run release:archive",
@@ -24,6 +24,7 @@
     "co-body": "6.0.0",
     "config": "3.1.0",
     "koa": "2.7.0",
+    "koa-ejs": "^4.2.0",
     "koa-locales": "1.11.0",
     "koa-router": "7.4.0",
     "koa-static": "5.0.0",
@@ -34,9 +35,11 @@
     "winston-papertrail": "1.0.5"
   },
   "devDependencies": {
+    "bootstrap": "3.4.1",
     "chai": "^4.1.1",
     "chai-as-promised": "^7.1.1",
     "eslint": "^5.16.0",
+    "jquery": "3.4.1",
     "mocha": "^6.1.4",
     "sinon": "^7.3.2",
     "supertest": "^4.0.2"

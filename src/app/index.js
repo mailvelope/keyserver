@@ -20,6 +20,7 @@
 const Koa = require('koa');
 const serve = require('koa-static');
 const router = require('koa-router')();
+const render = require('koa-ejs');
 const locales = require('koa-locales');
 const config = require('config');
 const middleware = require('./middleware');
@@ -31,10 +32,18 @@ const PGP = require('../service/pgp');
 const PublicKey = require('../service/public-key');
 
 const app = new Koa();
+render(app, {
+  root: `${__dirname}/../view`
+});
 locales(app);
 
 let hkp;
 let rest;
+
+// UI views
+router.get('/', ctx => ctx.render('index'));
+router.redirect('/index.html', '/');
+router.get('/manage.html', ctx => ctx.render('manage'));
 
 // HKP and REST api routes
 router.post('/pks/add', ctx => hkp.add(ctx));
