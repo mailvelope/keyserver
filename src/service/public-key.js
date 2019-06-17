@@ -378,7 +378,8 @@ class PublicKey {
     }
     if (flagged.userIds.length === 1) {
       // delete the key
-      return this._mongo.remove({keyId}, DB_TYPE);
+      await this._mongo.remove({keyId}, DB_TYPE);
+      return flagged.userIds[0];
     }
     // update the key
     const rmIdx = flagged.userIds.findIndex(userId => userId.nonce === nonce);
@@ -392,6 +393,7 @@ class PublicKey {
     }
     flagged.userIds.splice(rmIdx, 1);
     await this._mongo.update({keyId}, flagged, DB_TYPE);
+    return rmUserId;
   }
 }
 

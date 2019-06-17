@@ -23,6 +23,7 @@ const router = require('koa-router')();
 const render = require('koa-ejs');
 const locales = require('koa-locales');
 const config = require('config');
+const path = require('path');
 const middleware = require('./middleware');
 const Mongo = require('../dao/mongo');
 const Email = require('../email/email');
@@ -32,13 +33,21 @@ const PGP = require('../service/pgp');
 const PublicKey = require('../service/public-key');
 
 const app = new Koa();
+
 render(app, {
-  root: `${__dirname}/../view`
+  root: path.join(__dirname, '../view')
 });
+
 locales(app);
 
 let hkp;
 let rest;
+
+app.use(async (ctx, next) => {
+  ctx.state = ctx.state || {};
+  ctx.state.__ = ctx.__.bind(ctx);
+  await next();
+});
 
 // UI views
 router.get('/', ctx => ctx.render('index'));
@@ -58,7 +67,7 @@ app.use(middleware.upgradeToHTTPS);
 app.use(middleware.setHTTPResponseHeaders);
 app.use(router.routes());
 app.use(router.allowedMethods());
-app.use(serve(`${__dirname}/../static`));
+app.use(serve(path.join(__dirname, '../static')));
 
 async function init() {
   // inject dependencies

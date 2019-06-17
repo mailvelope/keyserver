@@ -62,7 +62,7 @@ class REST {
     if (!util.isKeyId(q.keyId) && !util.isFingerPrint(q.fingerprint) && !util.isEmail(q.email)) {
       ctx.throw(400, 'Invalid request!');
     }
-    ctx.body = await this._publicKey.get(q, ctx);
+    await ctx.render('key-armored', {query: q, key: await this._publicKey.get(q, ctx)});
   }
 
   /**
@@ -77,8 +77,7 @@ class REST {
     const {email} = await this._publicKey.verify(q);
     // create link for sharing
     const link = util.url(util.origin(ctx), `/pks/lookup?op=get&search=${email}`);
-    ctx.body = ctx.__('verify_success', [email, link]);
-    ctx.set('Content-Type', 'text/html; charset=utf-8');
+    await ctx.render('verify-success', {email, link});
   }
 
   /**
@@ -104,8 +103,8 @@ class REST {
     if (!util.isKeyId(q.keyId) || !util.isString(q.nonce)) {
       ctx.throw(400, 'Invalid request!');
     }
-    await this._publicKey.verifyRemove(q);
-    ctx.body = 'Email address successfully removed!';
+    const {email} = await this._publicKey.verifyRemove(q);
+    await ctx.render('removal-success', {email});
   }
 }
 

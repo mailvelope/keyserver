@@ -56,7 +56,7 @@ class HKP {
     const params = this.parseQueryString(ctx);
     const key = await this._publicKey.get(params, ctx);
     this.setGetHeaders(ctx, params);
-    this.setGetBody(ctx, params, key);
+    await this.setGetBody(ctx, params, key);
   }
 
   /**
@@ -119,9 +119,13 @@ class HKP {
    * @param {Object} params   The parsed query string parameters
    * @param {Object} key      The public key document
    */
-  setGetBody(ctx, params, key) {
+  async setGetBody(ctx, params, key) {
     if (params.op === 'get') {
-      ctx.body = key.publicKeyArmored;
+      if (params.mr) {
+        ctx.body = key.publicKeyArmored;
+      } else {
+        await ctx.render('key-armored', {query: params, key});
+      }
     } else if (['index', 'vindex'].indexOf(params.op) !== -1) {
       const VERSION = 1;
       const COUNT = 1; // number of keys
