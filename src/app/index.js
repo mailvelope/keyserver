@@ -38,7 +38,10 @@ render(app, {
   root: path.join(__dirname, '../view')
 });
 
-locales(app);
+locales(app, {
+  dirs: [path.join(__dirname, '../../locales')],
+  writeCookie: false
+});
 
 let hkp;
 let rest;
