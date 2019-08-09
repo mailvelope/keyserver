@@ -62,7 +62,7 @@ class REST {
     if (!util.isKeyId(q.keyId) && !util.isFingerPrint(q.fingerprint) && !util.isEmail(q.email)) {
       ctx.throw(400, 'Invalid request!');
     }
-    await ctx.render('key-armored', {query: q, key: await this._publicKey.get(q, ctx)});
+    ctx.body = await this._publicKey.get(q, ctx);
   }
 
   /**
