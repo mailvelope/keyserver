@@ -18,7 +18,7 @@
     "test:integration": "mocha --exit --opts test/mocha.opts ./test/integration",
     "release": "npm run release:install && npm run release:archive",
     "release:install": "rm -rf node_modules/ && npm install --production",
-    "release:archive": "zip -rq release.zip package.json package-lock.json node_modules/ *.js src/ config/"
+    "release:archive": "zip -rq release.zip package.json package-lock.json node_modules/ *.js src/ config/ locales/"
   },
   "dependencies": {
     "co-body": "6.0.0",
