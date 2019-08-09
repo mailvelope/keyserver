@@ -25,7 +25,7 @@ const crypto = require('crypto');
  * @return {boolean}   If data is a string
  */
 exports.isString = function(data) {
-  return typeof data === 'string' || String.prototype.isPrototypeOf(data);
+  return typeof data === 'string' || String.prototype.isPrototypeOf(data); // eslint-disable-line no-prototype-builtins
 };
 
 /**
