@@ -130,6 +130,12 @@ POST /api/v1/key
 
 * **publicKeyArmored**: The ascii armored public PGP key to be uploaded
 
+E.g. to upload a key from shell:
+```bash
+curl https://keys.mailvelope.com/api/v1/key --data "{\"publicKeyArmored\":\"$( \
+  gpg --armor --export-options export-minimal --export $GPGKEYID | sed ':a;N;$!ba;s/\n/\\n/g' \
+  )\"}" 
+```
 
 ### Verify uploaded key (via link in email)
 
