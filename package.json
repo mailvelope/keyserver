@@ -39,7 +39,7 @@
     "chai": "^4.1.1",
     "chai-as-promised": "^7.1.1",
     "eslint": "^6.1.0",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "mocha": "^6.2.0",
     "sinon": "^7.4.1",
     "supertest": "^4.0.2"
