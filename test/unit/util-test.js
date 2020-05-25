@@ -1,6 +1,6 @@
 'use strict';
 
-const util = require('../../src/service/util');
+const util = require('../../src/lib/util');
 
 describe('Util Unit Tests', () => {
   describe('isString', () => {
@@ -111,19 +111,6 @@ describe('Util Unit Tests', () => {
     });
   });
 
-  describe('throw', () => {
-    it('should throw error with status and expose', () => {
-      try {
-        util.throw(500, 'boom');
-        expect(true).to.be.false;
-      } catch (e) {
-        expect(e.message).to.equal('boom');
-        expect(e.status).to.equal(500);
-        expect(e.expose).to.be.true;
-      }
-    });
-  });
-
   describe('random', () => {
     it('should generate random 32 char hex string', () => {
       expect(util.random().length).to.equal(32);
@@ -136,7 +123,7 @@ describe('Util Unit Tests', () => {
 
   describe('origin', () => {
     it('should work', () => {
-      expect(util.origin({secure: true, host: 'h', protocol: 'p'})).to.exist;
+      expect(util.origin({info: {host: 'h'}, server: {info: {protocol: 'https'}}, headers: {}})).to.exist;
     });
   });
 

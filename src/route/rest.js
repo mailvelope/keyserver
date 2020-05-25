@@ -1,24 +1,12 @@
 /**
- * Mailvelope - secure email with OpenPGP encryption for Webmail
- * Copyright (C) 2016 Mailvelope GmbH
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License version 3
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2020 Mailvelope GmbH
+ * Licensed under the GNU Affero General Public License version 3
  */
 
 'use strict';
 
-const parse = require('co-body');
-const util = require('../service/util');
+const Boom = require('@hapi/boom');
+const util = require('../lib/util');
 
 /**
  * The REST api to provide additional functionality on top of HKP
@@ -35,77 +23,125 @@ class REST {
 
   /**
    * Public key / user ID upload via http POST
-   * @param  {Object} ctx   The koa request/response context
+   * @param {Object} request - hapi request object
+   * @param {Object} h - hapi response toolkit
    */
-  async create(ctx) {
-    const {emails, publicKeyArmored} = await parse.json(ctx, {limit: '1mb'});
+  async create(request, h) {
+    const {emails, publicKeyArmored} = request.payload;
     if (!publicKeyArmored) {
-      ctx.throw(400, 'Invalid request!');
+      return Boom.badRequest('No public armored key found');
     }
-    const origin = util.origin(ctx);
-    await this._publicKey.put({emails, publicKeyArmored, origin}, ctx);
-    ctx.body = 'Upload successful. Check your inbox to verify your email address.';
-    ctx.status = 201;
+    const origin = util.origin(request);
+    await this._publicKey.put({emails, publicKeyArmored, origin, i18n: request.i18n});
+    return h.response('Upload successful. Check your inbox to verify your email address.').code(201);
   }
 
   /**
    * Public key query via http GET
-   * @param  {Object} ctx   The koa request/response context
+   * @param {Object} request - hapi request object
+   * @param {Object} h - hapi response toolkit
    */
-  async query(ctx) {
-    const op = ctx.query.op;
-    if (op === 'verify' || op ===  'verifyRemove') {
-      return this[op](ctx); // delegate operation
+  async query(request, h) {
+    const {op} = request.query;
+    if (op === 'verify') {
+      return this.verify(request, h);
+    } else if (op === 'verifyRemove') {
+      return this.verifyRemove(request, h);
     }
     // do READ if no 'op' provided
-    const q = {keyId: ctx.query.keyId, fingerprint: ctx.query.fingerprint, email: ctx.query.email};
-    if (!util.isKeyId(q.keyId) && !util.isFingerPrint(q.fingerprint) && !util.isEmail(q.email)) {
-      ctx.throw(400, 'Invalid request!');
+    const {keyId, fingerprint, email} = request.query;
+    if (!util.isKeyId(keyId) && !util.isFingerPrint(fingerprint) && !util.isEmail(email)) {
+      return Boom.badRequest('Missing parameter: keyId, fingerprint or email.');
     }
-    ctx.body = await this._publicKey.get(q, ctx);
+    return h.response(await this._publicKey.get({keyId, fingerprint, email}, request.i18n));
   }
 
   /**
    * Verify a public key's user id via http GET
-   * @param  {Object} ctx   The koa request/response context
+   * @param {Object} request - hapi request object
+   * @param {Object} h - hapi response toolkit
    */
-  async verify(ctx) {
-    const q = {keyId: ctx.query.keyId, nonce: ctx.query.nonce};
-    if (!util.isKeyId(q.keyId) || !util.isString(q.nonce)) {
-      ctx.throw(400, 'Invalid request!');
+  async verify(request, h) {
+    const {keyId, nonce} = request.query;
+    if (!util.isKeyId(keyId) || !util.isString(nonce)) {
+      throw Boom.badRequest('Invalid parameter keyId or nonce');
     }
-    const {email} = await this._publicKey.verify(q);
+    const {email} = await this._publicKey.verify({keyId, nonce});
     // create link for sharing
-    const link = util.url(util.origin(ctx), `/pks/lookup?op=get&search=${email}`);
-    await ctx.render('verify-success', {email, link});
+    const link = util.url(util.origin(request), `/pks/lookup?op=get&search=${email}`);
+    return h.view('verify-success', {email, link});
   }
 
   /**
    * Request public key removal via http DELETE
-   * @param  {Object} ctx   The koa request/response context
+   * @param {Object} request - hapi request object
+   * @param {Object} h - hapi response toolkit
    */
-  async remove(ctx) {
-    const q = {keyId: ctx.query.keyId, email: ctx.query.email, origin: util.origin(ctx)};
-    if (!util.isKeyId(q.keyId) && !util.isEmail(q.email)) {
-      ctx.throw(400, 'Invalid request!');
+  async remove(request, h) {
+    const {keyId, email} = request.query;
+    const origin  = util.origin(request);
+    if (!util.isKeyId(keyId) && !util.isEmail(email)) {
+      throw Boom.badRequest('Invalid parameter keyId or email');
     }
-    await this._publicKey.requestRemove(q, ctx);
-    ctx.body = 'Check your inbox to verify the removal of your email address.';
-    ctx.status = 202;
+    await this._publicKey.requestRemove({keyId, email, origin}, request.i18n);
+    return h.response('Check your inbox to verify the removal of your email address.').code(202);
   }
 
   /**
    * Verify public key removal via http GET
-   * @param  {Object} ctx   The koa request/response context
+   * @param {Object} request - hapi request object
+   * @param {Object} h - hapi response toolkit
    */
-  async verifyRemove(ctx) {
-    const q = {keyId: ctx.query.keyId, nonce: ctx.query.nonce};
-    if (!util.isKeyId(q.keyId) || !util.isString(q.nonce)) {
-      ctx.throw(400, 'Invalid request!');
+  async verifyRemove(request, h) {
+    const {keyId, nonce} = request.query;
+    if (!util.isKeyId(keyId) || !util.isString(nonce)) {
+      throw Boom.badRequest('Invalid parameter keyId or nonce');
     }
-    const {email} = await this._publicKey.verifyRemove(q);
-    await ctx.render('removal-success', {email});
+    const {email} = await this._publicKey.verifyRemove({keyId, nonce});
+    return h.view('removal-success', {email});
   }
 }
 
-module.exports = REST;
+exports.plugin = {
+  name: 'REST',
+  async register(server, options) {
+    const rest = new REST(server.app.publicKey);
+
+    const routeOptions = {
+      bind: rest,
+      cors: Boolean(options.server.cors === 'true'),
+      security: Boolean(options.server.security === 'true'),
+      ext: {
+        onPreResponse: {
+          method({response}, h) {
+            if (!response.isBoom) {
+              return h.continue;
+            }
+            return h.response(response.message).code(response.output.statusCode);
+          }
+        }
+      }
+    };
+
+    server.route({
+      method: 'POST',
+      path: '/api/v1/key',
+      handler: rest.create,
+      options: routeOptions
+    });
+
+    server.route({
+      method: 'GET',
+      path: '/api/v1/key',
+      handler: rest.query,
+      options: routeOptions
+    });
+
+    server.route({
+      method: 'DELETE',
+      path: '/api/v1/key',
+      handler: rest.remove,
+      options: routeOptions
+    });
+  }
+};

@@ -1,10 +1,10 @@
 {
   "key_not_found": "Key not found",
   "verify_key_subject": "Verify your email address",
-  "verify_key_text": "Hello {0},\n\nplease verify your email address {1} by clicking on the following link:\n\n{2}\n\nAfter verification of your email address, your public key is available in our key directory.\n\nYou can find more info at {3}.\n\nGreetings from the Mailvelope Team",
-  "verify_success_header": "Email address {0} successfully verified",
+  "verify_key_text": "Hello {name},\n\nplease verify your email address {email} by clicking on the following link:\n\n{link}\n\nAfter verification of your email address, your public key is available in our key directory.\n\nYou can find more info at {host}.\n\nGreetings from the Mailvelope Team",
+  "verify_success_header": "Email address {{email}} successfully verified",
   "verify_success_link": "Your public OpenPGP key is now available at the following link:",
   "verify_removal_subject": "Verify key removal",
-  "verify_removal_text": "Hello {0},\n\nplease verify removal of your email address {1} from our key server ({2}) by clicking on the following link:\n\n{3}\n\nGreetings from the Mailvelope Team",
-  "removal_success": "Email address {0} removed from the key directory"
+  "verify_removal_text": "Hello {name},\n\nplease verify removal of your email address {email} from our key server ({host}) by clicking on the following link:\n\n{link}\n\nGreetings from the Mailvelope Team",
+  "removal_success": "Email address {{email}} removed from the key directory"
 }

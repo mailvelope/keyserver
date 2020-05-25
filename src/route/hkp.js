@@ -1,24 +1,12 @@
 /**
- * Mailvelope - secure email with OpenPGP encryption for Webmail
- * Copyright (C) 2016 Mailvelope GmbH
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License version 3
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2020 Mailvelope GmbH
+ * Licensed under the GNU Affero General Public License version 3
  */
 
 'use strict';
 
-const parse = require('co-body');
-const util = require('../service/util');
+const Boom = require('@hapi/boom');
+const util = require('../lib/util');
 
 /**
  * An implementation of the OpenPGP HTTP Keyserver Protocol (HKP)
@@ -27,7 +15,7 @@ const util = require('../service/util');
 class HKP {
   /**
    * Create an instance of the HKP server
-   * @param  {Object} publicKey   An instance of the public key service
+   * @param  {Object} publicKey - an instance of the public key service
    */
   constructor(publicKey) {
     this._publicKey = publicKey;
@@ -35,63 +23,82 @@ class HKP {
 
   /**
    * Public key upload via http POST
-   * @param  {Object} ctx   The koa request/response context
+   * @param {Object} request - hapi request object
+   * @param {Object} h - hapi response toolkit
    */
-  async add(ctx) {
-    const {keytext: publicKeyArmored} = await parse.form(ctx, {limit: '1mb'});
+  async add(request, h) {
+    const {keytext: publicKeyArmored} = request.payload;
     if (!publicKeyArmored) {
-      ctx.throw(400, 'Invalid request!');
+      return Boom.badRequest('No key found');
     }
-    const origin = util.origin(ctx);
-    await this._publicKey.put({publicKeyArmored, origin}, ctx);
-    ctx.body = 'Upload successful. Check your inbox to verify your email address.';
-    ctx.status = 201;
+    const origin = util.origin(request);
+    await this._publicKey.put({publicKeyArmored, origin, i18n: request.i18n});
+    return h.response('Upload successful. Check your inbox to verify your email address.').code(201);
   }
 
   /**
    * Public key lookup via http GET
-   * @param  {Object} ctx   The koa request/response context
+   * @param {Object} request - hapi request object
+   * @param {Object} h - hapi response toolkit
    */
-  async lookup(ctx) {
-    const params = this.parseQueryString(ctx);
-    const key = await this._publicKey.get(params, ctx);
-    this.setGetHeaders(ctx, params);
-    await this.setGetBody(ctx, params, key);
+  async lookup(request, h) {
+    const params = this.parseQueryString(request);
+    const key = await this._publicKey.get(params, request.i18n);
+    if (params.op === 'get') {
+      if (params.mr) {
+        return h.response(key.publicKeyArmored)
+        .header('Content-Type', 'application/pgp-keys; charset=utf-8')
+        .header('Content-Disposition', 'attachment; filename=openpgpkey.asc');
+      } else {
+        return h.view('key-armored', {query: params, key});
+      }
+    } else if (['index', 'vindex'].includes(params.op)) {
+      const VERSION = 1;
+      const COUNT = 1; // number of keys
+      const fp = key.fingerprint.toUpperCase();
+      const algo = key.algorithm.includes('rsa') ? 1 : '';
+      const created = key.created ? (key.created.getTime() / 1000) : '';
+      let body = `info:${VERSION}:${COUNT}\npub:${fp}:${algo}:${key.keySize}:${created}::\n`;
+      for (const uid of key.userIds) {
+        body += `uid:${encodeURIComponent(`${uid.name} <${uid.email}>`)}:::\n`;
+      }
+      return h.response(body);
+    }
   }
 
   /**
    * Parse the query string for a lookup request and set a corresponding
    * error code if the requests is not supported or invalid.
-   * @param  {Object} ctx   The koa request/response context
-   * @return {Object}       The query parameters or undefined for an invalid request
+   * @param {Object} request - hapi request object
+   * @param {Object} h - hapi response toolkit
+   * @return {Object} - query parameters or undefined for an invalid request
    */
-  parseQueryString(ctx) {
+  parseQueryString(request) {
     const params = {
-      op: ctx.query.op, // operation ... only 'get' is supported
-      mr: ctx.query.options === 'mr' // machine readable
+      op: request.query.op, // operation ... only 'get' is supported
+      mr: request.query.options === 'mr' // machine readable
     };
-    if (this.checkId(ctx.query.search)) {
-      const id = ctx.query.search.replace(/^0x/, '');
+    if (this.checkId(request.query.search)) {
+      const id = request.query.search.replace(/^0x/, '');
       params.keyId = util.isKeyId(id) ? id : undefined;
       params.fingerprint = util.isFingerPrint(id) ? id : undefined;
-    } else if (util.isEmail(ctx.query.search)) {
-      params.email = ctx.query.search;
+    } else if (util.isEmail(request.query.search)) {
+      params.email = request.query.search;
     }
 
-    if (['get', 'index', 'vindex'].indexOf(params.op) === -1) {
-      ctx.throw(501, 'Not implemented!');
+    if (!['get', 'index', 'vindex'].includes(params.op)) {
+      throw Boom.notImplemented('Method not implemented');
     } else if (!params.keyId && !params.fingerprint && !params.email) {
-      ctx.throw(501, 'Not implemented!');
+      throw Boom.badRequest('Invalid search parameter');
     }
-
     return params;
   }
 
   /**
    * Checks for a valid key id in the query string. A key must be prepended
    * with '0x' and can be between 16 and 40 hex characters long.
-   * @param  {String} id   The key id
-   * @return {Boolean}     If the key id is valid
+   * @param {String} id - key id
+   * @return {Boolean} - if the key id is valid
    */
   checkId(id) {
     if (!util.isString(id)) {
@@ -99,47 +106,41 @@ class HKP {
     }
     return /^0x[a-fA-F0-9]{16,40}$/.test(id);
   }
-
-  /**
-   * Set HTTP headers for a GET requests with 'mr' (machine readable) options.
-   * @param  {Object} ctx      The koa request/response context
-   * @param  {Object} params   The parsed query string parameters
-   */
-  setGetHeaders(ctx, params) {
-    if (params.op === 'get' && params.mr) {
-      ctx.set('Content-Type', 'application/pgp-keys; charset=utf-8');
-      ctx.set('Content-Disposition', 'attachment; filename=openpgpkey.asc');
-    }
-  }
-
-  /**
-   * Format the body accordingly.
-   * See https://tools.ietf.org/html/draft-shaw-openpgp-hkp-00#section-5
-   * @param {Object} ctx      The koa request/response context
-   * @param {Object} params   The parsed query string parameters
-   * @param {Object} key      The public key document
-   */
-  async setGetBody(ctx, params, key) {
-    if (params.op === 'get') {
-      if (params.mr) {
-        ctx.body = key.publicKeyArmored;
-      } else {
-        await ctx.render('key-armored', {query: params, key});
-      }
-    } else if (['index', 'vindex'].indexOf(params.op) !== -1) {
-      const VERSION = 1;
-      const COUNT = 1; // number of keys
-      const fp = key.fingerprint.toUpperCase();
-      const algo = (key.algorithm.indexOf('rsa') !== -1) ? 1 : '';
-      const created = key.created ? (key.created.getTime() / 1000) : '';
-
-      ctx.body = `info:${VERSION}:${COUNT}\npub:${fp}:${algo}:${key.keySize}:${created}::\n`;
-
-      for (const uid of key.userIds) {
-        ctx.body += `uid:${encodeURIComponent(`${uid.name} <${uid.email}>`)}:::\n`;
-      }
-    }
-  }
 }
 
-module.exports = HKP;
+exports.plugin = {
+  name: 'HKP',
+  async register(server, options) {
+    const hkp = new HKP(server.app.publicKey);
+
+    const routeOptions = {
+      bind: hkp,
+      cors: Boolean(options.server.cors === 'true'),
+      security: Boolean(options.server.security === 'true'),
+      ext: {
+        onPreResponse: {
+          method({response}, h) {
+            if (!response.isBoom) {
+              return h.continue;
+            }
+            return h.response(response.message).code(response.output.statusCode);
+          }
+        }
+      }
+    };
+
+    server.route({
+      method: 'POST',
+      path: '/pks/add',
+      handler: hkp.add,
+      options: routeOptions
+    });
+
+    server.route({
+      method: 'GET',
+      path: '/pks/lookup',
+      handler: hkp.lookup,
+      options: routeOptions
+    });
+  }
+};

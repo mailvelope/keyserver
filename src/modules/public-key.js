@@ -1,25 +1,14 @@
 /**
- * Mailvelope - secure email with OpenPGP encryption for Webmail
- * Copyright (C) 2016 Mailvelope GmbH
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License version 3
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2020 Mailvelope GmbH
+ * Licensed under the GNU Affero General Public License version 3
  */
 
 'use strict';
 
-const config = require('config');
-const util = require('./util');
-const tpl = require('../email/templates');
+const Boom = require('@hapi/boom');
+const config = require('../../config/config');
+const util = require('../lib/util');
+const tpl = require('../lib/templates');
 
 /**
  * Database documents have the format:
@@ -66,10 +55,10 @@ class PublicKey {
    * @param {Array} emails              (optional) The emails to upload/update
    * @param {String} publicKeyArmored   The ascii armored pgp key block
    * @param {Object} origin             Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
-   * @param {Object} ctx                Context
+   * @param {Object} i18n               i18n object
    * @return {Promise}
    */
-  async put({emails = [], publicKeyArmored, origin}, ctx) {
+  async put({emails = [], publicKeyArmored, origin, i18n}) {
     emails = emails.map(util.normalizeEmail);
     // lazily purge old/unverified keys on every key upload
     await this._purgeOldUnverified();
@@ -80,7 +69,7 @@ class PublicKey {
       // keep submitted user IDs only
       key.userIds = key.userIds.filter(({email}) => emails.includes(email));
       if (key.userIds.length !== emails.length) {
-        util.throw(400, 'Provided email address does not match a valid user ID of the key');
+        throw Boom.badRequest('Provided email address does not match a valid user ID of the key');
       }
     }
     // check for existing verified key with same id
@@ -94,14 +83,14 @@ class PublicKey {
     } else {
       key.userIds = key.userIds.filter(userId => userId.status === KEY_STATUS_VALID);
       if (!key.userIds.length) {
-        util.throw(400, 'Invalid PGP key: no valid user IDs found');
+        throw Boom.badRequest('Invalid PGP key: no valid user IDs found');
       }
       await this._addKeyArmored(key.userIds, key.publicKeyArmored);
       // new key, set armored to null
       key.publicKeyArmored = null;
     }
     // send mails to verify user ids
-    await this._sendVerifyEmail(key, origin, ctx);
+    await this._sendVerifyEmail(key, origin, i18n);
     // store key in database
     await this._persistKey(key);
   }
@@ -163,15 +152,15 @@ class PublicKey {
    * If a primary email address is provided only one email will be sent.
    * @param {Array}  userIds            user id documents containg the verification nonces
    * @param {Object} origin             the server's origin (required for email links)
-   * @param {Object} ctx                Context
+   * @param {Object} i18n               i18n object
    * @return {Promise}
    */
-  async _sendVerifyEmail({userIds, keyId}, origin, ctx) {
+  async _sendVerifyEmail({userIds, keyId}, origin, i18n) {
     for (const userId of userIds) {
       if (userId.notify && userId.notify === true) {
         // generate nonce for verification
         userId.nonce = util.random();
-        await this._email.send({template: tpl.verifyKey.bind(null, ctx), userId, keyId, origin, publicKeyArmored: userId.publicKeyArmored});
+        await this._email.send({template: tpl.verifyKey, userId, keyId, origin, publicKeyArmored: userId.publicKeyArmored, i18n});
       }
     }
   }
@@ -194,7 +183,7 @@ class PublicKey {
     // persist new key
     const r = await this._mongo.create(key, DB_TYPE);
     if (r.insertedCount !== 1) {
-      util.throw(500, 'Failed to persist key');
+      throw Boom.badImplementation('Failed to persist key');
     }
   }
 
@@ -209,7 +198,7 @@ class PublicKey {
     const query = {keyId, 'userIds.nonce': nonce};
     const key = await this._mongo.get(query, DB_TYPE);
     if (!key) {
-      util.throw(404, 'User ID not found');
+      throw Boom.notFound('User ID not found');
     }
     await this._removeKeysWithSameEmail(key, nonce);
     let {publicKeyArmored, email} = key.userIds.find(userId => userId.nonce === nonce);
@@ -286,15 +275,15 @@ class PublicKey {
    * @param {string} fingerprint   (optional) The public key fingerprint
    * @param {string} keyId         (optional) The public key id
    * @param {String} email         (optional) The user's email address
-   * @param {Object} ctx           Context
+   * @param {Object} i18n          i18n object
    * @return {Object}               The public key document
    */
-  async get({fingerprint, keyId, email}, ctx) {
+  async get({fingerprint, keyId, email}, i18n) {
     // look for verified key
     const userIds = email ? [{email}] : undefined;
     const key = await this.getVerified({keyId, fingerprint, userIds});
     if (!key) {
-      util.throw(404, ctx.__('key_not_found'));
+      throw Boom.notFound(i18n.__('key_not_found'));
     }
     // clean json return value (_id, nonce)
     delete key._id;
@@ -314,19 +303,19 @@ class PublicKey {
    * @param {String} keyId    (optional) The public key id
    * @param {String} email    (optional) The user's email address
    * @param {Object} origin   Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
-   * @param {Object} ctx      Context
+   * @param {Object} i18n     i18n object
    * @return {Promise}
    */
-  async requestRemove({keyId, email, origin}, ctx) {
+  async requestRemove({keyId, email, origin}, i18n) {
     // flag user ids for removal
     const key = await this._flagForRemove(keyId, email);
     if (!key) {
-      util.throw(404, 'User ID not found');
+      throw Boom.notFound('User ID not found');
     }
     // send verification mails
     keyId = key.keyId; // get keyId in case request was by email
     for (const userId of key.userIds) {
-      await this._email.send({template: tpl.verifyRemove.bind(null, ctx), userId, keyId, origin});
+      await this._email.send({template: tpl.verifyRemove, userId, keyId, origin, i18n});
     }
   }
 
@@ -374,7 +363,7 @@ class PublicKey {
     // check if key exists in database
     const flagged = await this._mongo.get({keyId, 'userIds.nonce': nonce}, DB_TYPE);
     if (!flagged) {
-      util.throw(404, 'User ID not found');
+      throw Boom.notFound('User ID not found');
     }
     if (flagged.userIds.length === 1) {
       // delete the key

@@ -1,23 +1,11 @@
 /**
- * Mailvelope - secure email with OpenPGP encryption for Webmail
- * Copyright (C) 2016 Mailvelope GmbH
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License version 3
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2020 Mailvelope GmbH
+ * Licensed under the GNU Affero General Public License version 3
  */
 
 'use strict';
 
-const log = require('winston');
+const log = require('../lib/log');
 const MongoClient = require('mongodb').MongoClient;
 
 /**
@@ -32,7 +20,7 @@ class Mongo {
    * @yield {undefined}
    */
   async init({uri, user, pass}) {
-    log.info('mongo', 'Connecting to MongoDB ...');
+    log.info('Connecting to MongoDB ...');
     const url = `mongodb://${user}:${pass}@${uri}`;
     this._client = await MongoClient.connect(url, {useNewUrlParser: true, useUnifiedTopology: true});
     this._db = this._client.db();

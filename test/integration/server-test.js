@@ -1,14 +1,14 @@
 'use strict';
 
 const request = require('supertest');
-const Mongo = require('../../src/dao/mongo');
+const Mongo = require('../../src/modules/mongo');
 const nodemailer = require('nodemailer');
-const templates = require('../../src/email/templates');
-const config = require('config');
+const templates = require('../../src/lib/templates');
+const config = require('../../config/config');
 const fs = require('fs');
-const log = require('winston');
+const log = require('../../src/lib/log');
 
-describe('Koa App (HTTP Server) Integration Tests', function() {
+describe('Key Server Integration Tests', function() {
   this.timeout(20000);
 
   const sandbox = sinon.createSandbox();

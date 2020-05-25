@@ -1,21 +1,24 @@
 'use strict';
 
+require('dotenv').config();
+
 module.exports = {
 
   log: {
-    level: process.env.LOG_LEVEL || 'silly'
+    level: process.env.LOG_LEVEL || 'info'
   },
 
-  papertrail: {
-    host: process.env.PAPERTRAIL_HOST,
-    port: process.env.PAPERTRAIL_PORT
+  syslog: {
+    host: process.env.SYSLOG_HOST,
+    port: process.env.SYSLOG_PORT
   },
 
   server: {
     port: process.env.PORT || 8888,
-    httpsUpgrade: process.env.HTTPS_UPGRADE,
-    httpsKeyPin: process.env.HTTPS_KEY_PIN,
-    httpsKeyPinBackup: process.env.HTTPS_KEY_PIN_BACKUP
+    host: process.env.SERVER_HOST || 'localhost',
+    cors: process.env.CORS_HEADER,
+    security: process.env.HTTP_SECURITY_HEADER,
+    csp: process.env.CSP_HEADER
   },
 
   mongo: {

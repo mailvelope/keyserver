@@ -1,24 +1,13 @@
 /**
- * Mailvelope - secure email with OpenPGP encryption for Webmail
- * Copyright (C) 2016 Mailvelope GmbH
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License version 3
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2020 Mailvelope GmbH
+ * Licensed under the GNU Affero General Public License version 3
  */
 
 'use strict';
 
-const log = require('winston');
-const util = require('./util');
+const Boom = require('@hapi/boom');
+const log = require('../lib/log');
+const util = require('../lib/util');
 const openpgp = require('openpgp');
 
 const KEY_BEGIN = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
@@ -44,10 +33,11 @@ class PGP {
     const r = await openpgp.key.readArmored(publicKeyArmored);
     if (r.err) {
       const error = r.err[0];
-      log.error('pgp', 'Failed to parse PGP key:\n%s', publicKeyArmored, error);
-      util.throw(500, 'Failed to parse PGP key');
+      log.error('Failed to parse PGP key\n%s\n%s', error, publicKeyArmored);
+      throw Boom.badImplementation('Failed to parse PGP key');
     } else if (!r.keys || r.keys.length !== 1 || !r.keys[0].primaryKey) {
-      util.throw(400, 'Invalid PGP key: only one key can be uploaded');
+      log.error('Invalid PGP key: only one key per armored block\n%s', publicKeyArmored);
+      throw Boom.badRequest('Invalid PGP key: only one key per armored block');
     }
 
     // verify primary key
@@ -56,20 +46,23 @@ class PGP {
     const now = new Date();
     const verifyDate = primaryKey.created > now ? primaryKey.created : now;
     if (await key.verifyPrimaryKey(verifyDate) !== openpgp.enums.keyStatus.valid) {
-      util.throw(400, 'Invalid PGP key: primary key verification failed');
+      log.error('Invalid PGP key: primary key verification failed\n%s', publicKeyArmored);
+      throw Boom.badRequest('Invalid PGP key: primary key verification failed');
     }
 
     // accept version 4 keys only
     const keyId = primaryKey.getKeyId().toHex();
     const fingerprint = primaryKey.getFingerprint();
     if (!util.isKeyId(keyId) || !util.isFingerPrint(fingerprint)) {
-      util.throw(400, 'Invalid PGP key: only v4 keys are accepted');
+      log.error('Invalid PGP key: only v4 keys are accepted\n%s', publicKeyArmored);
+      throw Boom.badRequest('Invalid PGP key: only v4 keys are accepted');
     }
 
     // check for at least one valid user id
     const userIds = await this.parseUserIds(key.users, primaryKey, verifyDate);
     if (!userIds.length) {
-      util.throw(400, 'Invalid PGP key: invalid user IDs');
+      log.error('Invalid PGP key: no valid user IDs found\n%s', publicKeyArmored);
+      throw Boom.badRequest('Invalid PGP key: no valid user IDs found');
     }
 
     // get algorithm details from primary key
@@ -95,7 +88,8 @@ class PGP {
    */
   trimKey(data) {
     if (!this.validateKeyBlock(data)) {
-      util.throw(400, 'Invalid PGP key: key block not found');
+      log.error('Invalid PGP key: armored key not found\n%s', data);
+      throw Boom.badRequest('Invalid PGP key: armored key not found');
     }
     return KEY_BEGIN + data.split(KEY_BEGIN)[1].split(KEY_END)[0] + KEY_END;
   }
@@ -123,7 +117,8 @@ class PGP {
    */
   async parseUserIds(users, primaryKey, verifyDate = new Date()) {
     if (!users || !users.length) {
-      util.throw(400, 'Invalid PGP key: no user ID found');
+      log.error('Invalid PGP key: no valid user IDs found for key %s', primaryKey.getFingerprint());
+      throw Boom.badRequest('Invalid PGP key: no user ID found');
     }
     // at least one user id must be valid, revoked or expired
     const result = [];
@@ -169,13 +164,13 @@ class PGP {
   async updateKey(srcArmored, dstArmored) {
     const {keys: [srcKey], err: srcErr} = await openpgp.key.readArmored(srcArmored);
     if (srcErr) {
-      log.error('pgp', 'Failed to parse source PGP key for update:\n%s', srcArmored, srcErr);
-      util.throw(500, 'Failed to parse PGP key');
+      log.error('Failed to parse source PGP key for update\n%s\n%s', srcErr, srcArmored);
+      throw Boom.badImplementation('Failed to parse PGP key');
     }
     const {keys: [dstKey], err: dstErr} = await openpgp.key.readArmored(dstArmored);
     if (dstErr) {
-      log.error('pgp', 'Failed to parse destination PGP key for update:\n%s', dstArmored, dstErr);
-      util.throw(500, 'Failed to parse PGP key');
+      log.error('Failed to parse destination PGP key for update\n%s\n%s', dstErr, dstArmored);
+      throw Boom.badImplementation('Failed to parse PGP key');
     }
     await dstKey.update(srcKey);
     return dstKey.armor();

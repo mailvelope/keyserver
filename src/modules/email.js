@@ -1,24 +1,13 @@
 /**
- * Mailvelope - secure email with OpenPGP encryption for Webmail
- * Copyright (C) 2016 Mailvelope GmbH
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License version 3
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2020 Mailvelope GmbH
+ * Licensed under the GNU Affero General Public License version 3
  */
 
 'use strict';
 
-const log = require('winston');
-const util = require('../service/util');
+const Boom = require('@hapi/boom');
+const log = require('../lib/log');
+const util = require('../lib/util');
 const openpgp = require('openpgp');
 const nodemailer = require('nodemailer');
 
@@ -56,11 +45,12 @@ class Email {
    * @param {Object} origin     origin of the server
    * @yield {Object}            reponse object containing SMTP info
    */
-  async send({template, userId, keyId, origin, publicKeyArmored}) {
+  async send({template, userId, keyId, origin, publicKeyArmored, i18n}) {
     const compiled = template({
       ...userId,
       origin,
-      keyId
+      keyId,
+      i18n
     });
     if (this._usePGPEncryption && publicKeyArmored) {
       compiled.text = await this._pgpEncrypt(compiled.text, publicKeyArmored);
@@ -83,7 +73,7 @@ class Email {
   async _pgpEncrypt(plaintext, publicKeyArmored) {
     const {keys: [key], err} = await openpgp.key.readArmored(publicKeyArmored);
     if (err) {
-      log.error('email', 'Reading armored key failed.', err, publicKeyArmored);
+      log.warning('Reading armored key for message encryption returned error\n%s\n%s', err, publicKeyArmored);
     }
     const now = new Date();
     // set message creation date if key has been created with future creation date
@@ -96,8 +86,8 @@ class Email {
       });
       return ciphertext.data;
     } catch (error) {
-      log.error('email', 'Encrypting message failed.', error, publicKeyArmored);
-      util.throw(400, 'Encrypting message for verification email failed.', error);
+      log.error('Encrypting message for verification email failed\n%s\n%s', error, publicKeyArmored);
+      throw Boom.boomify(error, {statusCode: 400, message: 'Encrypting message for verification email failed.'});
     }
   }
 
@@ -110,12 +100,12 @@ class Email {
     try {
       const info = await this._transporter.sendMail(sendOptions);
       if (!this._checkResponse(info)) {
-        log.warn('email', 'Message may not have been received.', info);
+        log.warning('Message may not have been received: %s', info.response);
       }
       return info;
     } catch (error) {
-      log.error('email', 'Sending message failed.', error);
-      util.throw(500, 'Sending email to user failed');
+      log.error('Sending message failed\n%s', error);
+      throw Boom.badImplementation('Sending email to user failed');
     }
   }
 

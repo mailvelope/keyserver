@@ -1,7 +1,7 @@
 'use strict';
 
-const log = require('winston');
-const Email = require('../../src/email/email');
+const log = require('../../src/lib/log');
+const Email = require('../../src/modules/email');
 const nodemailer = require('nodemailer');
 
 describe('Email Unit Tests', () => {
@@ -84,7 +84,7 @@ describe('Email Unit Tests', () => {
       const info = await email._sendHelper(mailOptions);
 
       expect(info.response).to.match(/^554/);
-      expect(log.warn.calledOnce).to.be.true;
+      expect(log.warning.calledOnce).to.be.true;
     });
 
     it('should fail', async () => {
@@ -93,8 +93,9 @@ describe('Email Unit Tests', () => {
       try {
         await email._sendHelper(mailOptions);
       } catch (e) {
+        console.log('error', e);
         expect(log.error.calledOnce).to.be.true;
-        expect(e.status).to.equal(500);
+        expect(e.output.statusCode).to.equal(500);
         expect(e.message).to.match(/failed/);
       }
     });

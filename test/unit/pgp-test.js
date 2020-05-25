@@ -1,9 +1,9 @@
 'use strict';
 
 const fs = require('fs');
-const log = require('winston');
+const log = require('../../src/lib/log');
 const openpgp = require('openpgp');
-const PGP = require('../../src/service/pgp');
+const PGP = require('../../src/modules/pgp');
 
 describe('PGP Unit Tests', () => {
   const sandbox = sinon.createSandbox();
@@ -91,7 +91,7 @@ describe('PGP Unit Tests', () => {
 
     it('should only accept valid user ids', () => {
       sandbox.stub(pgp, 'parseUserIds').returns([]);
-      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/invalid user IDs/);
+      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/no valid user IDs found/);
     });
 
     it('should be able to parse RSA key', async () => {
