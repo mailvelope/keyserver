@@ -28,5 +28,6 @@ const init = require('./app');
     log.info('app', `Listening on http://localhost:${config.server.port}`);
   } catch (err) {
     log.error('app', 'Initialization failed!', err);
+    throw err;
   }
 })();
