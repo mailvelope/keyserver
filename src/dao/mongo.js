@@ -34,7 +34,7 @@ class Mongo {
   async init({uri, user, pass}) {
     log.info('mongo', 'Connecting to MongoDB ...');
     const url = `mongodb://${user}:${pass}@${uri}`;
-    this._client = await MongoClient.connect(url, {useNewUrlParser: true});
+    this._client = await MongoClient.connect(url, {useNewUrlParser: true, useUnifiedTopology: true});
     this._db = this._client.db();
   }
 
