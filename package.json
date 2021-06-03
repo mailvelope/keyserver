@@ -30,7 +30,7 @@
     "koa-static": "5.0.0",
     "mongodb": "3.6.6",
     "nodemailer": "6.6.0",
-    "openpgp": "4.5.5",
+    "openpgp": "4.10.10",
     "winston": "3.3.3",
     "winston-papertrail": "1.0.5"
   },
