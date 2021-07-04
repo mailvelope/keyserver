@@ -155,13 +155,17 @@ DELETE /api/v1/key?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
 GET /api/v1/key?op=verifyRemove&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
 ```
 
+# Language & DB
+
+The server is written is in JavaScript ES7 and runs on [Node.js](https://nodejs.org/) v8+.
+
+It uses [MongoDB](https://www.mongodb.com/) v3.2+ as its database.
 
 
-# Development
+# Getting started
+## Installation
 
-The server is written is in JavaScript ES7 and runs on [Node.js](https://nodejs.org/) v8+. It uses [MongoDB](https://www.mongodb.com/) v3.2+ as its database.
-
-## Install Node.js (Mac OS)
+### Node.js (Mac OS)
 
 This is how to install node on Mac OS using [homebrew](http://brew.sh/). For other operating systems, please refer to the [Node.js download page](https://nodejs.org/en/download/).
 
@@ -170,7 +174,7 @@ brew update
 brew install node
 ```
 
-## Setup local MongoDB (Mac OS)
+### MongoDB (Mac OS)
 
 This is the installation guide to get a local development installation on Mac OS using [homebrew](http://brew.sh/). For other operating systems, please refer to the [MongoDB Getting Started Guide](https://docs.mongodb.com/getting-started/shell/).
 
@@ -186,7 +190,7 @@ Now the mongo daemon should be running in the background. To have mongo start au
 brew services start mongodb
 ```
 
-Now you can use the `mongo` CLI client to create a new test database. **The username and password used here match the ones in the `config/development.js` file. Be sure to change them for production use**:
+Now you can use the `mongo` CLI client to create a new test database. The username and password used here match the ones in the `config/development.js` file. **Be sure to change them for production use**:
 
 ```shell
 mongo
@@ -194,31 +198,46 @@ use keyserver-test
 db.createUser({ user:"keyserver-user", pwd:"trfepCpjhVrqgpXFWsEF", roles:[{ role:"readWrite", db:"keyserver-test" }] })
 ```
 
-## Setup SMTP user
-
-The key server uses [nodemailer](https://nodemailer.com) to send out emails upon public key upload to verify email address ownership. To test this feature locally, open the `config/development.js` file and change the `email.auth.user` and `email.auth.pass` attributes to your Gmail test account. Make sure that `email.auth.user` and `email.sender.email` match. Otherwise the Gmail SMTP server will block any emails you try to send. Also, make sure to enable `Allow less secure apps` in the [Gmail security settings](https://myaccount.google.com/security#connectedapps). You can read more on this in the [Nodemailer documentation](https://nodemailer.com/using-gmail/).
-
-For production you should use a service like [Amazon SES](https://aws.amazon.com/ses/), [Mailgun](https://www.mailgun.com/) or [Sendgrid](https://sendgrid.com/solutions/transactional-email/). Nodemailer supports all of these out of the box.
-
-## Install dependencies and run tests
+### Dependencies
 
 ```shell
-npm install && npm test
+npm install
 ```
 
-## Start local server
+## Configuration
 
-```shell
-npm start
-```
+Configuration settings may be provided as environment variables. The files in the config directory read the environment variables and define configuration values for settings with no corresponding environment variable. Warning: Default settings are only provided for a small minority of settings in these files (as most of them are very individual like host/user/password)!
 
+If settings are configured in multiple places, the priority ranking is as follows (individually for each setting):
+1. Environment variable
+2. config/production.js or config/development.js (depending on NODE_ENV)
+3. config/default.js
 
+### Development
 
-# Production
+If you don't use environment variables to configure settings, create `config/development.js` and use `config/default.js` as a template. Creating `development.js` instead of just editing `config/default.js` is recommended to prevent accidental commits of locally used settings.
 
-The `config/development.js` file can be used to configure a local development installation. For production use, the following environment variables need to be set:
+### Production
 
-* NODE_ENV=production
+For production use, settings configuration with environment variables is recommended as `NODE_ENV=production` is REQUIRED to be set as environment variable to instruct node.js to adapt e.g. logging to production use.
+
+*Other settings you may also configure within `config/production.js` and use `config/default.js` as a template; but ensure then the environment variable `NODE_ENV=production` or `production.js` will not be read!*
+
+### Settings
+
+Available settings with its environment-variable-names, possible/example values and meaning (if not self-explainable). Defaults **bold**:
+
+* NODE_ENV=development|production
+  (no default + needs to be set as environment variable!)
+* LOG_LEVEL=**silly**|error|warn|info|debug
+* PORT=**8888**
+  (application server port)
+* HTTPS_UPGRADE=true
+  (upgrade HTTP requests to HTTPS and use [HSTS](https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security))
+* HTTPS_KEY_PIN=base64_encoded_sha256
+  (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
+* HTTPS_KEY_PIN_BACKUP=base64_encoded_sha256
+  (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
 * MONGO_URI=127.0.0.1:27017/test_db
 * MONGO_USER=db_user
 * MONGO_PASS=db_password
@@ -227,13 +246,32 @@ The `config/development.js` file can be used to configure a local development in
 * SMTP_TLS=true
 * SMTP_STARTTLS=true
 * SMTP_PGP=true
+  (encrypt verification message with public key (allows to verify presence + usability of private key at owner of the mail-address))
 * SMTP_USER=smtp_user
 * SMTP_PASS=smtp_pass
 * SENDER_NAME="OpenPGP Key Server"
 * SENDER_EMAIL=noreply@example.com
-* HTTPS_UPGRADE=true                          (upgrade HTTP requests to HTTPS and use [HSTS](https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security))
-* HTTPS_KEY_PIN=base64_encoded_sha256         (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
-* HTTPS_KEY_PIN_BACKUP=base64_encoded_sha256  (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
+* PUBLIC_KEY_PURGE_TIME=**30**
+  (number of days after which uploaded keys are deleted if they have not been verified)
+
+### Notes on SMTP
+
+The key server uses [nodemailer](https://nodemailer.com) to send out emails upon public key upload to verify email address ownership. To test this feature locally, configure `SMTP_USER` and `SMTP_PASS` settings to your Gmail test account. Make sure that `SMTP_USER` and `SENDER_EMAIL` match. Otherwise the Gmail SMTP server will block any emails you try to send. Also, make sure to enable `Allow less secure apps` in the [Gmail security settings](https://myaccount.google.com/security#connectedapps). You can read more on this in the [Nodemailer documentation](https://nodemailer.com/using-gmail/).
+
+For production you should use a service like [Amazon SES](https://aws.amazon.com/ses/), [Mailgun](https://www.mailgun.com/) or [Sendgrid](https://sendgrid.com/solutions/transactional-email/). Nodemailer supports all of these out of the box.
+
+## Run tests
+
+```shell
+npm test
+```
+
+## Start local server
+
+```shell
+npm start
+```
+
 
 
 
