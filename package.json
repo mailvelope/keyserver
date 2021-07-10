@@ -23,6 +23,7 @@
   "dependencies": {
     "co-body": "6.1.0",
     "config": "3.3.6",
+    "dotenv": "^10.0.0",
     "koa": "2.13.1",
     "koa-ejs": "4.3.0",
     "koa-locales": "1.12.0",
