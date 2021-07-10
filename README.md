@@ -29,7 +29,15 @@ The idea is that an identity provider such as an email provider can host their o
 
 Try out the server here: [https://keys.mailvelope.com](https://keys.mailvelope.com)
 
+### Get started
 
+```
+docker-compose up
+docker-compose exec -it mongodb bash
+mongo -u keyserver_user -p keyserver_pass
+use keyserver_db
+db.createUser({ user:"keyserver_user", pwd:"keyserver_pass", roles:[{ role:"readWrite", db:"keyserver_db" }] })
+```
 
 # API
 

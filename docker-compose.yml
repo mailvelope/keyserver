@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  mongodb:
+    image: mongo
+    volumes:
+    - mongo-data:/data/db
+    networks:
+    - backend
+    env_file:
+    - env.sample
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+    - 8025:8025
+    networks:
+    - backend
+
+  keyserver:
+    build:
+      context: .
+      args:
+        USER_ID: ${USER_ID:-1000}
+    ports:
+    - "3000:3000"
+    depends_on:
+    - mongodb
+    - mailhog
+    networks:
+    - backend
+    env_file:
+    - env.sample
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  backend:
