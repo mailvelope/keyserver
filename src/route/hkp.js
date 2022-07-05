@@ -97,7 +97,7 @@ class HKP {
     if (!util.isString(id)) {
       return false;
     }
-    return /^0x[a-fA-F0-9]{16,40}$/.test(id);
+    return /^(?:0x)?[a-fA-F0-9]{8,40}$/.test(id);
   }
 
   /**

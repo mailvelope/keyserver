@@ -261,8 +261,12 @@ class PublicKey {
     }
     // query by key id (to prevent key id collision)
     if (keyId) {
+      keyId = keyId.toLowerCase();
+      if (keyId.length === 8) {
+       keyId = new RegExp('[a-fA-F0-9]{8}' + keyId);
+      }
       queries.push({
-        keyId: keyId.toLowerCase(),
+        keyId: keyId,
         'userIds.verified': true
       });
     }

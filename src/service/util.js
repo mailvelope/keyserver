@@ -50,7 +50,7 @@ exports.isKeyId = function(data) {
   if (!this.isString(data)) {
     return false;
   }
-  return /^[a-fA-F0-9]{16}$/.test(data);
+  return /^[a-fA-F0-9]{8,16}$/.test(data);
 };
 
 /**
