@@ -168,13 +168,17 @@ class PGP {
    * @return {String}            merged armored key block
    */
   async updateKey(srcArmored, dstArmored) {
-    const {keys: [srcKey], err: srcErr} = await openpgp.key.readArmored(srcArmored);
-    if (srcErr) {
+    let srcKey;
+    let dstKey;
+    try {
+      srcKey = await openpgp.readKey({armoredKey: srcArmored});
+    } catch (srcErr) {
       log.error('pgp', 'Failed to parse source PGP key for update:\n%s', srcArmored, srcErr);
       util.throw(500, 'Failed to parse PGP key');
     }
-    const {keys: [dstKey], err: dstErr} = await openpgp.key.readArmored(dstArmored);
-    if (dstErr) {
+    try {
+      dstKey = await openpgp.readKey({armoredKey: dstArmored});
+    } catch (dstErr) {
       log.error('pgp', 'Failed to parse destination PGP key for update:\n%s', dstArmored, dstErr);
       util.throw(500, 'Failed to parse PGP key');
     }
