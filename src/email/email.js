@@ -81,21 +81,26 @@ class Email {
    * @return {string}                    the encrypted PGP message block
    */
   async _pgpEncrypt(plaintext, publicKeyArmored) {
-    const {keys: [key], err} = await openpgp.key.readArmored(publicKeyArmored);
-    if (err) {
+    //const {keys: [key], err} = 
+	  let key;
+	  try {
+    key = await openpgp.readKey({armoredKey: publicKeyArmored});
+	  }	  catch (err) {
       log.error('email', 'Reading armored key failed.', err, publicKeyArmored);
     }
     const now = new Date();
     // set message creation date if key has been created with future creation date
-    const msgCreationDate = key.primaryKey.created > now ? key.primaryKey.created : now;
+    const msgCreationDate = key.created > now ? key.created : now;
+    const crypttext = await openpgp.createMessage({text: plaintext})
     try {
       const ciphertext = await openpgp.encrypt({
-        message: openpgp.message.fromText(plaintext),
-        publicKeys: key,
+        message: crypttext,
+        encryptionKeys: key,
         date: msgCreationDate
       });
-      return ciphertext.data;
+      return ciphertext;
     } catch (error) {
+      console.log(error);
       log.error('email', 'Encrypting message failed.', error, publicKeyArmored);
       util.throw(400, 'Encrypting message for verification email failed.', error);
     }

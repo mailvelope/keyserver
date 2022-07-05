@@ -43,7 +43,8 @@ const tpl = require('../email/templates');
  * }
  */
 const DB_TYPE = 'publickey';
-const KEY_STATUS_VALID = 3;
+//const KEY_STATUS_VALID = 3;
+const KEY_STATUS_VALID = true;
 
 /**
  * A service that handlers PGP public keys queries to the database
@@ -78,8 +79,8 @@ class PublicKey {
     // if emails array is empty, all userIds of the key will be submitted
     if (emails.length) {
       // keep submitted user IDs only
-      key.userIds = key.userIds.filter(({email}) => emails.includes(email));
-      if (key.userIds.length !== emails.length) {
+      key.userIds = key.getUserIDs.filter(({email}) => emails.includes(email));
+      if (key.getUserIDs().length !== emails.length) {
         util.throw(400, 'Provided email address does not match a valid user ID of the key');
       }
     }

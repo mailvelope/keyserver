@@ -41,46 +41,49 @@ class PGP {
   async parseKey(publicKeyArmored) {
     publicKeyArmored = this.trimKey(publicKeyArmored);
 
-    const r = await openpgp.key.readArmored(publicKeyArmored);
+    const r = await openpgp.readKeys({armoredKeys: publicKeyArmored});
+    //const r = await openpgp.key.readArmored(publicKeyArmored);
     if (r.err) {
       const error = r.err[0];
       log.error('pgp', 'Failed to parse PGP key:\n%s', publicKeyArmored, error);
       util.throw(500, 'Failed to parse PGP key');
-    } else if (!r.keys || r.keys.length !== 1 || !r.keys[0].primaryKey) {
+    } else if (!r || r.length !== 1 || !r[0].keyPacket) {
       util.throw(400, 'Invalid PGP key: only one key can be uploaded');
     }
 
     // verify primary key
-    const key = r.keys[0];
-    const primaryKey = key.primaryKey;
+    const key = r[0];
+    //const primaryKey = key;
     const now = new Date();
-    const verifyDate = primaryKey.created > now ? primaryKey.created : now;
-    if (await key.verifyPrimaryKey(verifyDate) !== openpgp.enums.keyStatus.valid) {
+    const verifyDate = key.created > now ? key.created : now;
+    try {
+      await key.verifyPrimaryKey(verifyDate)
+    } catch (myerror) {
       util.throw(400, 'Invalid PGP key: primary key verification failed');
     }
 
     // accept version 4 keys only
-    const keyId = primaryKey.getKeyId().toHex();
-    const fingerprint = primaryKey.getFingerprint();
+    const keyId = key.keyPacket.keyID.toHex();
+    const fingerprint = key.getFingerprint();
     if (!util.isKeyId(keyId) || !util.isFingerPrint(fingerprint)) {
       util.throw(400, 'Invalid PGP key: only v4 keys are accepted');
     }
 
     // check for at least one valid user id
-    const userIds = await this.parseUserIds(key.users, primaryKey, verifyDate);
+    const userIds = await this.parseUserIds(key.users, key.keyPacket, verifyDate);
     if (!userIds.length) {
       util.throw(400, 'Invalid PGP key: invalid user IDs');
     }
 
     // get algorithm details from primary key
-    const keyInfo = key.primaryKey.getAlgorithmInfo();
+    const keyInfo = key.getAlgorithmInfo();
 
     // public key document that is stored in the database
     return {
       keyId,
       fingerprint,
       userIds,
-      created: primaryKey.created,
+      created: key.created,
       uploaded: new Date(),
       algorithm: keyInfo.algorithm,
       keySize: keyInfo.bits,
@@ -128,10 +131,10 @@ class PGP {
     // at least one user id must be valid, revoked or expired
     const result = [];
     for (const user of users) {
-      const userStatus = await user.verify(primaryKey, verifyDate);
-      if (userStatus !== openpgp.enums.keyStatus.invalid && user.userId && user.userId.userid) {
+      const userStatus = await user.verify(verifyDate, openpgp.config);
+      if (userStatus !== 0 && user.userID && user.userID.userID) {
         try {
-          const uid = openpgp.util.parseUserId(user.userId.userid);
+          const uid = user.userID;
           if (util.isEmail(uid.email)) {
             // map to local user id object format
             result.push({
@@ -141,7 +144,7 @@ class PGP {
               verified: false
             });
           }
-        } catch (e) {}
+        } catch (e) { console.log(e); }
       }
     }
     return result;
@@ -155,7 +158,8 @@ class PGP {
    */
   async filterKeyByUserIds(userIds, armored) {
     const emails = userIds.map(({email}) => email);
-    const {keys: [key]} = await openpgp.key.readArmored(armored);
+    const key = await openpgp.readKey({armoredKey: armored});
+    //const {keys: [key]} = r;
     key.users = key.users.filter(({userId}) => !userId || emails.includes(util.normalizeEmail(userId.email)));
     return key.armor();
   }
