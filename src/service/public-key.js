@@ -79,7 +79,7 @@ class PublicKey {
     // if emails array is empty, all userIds of the key will be submitted
     if (emails.length) {
       // keep submitted user IDs only
-      key.userIds = key.getUserIDs.filter(({email}) => emails.includes(email));
+      key.userIds = key.getUserIDs().filter(({email}) => emails.includes(email));
       if (key.getUserIDs().length !== emails.length) {
         util.throw(400, 'Provided email address does not match a valid user ID of the key');
       }
