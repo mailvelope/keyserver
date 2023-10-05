@@ -62,8 +62,17 @@ exports.isEmail = function(data) {
   if (!this.isString(data)) {
     return false;
   }
-  const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  const re = /^[+a-zA-Z0-9_.!#$%&'*\/=?^`{|}~-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z0-9]{2,63}$/;
   return re.test(data);
+};
+
+/**
+ * Checks for a valid nonce.
+ * @param  {string} data   The nonce
+ * @return {boolean}       If the nonce is valid
+ */
+exports.isNonce = function(data) {
+  return this.isString(data) && data.length === 32;
 };
 
 /**
@@ -84,8 +93,7 @@ exports.normalizeEmail = function(email) {
  * @param  {number} bytes   (optional) The number of random bytes
  * @return {string}         The random bytes in hex (twice as long as bytes)
  */
-exports.random = function(bytes) {
-  bytes = bytes || 16;
+exports.random = function(bytes = 16) {
   return crypto.randomBytes(bytes).toString('hex');
 };
 

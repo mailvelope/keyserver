@@ -107,16 +107,14 @@ describe('PGP Unit Tests', () => {
       expect(params.publicKeyArmored).to.equal(key1Armored);
     });
 
-    /* test key2 has expired */
-    it.skip('should be able to parse RSA/ECC key', async () => {
+    it('should be able to parse ECC key', async () => {
       const params = await pgp.parseKey(key2Armored);
-      expect(params.keyId).to.equal('b8e4105cc9dedc77');
-      expect(params.fingerprint).to.equal('e3317db04d3958fd5f662c37b8e4105cc9dedc77');
+      expect(params.keyId).to.equal('4c03a47362c5b4cc');
+      expect(params.fingerprint).to.equal('90507fb229658f71f3de96a84c03a47362c5b4cc');
       expect(params.userIds.length).to.equal(1);
       expect(params.created.getTime()).to.exist;
       expect(params.uploaded.getTime()).to.exist;
-      expect(params.algorithm).to.equal('rsa_encrypt_sign');
-      expect(params.keySize).to.equal(4096);
+      expect(params.algorithm).to.equal('eddsa');
       expect(params.publicKeyArmored).to.equal(pgp.trimKey(key2Armored));
     });
 

@@ -50,7 +50,8 @@ class REST {
     }
     // do READ if no 'op' provided
     const {keyId, fingerprint, email} = request.query;
-    if (!util.isKeyId(keyId) && !util.isFingerPrint(fingerprint) && !util.isEmail(email)) {
+    if (!keyId && !fingerprint && ! email ||
+        keyId && !util.isKeyId(keyId) || fingerprint && !util.isFingerPrint(fingerprint) || email && !util.isEmail(email)) {
       return Boom.badRequest('Missing parameter: keyId, fingerprint or email.');
     }
     return h.response(await this._publicKey.get({keyId, fingerprint, email}, request.i18n));
@@ -63,7 +64,7 @@ class REST {
    */
   async verify(request, h) {
     const {keyId, nonce} = request.query;
-    if (!util.isKeyId(keyId) || !util.isString(nonce)) {
+    if (!util.isKeyId(keyId) || !util.isNonce(nonce)) {
       throw Boom.badRequest('Invalid parameter keyId or nonce');
     }
     const {email} = await this._publicKey.verify({keyId, nonce});
@@ -94,7 +95,7 @@ class REST {
    */
   async verifyRemove(request, h) {
     const {keyId, nonce} = request.query;
-    if (!util.isKeyId(keyId) || !util.isString(nonce)) {
+    if (!util.isKeyId(keyId) || !util.isNonce(nonce)) {
       throw Boom.badRequest('Invalid parameter keyId or nonce');
     }
     const {email} = await this._publicKey.verifyRemove({keyId, nonce});

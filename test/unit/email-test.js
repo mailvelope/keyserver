@@ -93,7 +93,6 @@ describe('Email Unit Tests', () => {
       try {
         await email._sendHelper(mailOptions);
       } catch (e) {
-        console.log('error', e);
         expect(log.error.calledOnce).to.be.true;
         expect(e.output.statusCode).to.equal(500);
         expect(e.message).to.match(/failed/);
