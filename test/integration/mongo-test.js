@@ -1,20 +1,22 @@
 'use strict';
 
-const log = require('winston');
-const config = require('config');
-const Mongo = require('../../src/dao/mongo');
+const config = require('../../config/config');
+const log = require('../../src/lib/log');
+const Mongo = require('../../src/modules/mongo');
 
 describe('Mongo Integration Tests', function() {
   this.timeout(20000);
 
   const DB_TYPE = 'apple';
   const sandbox = sinon.createSandbox();
+  const conf = structuredClone(config);
   let mongo;
 
   before(async () => {
     sandbox.stub(log);
     mongo = new Mongo();
-    await mongo.init(config.mongo);
+    conf.mongo.uri = `${config.mongo.uri}-int`;
+    await mongo.init(conf.mongo);
   });
 
   beforeEach(async () => {

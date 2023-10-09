@@ -54,7 +54,7 @@ class REST {
         keyId && !util.isKeyId(keyId) || fingerprint && !util.isFingerPrint(fingerprint) || email && !util.isEmail(email)) {
       return Boom.badRequest('Missing parameter: keyId, fingerprint or email.');
     }
-    return h.response(await this._publicKey.get({keyId, fingerprint, email}, request.i18n));
+    return h.response(await this._publicKey.get({keyId, fingerprint, email, i18n: request.i18n}));
   }
 
   /**
@@ -84,7 +84,7 @@ class REST {
     if (!util.isKeyId(keyId) && !util.isEmail(email)) {
       throw Boom.badRequest('Invalid parameter keyId or email');
     }
-    await this._publicKey.requestRemove({keyId, email, origin}, request.i18n);
+    await this._publicKey.requestRemove({keyId, email, origin, i18n: request.i18n});
     return h.response('Check your inbox to verify the removal of your email address.').code(202);
   }
 

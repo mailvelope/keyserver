@@ -43,7 +43,7 @@ class HKP {
    */
   async lookup(request, h) {
     const params = this.parseQueryString(request);
-    const key = await this._publicKey.get(params, request.i18n);
+    const key = await this._publicKey.get({...params, i18n: request.i18n});
     if (params.op === 'get') {
       if (params.mr) {
         return h.response(key.publicKeyArmored)

@@ -278,7 +278,7 @@ class PublicKey {
    * @param {Object} i18n          i18n object
    * @return {Object}               The public key document
    */
-  async get({fingerprint, keyId, email}, i18n) {
+  async get({fingerprint, keyId, email, i18n}) {
     // look for verified key
     const userIds = email ? [{email}] : undefined;
     const key = await this.getVerified({keyId, fingerprint, userIds});
@@ -306,7 +306,7 @@ class PublicKey {
    * @param {Object} i18n     i18n object
    * @return {Promise}
    */
-  async requestRemove({keyId, email, origin}, i18n) {
+  async requestRemove({keyId, email, origin, i18n}) {
     // flag user ids for removal
     const key = await this._flagForRemove(keyId, email);
     if (!key) {

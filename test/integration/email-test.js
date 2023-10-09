@@ -1,8 +1,8 @@
 'use strict';
 
-const config = require('config');
-const Email = require('../../src/email/email');
-const tpl = require('../../src/email/templates');
+const config = require('../../config/config');
+const Email = require('../../src/modules/email');
+const tpl = require('../../src/lib/templates');
 
 describe('Email Integration Tests', function() {
   this.timeout(20000);
@@ -13,11 +13,14 @@ describe('Email Integration Tests', function() {
   let origin;
   let publicKeyArmored;
 
-  const recipient = {name: 'Test User', email: 'safewithme.testuser@gmail.com'};
-  const ctx = {__: key => key};
+  const recipient = {name: 'Mailvelope Demo', email: 'demo@mailvelope.com'};
+  const i18n = {
+    __: key => key,
+    __mf: key => key
+  };
 
   before(() => {
-    publicKeyArmored = require('fs').readFileSync(`${__dirname}/../fixtures/key1.asc`, 'utf8');
+    publicKeyArmored = require('fs').readFileSync(`${__dirname}/../fixtures/key2.asc`, 'utf8');
     origin = {
       protocol: 'http',
       host: `localhost:${config.server.port}`
@@ -52,23 +55,17 @@ describe('Email Integration Tests', function() {
 
   describe('send verifyKey template', () => {
     it('should send plaintext email', async () => {
-      delete userId.publicKeyArmored;
-      await email.send({template: tpl.verifyKey.bind(null, ctx), userId, keyId, origin});
+      await email.send({template: tpl.verifyKey, userId, keyId, origin, i18n});
     });
 
     it('should send pgp encrypted email', async () => {
-      await email.send({template: tpl.verifyKey.bind(null, ctx), userId, keyId, origin});
+      await email.send({template: tpl.verifyKey, userId, keyId, publicKeyArmored: userId.publicKeyArmored, origin, i18n});
     });
   });
 
   describe('send verifyRemove template', () => {
     it('should send plaintext email', async () => {
-      delete userId.publicKeyArmored;
-      await email.send({template: tpl.verifyRemove.bind(null, ctx), userId, keyId, origin});
-    });
-
-    it('should send pgp encrypted email', async () => {
-      await email.send({template: tpl.verifyRemove.bind(null, ctx), userId, keyId, origin});
+      await email.send({template: tpl.verifyRemove, userId, keyId, origin, i18n});
     });
   });
 });

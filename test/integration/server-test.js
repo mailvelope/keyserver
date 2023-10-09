@@ -1,12 +1,12 @@
 'use strict';
 
-const request = require('supertest');
-const Mongo = require('../../src/modules/mongo');
-const nodemailer = require('nodemailer');
-const templates = require('../../src/lib/templates');
 const config = require('../../config/config');
 const fs = require('fs');
 const log = require('../../src/lib/log');
+const Mongo = require('../../src/modules/mongo');
+const nodemailer = require('nodemailer');
+const request = require('supertest');
+const templates = require('../../src/lib/templates');
 
 describe('Key Server Integration Tests', function() {
   this.timeout(20000);
@@ -21,18 +21,18 @@ describe('Key Server Integration Tests', function() {
   const DB_TYPE_PUB_KEY = 'publickey';
   const primaryEmail = 'demo@mailvelope.com';
   const fingerprint = '90507FB229658F71F3DE96A84C03A47362C5B4CC';
+  const conf = structuredClone(config);
 
   before(async () => {
     sandbox.stub(log);
     publicKeyArmored = fs.readFileSync(`${__dirname}/../fixtures/key2.asc`, 'utf8');
     mongo = new Mongo();
-    config.mongo.uri = `${config.mongo.uri}-int`;
-    await mongo.init(config.mongo);
+    conf.mongo.uri = `${config.mongo.uri}-int`;
+    await mongo.init(conf.mongo);
     const paramMatcher = sinon.match(params => {
       emailParams = params;
       return Boolean(params.nonce);
     });
-    //const ctxMatcher = sinon.match(ctx => Boolean(ctx));
     sandbox.spy(templates, 'verifyKey').withArgs(paramMatcher);
     sandbox.spy(templates, 'verifyRemove').withArgs(paramMatcher);
     sendEmailStub = sandbox.stub().returns(Promise.resolve({response: '250'}));
@@ -41,7 +41,7 @@ describe('Key Server Integration Tests', function() {
       sendMail: sendEmailStub
     });
     const init = require('../../src/server');
-    app = await init(config);
+    app = await init(conf);
   });
 
   beforeEach(async () => {
