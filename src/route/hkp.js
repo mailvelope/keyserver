@@ -62,7 +62,12 @@ class HKP {
       for (const uid of key.userIds) {
         body += `uid:${encodeURIComponent(`${uid.name} <${uid.email}>`)}:::\n`;
       }
-      return h.response(body);
+      if (params.mr) {
+        return h.response(body)
+        .header('Content-Type', 'text/plain; charset=utf-8');
+      } else {
+        return h.response(body);
+      }
     }
   }
 
@@ -85,7 +90,6 @@ class HKP {
     } else if (util.isEmail(request.query.search)) {
       params.email = request.query.search;
     }
-
     if (!['get', 'index', 'vindex'].includes(params.op)) {
       throw Boom.notImplemented('Method not implemented');
     } else if (!params.keyId && !params.fingerprint && !params.email) {

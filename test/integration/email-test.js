@@ -14,7 +14,6 @@ describe('Email Integration Tests', function() {
   let publicKeyArmored;
 
   const recipient = {name: 'Test User', email: 'safewithme.testuser@gmail.com'};
-
   const ctx = {__: key => key};
 
   before(() => {

@@ -13,7 +13,6 @@ describe('Mongo Integration Tests', function() {
 
   before(async () => {
     sandbox.stub(log);
-
     mongo = new Mongo();
     await mongo.init(config.mongo);
   });

@@ -37,7 +37,6 @@ describe('Public Key Integration Tests', function() {
 
   beforeEach(async () => {
     await mongo.clear(DB_TYPE);
-
     mailsSent = [];
     const paramMatcher = sinon.match(params => {
       mailsSent[mailsSent.length] = {params};
@@ -48,7 +47,6 @@ describe('Public Key Integration Tests', function() {
     const ctxMatcher = sinon.match(context => Boolean(context));
     sandbox.spy(templates, 'verifyKey').withArgs(ctxMatcher, paramMatcher);
     sandbox.spy(templates, 'verifyRemove').withArgs(ctxMatcher, paramMatcher);
-
     sendEmailStub = sinon.stub().returns(Promise.resolve({response: '250'}));
     sendEmailStub.withArgs(sinon.match(sendOptions => {
       mailsSent[mailsSent.length - 1].to = sendOptions.to.address;

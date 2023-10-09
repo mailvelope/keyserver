@@ -23,6 +23,7 @@ class Mongo {
     log.info('Connecting to MongoDB ...');
     const url = `mongodb://${user}:${pass}@${uri}`;
     this._client = await MongoClient.connect(url, {useNewUrlParser: true, useUnifiedTopology: true});
+    this._client.on('commandFailed', event => log.error('MongoDB command failed\n%s', event));
     this._db = this._client.db();
   }
 
