@@ -182,7 +182,7 @@ class PublicKey {
     }
     // persist new key
     const r = await this._mongo.create(key, DB_TYPE);
-    if (r.insertedCount !== 1) {
+    if (!r.acknowledged) {
       throw Boom.badImplementation('Failed to persist key');
     }
   }

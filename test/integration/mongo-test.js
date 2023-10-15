@@ -32,14 +32,15 @@ describe('Mongo Integration Tests', function() {
   describe('create', () => {
     it('should insert a document', async () => {
       const r = await mongo.create({_id: '0'}, DB_TYPE);
-      expect(r.insertedCount).to.equal(1);
+      expect(r.acknowledged).to.be.true;
     });
 
     it('should fail if two with the same ID are inserted', async () => {
       let r = await mongo.create({_id: '0'}, DB_TYPE);
-      expect(r.insertedCount).to.equal(1);
+      expect(r.acknowledged).to.be.true;
       try {
         r = await mongo.create({_id: '0'}, DB_TYPE);
+        expect(true).to.be.false;
       } catch (e) {
         expect(e.message).to.match(/duplicate/);
       }
@@ -57,6 +58,7 @@ describe('Mongo Integration Tests', function() {
       expect(r.insertedCount).to.equal(2);
       try {
         r = await mongo.batch([{_id: '0'}, {_id: '1'}], DB_TYPE);
+        expect(true).to.be.false;
       } catch (e) {
         expect(e.message).to.match(/duplicate/);
       }
