@@ -32,7 +32,7 @@ const tpl = require('../lib/templates');
  * }
  */
 const DB_TYPE = 'publickey';
-const KEY_STATUS_VALID = 3;
+const {KEY_STATUS} = util;
 
 /**
  * A service that handlers PGP public keys queries to the database
@@ -81,7 +81,7 @@ class PublicKey {
       // update verified key with new key
       key.publicKeyArmored = await this._pgp.updateKey(verified.publicKeyArmored, filteredPublicKeyArmored);
     } else {
-      key.userIds = key.userIds.filter(userId => userId.status === KEY_STATUS_VALID);
+      key.userIds = key.userIds.filter(userId => userId.status === KEY_STATUS.valid);
       if (!key.userIds.length) {
         throw Boom.badRequest('Invalid PGP key: no valid user IDs found');
       }
@@ -122,7 +122,7 @@ class PublicKey {
     // existing verified valid or revoked users
     const verifiedUsers = existingUsers.filter(userId => userId.verified);
     // valid new users which are not yet verified
-    const validUsers = newUsers.filter(userId => userId.status === KEY_STATUS_VALID && !this._includeEmail(verifiedUsers, userId));
+    const validUsers = newUsers.filter(userId => userId.status === KEY_STATUS.valid && !this._includeEmail(verifiedUsers, userId));
     // pending users are not verified, not newly submitted
     const pendingUsers = existingUsers.filter(userId => !userId.verified && !this._includeEmail(validUsers, userId));
     await this._addKeyArmored(validUsers, publicKeyArmored);

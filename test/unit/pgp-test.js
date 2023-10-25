@@ -31,67 +31,31 @@ describe('PGP Unit Tests', () => {
 
   describe('parseKey', () => {
     it('should should throw error on key parsing', async () => {
-      sandbox.stub(openpgp.key, 'readArmored').returns({err: [new Error()]});
-      await expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/Failed to parse/);
+      sandbox.stub(openpgp, 'readKey').throws(new Error('readKey: test error'));
+      await expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/Error reading PGP key. readKey: test error/);
       expect(log.error.calledOnce).to.be.true;
     });
 
-    it('should should throw error when more than one key', () => {
-      sandbox.stub(openpgp.key, 'readArmored').returns({keys: [{}, {}]});
-      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/only one key/);
-    });
-
     it('should should throw error when primaryKey not verfied', () => {
-      sandbox.stub(openpgp.key, 'readArmored').returns({
-        keys: [{
-          primaryKey: {},
-          verifyPrimaryKey() { return false; }
-        }]
+      sandbox.stub(openpgp, 'readKey').returns({
+        isPrivate() { return false; },
+        armor() { return 'ABC'; },
+        verifyPrimaryKey() { throw new Error('Invalid primary key'); }
       });
-      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/primary key verification/);
+      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/Invalid PGP key. Key verification failed: Invalid primary key/);
     });
 
-    it('should only accept 16 char key id', () => {
-      sandbox.stub(openpgp.key, 'readArmored').returns({
-        keys: [{
-          primaryKey: {
-            getFingerprint() {
-              return '4277257930867231ce393fb8dbc0b3d92b1b86e9';
-            },
-            getKeyId() {
-              return {
-                toHex() { return 'asdf'; }
-              };
-            }
-          },
-          verifyPrimaryKey() { return openpgp.enums.keyStatus.valid; }
-        }]
+    it('should refuse private keys', () => {
+      sandbox.stub(openpgp, 'readKey').returns({
+        isPrivate() { return true; },
+        armor() { return 'ABC'; }
       });
-      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/only v4 keys/);
-    });
-
-    it('should only accept version 4 fingerprint', () => {
-      sandbox.stub(openpgp.key, 'readArmored').returns({
-        keys: [{
-          primaryKey: {
-            getFingerprint() {
-              return '4277257930867231ce393fb8dbc0b3d92b1b86e';
-            },
-            getKeyId() {
-              return {
-                toHex() { return 'dbc0b3d92b1b86e9'; }
-              };
-            }
-          },
-          verifyPrimaryKey() { return openpgp.enums.keyStatus.valid; }
-        }]
-      });
-      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/only v4 keys/);
+      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/Error uploading private key/);
     });
 
     it('should only accept valid user ids', () => {
       sandbox.stub(pgp, 'parseUserIds').returns([]);
-      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/no valid user IDs found/);
+      return expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/Invalid PGP key: no valid user ID with email address found/);
     });
 
     it('should be able to parse RSA key', async () => {
@@ -102,9 +66,9 @@ describe('PGP Unit Tests', () => {
       expect(params.userIds[0].email).to.equal('safewithme.testuser@gmail.com');
       expect(params.created.getTime()).to.exist;
       expect(params.uploaded.getTime()).to.exist;
-      expect(params.algorithm).to.equal('rsa_encrypt_sign');
+      expect(params.algorithm).to.equal('rsaEncryptSign');
       expect(params.keySize).to.equal(2048);
-      expect(params.publicKeyArmored).to.equal(key1Armored);
+      expect(params.publicKeyArmored).to.include('PGP PUBLIC KEY');
     });
 
     it('should be able to parse ECC key', async () => {
@@ -115,7 +79,7 @@ describe('PGP Unit Tests', () => {
       expect(params.created.getTime()).to.exist;
       expect(params.uploaded.getTime()).to.exist;
       expect(params.algorithm).to.equal('eddsa');
-      expect(params.publicKeyArmored).to.equal(pgp.trimKey(key2Armored));
+      expect(params.publicKeyArmored).to.include('PGP PUBLIC KEY');
     });
 
     it('should be able to parse komplex key', async () => {
@@ -125,46 +89,9 @@ describe('PGP Unit Tests', () => {
       expect(params.userIds.length).to.equal(4);
       expect(params.created.getTime()).to.exist;
       expect(params.uploaded.getTime()).to.exist;
-      expect(params.algorithm).to.equal('rsa_encrypt_sign');
+      expect(params.algorithm).to.equal('rsaEncryptSign');
       expect(params.keySize).to.equal(4096);
-      expect(params.publicKeyArmored).to.equal(pgp.trimKey(key3Armored));
-    });
-  });
-
-  describe('trimKey', () => {
-    it('should be the same as key1', () => {
-      const trimmed = pgp.trimKey(key1Armored);
-      expect(trimmed).to.equal(key1Armored);
-    });
-
-    it('should not be the same as key2', () => {
-      const trimmed = pgp.trimKey(key2Armored);
-      expect(trimmed).to.not.equal(key2Armored);
-    });
-  });
-
-  describe('validateKeyBlock', () => {
-    const KEY_BEGIN = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
-    const KEY_END = '-----END PGP PUBLIC KEY BLOCK-----';
-
-    it('should return true for valid key block', () => {
-      const input = KEY_BEGIN + KEY_END;
-      expect(pgp.validateKeyBlock(input)).to.be.true;
-    });
-
-    it('should return false for invalid key block', () => {
-      const input = KEY_END + KEY_BEGIN;
-      expect(pgp.validateKeyBlock(input)).to.be.false;
-    });
-
-    it('should return false for invalid key block', () => {
-      const input = KEY_END;
-      expect(pgp.validateKeyBlock(input)).to.be.false;
-    });
-
-    it('should return false for invalid key block', () => {
-      const input = KEY_BEGIN;
-      expect(pgp.validateKeyBlock(input)).to.be.false;
+      expect(params.publicKeyArmored).to.include('PGP PUBLIC KEY');
     });
   });
 
@@ -172,28 +99,24 @@ describe('PGP Unit Tests', () => {
     let key;
 
     beforeEach(async () => {
-      key = (await openpgp.key.readArmored(key1Armored)).keys[0];
+      key = await openpgp.readKey({armoredKey: key1Armored});
     });
 
     it('should parse a valid user id', async () => {
-      const parsed = await pgp.parseUserIds(key.users, key.primaryKey);
+      const parsed = await pgp.parseUserIds(key);
       expect(parsed[0].name).to.equal('safewithme testuser');
       expect(parsed[0].email).to.equal('safewithme.testuser@gmail.com');
     });
 
-    it('should throw for an empty user ids array', () =>
-      expect(pgp.parseUserIds([], key.primaryKey)).to.eventually.be.rejectedWith(/no user ID/)
-    );
-
     it('should return no user id for an invalid signature', async () => {
-      key.users[0].userId.userid = 'fake@example.com';
-      const parsed = await pgp.parseUserIds(key.users, key.primaryKey);
+      key.users[0].userID.userID = 'fake@example.com';
+      const parsed = await pgp.parseUserIds(key);
       expect(parsed.length).to.equal(0);
     });
 
-    it('should throw for an invalid email address', async () => {
-      key.users[0].userId.userid = 'safewithme testuser <safewithme.testusergmail.com>';
-      const parsed = await pgp.parseUserIds(key.users, key.primaryKey);
+    it('should return no user id if no email address', async () => {
+      key.users[0].userID.email = '';
+      const parsed = await pgp.parseUserIds(key);
       expect(parsed.length).to.equal(0);
     });
   });
@@ -201,45 +124,43 @@ describe('PGP Unit Tests', () => {
   describe('filterKeyByUserIds', () => {
     it('should filter user IDs', async () => {
       const email = 'test1@example.com';
-      const {keys: [key]} = await openpgp.key.readArmored(key3Armored);
+      const key = await openpgp.readKey({armoredKey: key3Armored});
       expect(key.users.length).to.equal(4);
       const filtered = await pgp.filterKeyByUserIds([{email}], key3Armored);
-      const {keys: [filteredKey]} = await openpgp.key.readArmored(filtered);
+      const filteredKey = await openpgp.readKey({armoredKey: filtered});
       expect(filteredKey.users.length).to.equal(1);
-      expect(filteredKey.users[0].userId.email).to.equal(email);
+      expect(filteredKey.users[0].userID.email).to.equal(email);
     });
 
-    it('should not filter user attributes', async () => {
+    it('should filter user attributes', async () => {
       const email = 'test@example.com';
-      const {keys: [key]} = await openpgp.key.readArmored(key5Armored);
+      const key = await openpgp.readKey({armoredKey: key5Armored});
       expect(key.users.length).to.equal(2);
       const filtered = await pgp.filterKeyByUserIds([{email}], key5Armored);
-      const {keys: [filteredKey]} = await openpgp.key.readArmored(filtered);
-      expect(filteredKey.users.length).to.equal(2);
-      expect(filteredKey.users[0].userId).to.exist;
-      expect(filteredKey.users[1].userAttribute).to.exist;
+      const filteredKey = await openpgp.readKey({armoredKey: filtered});
+      expect(filteredKey.users.length).to.equal(1);
+      expect(filteredKey.users[0].userID).to.exist;
     });
   });
 
   describe('removeUserId', () => {
     it('should remove user IDs', async () => {
       const email = 'test1@example.com';
-      const {keys: [key]} = await openpgp.key.readArmored(key3Armored);
+      const key = await openpgp.readKey({armoredKey: key3Armored});
       expect(key.users.length).to.equal(4);
       const reduced = await pgp.removeUserId(email, key3Armored);
-      const {keys: [reducedKey]} = await openpgp.key.readArmored(reduced);
+      const reducedKey = await openpgp.readKey({armoredKey: reduced});
       expect(reducedKey.users.length).to.equal(3);
       expect(reducedKey.users.includes(({userId}) => userId.email === email)).to.be.false;
     });
 
     it('should not remove user attributes', async () => {
       const email = 'test@example.com';
-      const {keys: [key]} = await openpgp.key.readArmored(key5Armored);
+      const key = await openpgp.readKey({armoredKey: key5Armored});
       expect(key.users.length).to.equal(2);
       const reduced = await pgp.removeUserId(email, key5Armored);
-      const {keys: [reducedKey]} = await openpgp.key.readArmored(reduced);
-      expect(reducedKey.users.length).to.equal(1);
-      expect(reducedKey.users[0].userAttribute).to.exist;
+      const reducedKey = await openpgp.readKey({armoredKey: reduced});
+      expect(reducedKey.users.length).to.equal(0);
     });
   });
 });

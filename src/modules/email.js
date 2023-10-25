@@ -72,20 +72,25 @@ class Email {
    * @return {string}                    the encrypted PGP message block
    */
   async _pgpEncrypt(plaintext, publicKeyArmored) {
-    const {keys: [key], err} = await openpgp.key.readArmored(publicKeyArmored);
-    if (err) {
-      log.warning('Reading armored key for message encryption returned error\n%s\n%s', err, publicKeyArmored);
+    let key;
+    try {
+      key = await openpgp.readKey({armoredKey: publicKeyArmored});
+    } catch (e) {
+      log.error('Failed to parse PGP key in _pgpEncrypt\n%s\n%s', e, publicKeyArmored);
+      throw Boom.badImplementation('Failed to parse PGP key');
     }
     const now = new Date();
+    const keyCreationDate = key.getCreationTime();
     // set message creation date if key has been created with future creation date
-    const msgCreationDate = key.primaryKey.created > now ? key.primaryKey.created : now;
+    const msgCreationDate = keyCreationDate > now ? keyCreationDate : now;
     try {
+      const message = await openpgp.createMessage({text: plaintext, date: msgCreationDate});
       const ciphertext = await openpgp.encrypt({
-        message: openpgp.message.fromText(plaintext),
-        publicKeys: key,
+        message,
+        encryptionKeys: key,
         date: msgCreationDate
       });
-      return ciphertext.data;
+      return ciphertext;
     } catch (error) {
       log.error('Encrypting message for verification email failed\n%s\n%s', error, publicKeyArmored);
       throw Boom.boomify(error, {statusCode: 400, message: 'Encrypting message for verification email failed.'});

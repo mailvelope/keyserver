@@ -140,3 +140,11 @@ exports.origin = function(request) {
 exports.url = function(origin, resource) {
   return `${origin.protocol}://${origin.host}${resource || ''}`;
 };
+
+exports.KEY_STATUS = {
+  invalid: 0,
+  expired: 1,
+  revoked: 2,
+  valid: 3,
+  no_self_cert: 4
+};

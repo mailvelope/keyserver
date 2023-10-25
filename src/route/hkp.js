@@ -7,6 +7,7 @@
 
 const Boom = require('@hapi/boom');
 const util = require('../lib/util');
+const openpgp = require('openpgp');
 
 /**
  * An implementation of the OpenPGP HTTP Keyserver Protocol (HKP)
@@ -56,9 +57,15 @@ class HKP {
       const VERSION = 1;
       const COUNT = 1; // number of keys
       const fp = key.fingerprint.toUpperCase();
-      const algo = key.algorithm.includes('rsa') ? 1 : '';
+      let algo;
+      try {
+        algo = openpgp.enums.write(openpgp.enums.publicKey, key.algorithm);
+      } catch (e) {
+        algo = key.algorithm.includes('rsa') ? 1 : '';
+      }
       const created = key.created ? (key.created.getTime() / 1000) : '';
-      let body = `info:${VERSION}:${COUNT}\npub:${fp}:${algo}:${key.keySize}:${created}::\n`;
+      const keySize = key.keySize ? key.keySize : '';
+      let body = `info:${VERSION}:${COUNT}\npub:${fp}:${algo}:${keySize}:${created}::\n`;
       for (const uid of key.userIds) {
         body += `uid:${encodeURIComponent(`${uid.name} <${uid.email}>`)}:::\n`;
       }
