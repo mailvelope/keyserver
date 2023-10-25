@@ -9,7 +9,7 @@ exports.plugin = {
   name: 'www',
   async register(server, options) {
     const routeOptions = {
-      security: Boolean(options.server.security === 'true')
+      security: options.server.security === 'true'
     };
 
     server.route({

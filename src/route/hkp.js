@@ -49,7 +49,7 @@ class HKP {
       if (params.mr) {
         return h.response(key.publicKeyArmored)
         .header('Content-Type', 'application/pgp-keys; charset=utf-8')
-        .header('Content-Disposition', 'attachment; filename=openpgpkey.asc');
+        .header('Content-Disposition', 'attachment; filename=openpgp-key.asc');
       } else {
         return h.view('key-armored', {query: params, key});
       }
@@ -67,14 +67,11 @@ class HKP {
       const keySize = key.keySize ? key.keySize : '';
       let body = `info:${VERSION}:${COUNT}\npub:${fp}:${algo}:${keySize}:${created}::\n`;
       for (const uid of key.userIds) {
-        body += `uid:${encodeURIComponent(`${uid.name} <${uid.email}>`)}:::\n`;
+        if (uid.verified) {
+          body += `uid:${encodeURIComponent(`${uid.name} <${uid.email}>`)}:::\n`;
+        }
       }
-      if (params.mr) {
-        return h.response(body)
-        .header('Content-Type', 'text/plain; charset=utf-8');
-      } else {
-        return h.response(body);
-      }
+      return h.response(body).type('text/plain');
     }
   }
 
@@ -126,15 +123,15 @@ exports.plugin = {
 
     const routeOptions = {
       bind: hkp,
-      cors: Boolean(options.server.cors === 'true'),
-      security: Boolean(options.server.security === 'true'),
+      cors: options.server.cors === 'true',
+      security: options.server.security === 'true',
       ext: {
         onPreResponse: {
           method({response}, h) {
             if (!response.isBoom) {
               return h.continue;
             }
-            return h.response(response.message).code(response.output.statusCode);
+            return h.response(response.message).code(response.output.statusCode).type('text/plain');
           }
         }
       }

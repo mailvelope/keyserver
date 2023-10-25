@@ -110,15 +110,15 @@ exports.plugin = {
 
     const routeOptions = {
       bind: rest,
-      cors: Boolean(options.server.cors === 'true'),
-      security: Boolean(options.server.security === 'true'),
+      cors: options.server.cors === 'true',
+      security: options.server.security === 'true',
       ext: {
         onPreResponse: {
           method({response}, h) {
             if (!response.isBoom) {
               return h.continue;
             }
-            return h.response(response.message).code(response.output.statusCode);
+            return h.response(response.message).code(response.output.statusCode).type('text/plain');
           }
         }
       }

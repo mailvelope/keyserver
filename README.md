@@ -1,13 +1,11 @@
-Mailvelope Keyserver [![Build Status](https://travis-ci.org/mailvelope/keyserver.svg?branch=master)](https://travis-ci.org/mailvelope/keyserver)
-==============
+Mailvelope Keyserver
+====================
 
 A simple OpenPGP public key server that validates email address ownership of uploaded keys.
 
-
-
 ## Why not use Web of Trust?
 
-There are already OpenPGP key servers like the [SKS keyserver](https://bitbucket.org/skskeyserver/sks-keyserver/wiki/Home) that employ the [Web of Trust](https://en.wikipedia.org/wiki/Web_of_trust) to provide a way to authenticate a user's PGP keys. The problem with these servers are discussed [here](https://en.wikipedia.org/wiki/Key_server_(cryptographic)#Problems_with_keyservers).
+There are already OpenPGP key servers like the [SKS keyserver](https://github.com/SKS-Keyserver/sks-keyserver) that employ the [Web of Trust](https://en.wikipedia.org/wiki/Web_of_trust) to provide a way to authenticate a user's PGP keys. The problem with these servers are discussed [here](https://en.wikipedia.org/wiki/Key_server_(cryptographic)#Problems_with_keyservers).
 
 ### Privacy
 
@@ -23,13 +21,9 @@ This requires more trust to be placed in the service provider that hosts a key s
 
 The idea is that an identity provider such as an email provider can host their own key directory under a common `openpgpkeys` subdomain. An OpenPGP supporting user agent should attempt to lookup keys under the user's domain e.g. `https://openpgpkeys.example.com` for `user@example.com` first. User agents can host their own fallback key server as well, in case a mail provider does not provide its own key directory.
 
-
-
 # Demo
 
 Try out the server here: [https://keys.mailvelope.com](https://keys.mailvelope.com)
-
-
 
 # API
 
@@ -98,7 +92,7 @@ GET /api/v1/key?email=user@example.com
     }
   ],
   "created": "Sat Oct 17 2015 12:17:03 GMT+0200 (CEST)",
-  "algorithm": "rsa_encrypt_sign",
+  "algorithm": "rsaEncryptSign",
   "keySize": "4096",
   "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----"
 }
@@ -157,15 +151,14 @@ GET /api/v1/key?op=verifyRemove&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b1
 
 # Language & DB
 
-The server is written is in JavaScript ES7 and runs on [Node.js](https://nodejs.org/) v8+.
+The server is written is in JavaScript ES2020 and runs on [Node.js](https://nodejs.org/) v18+.
 
-It uses [MongoDB](https://www.mongodb.com/) v3.2+ as its database.
-
+It uses [MongoDB](https://www.mongodb.com/) v6.0+ as its database.
 
 # Getting started
 ## Installation
 
-### Node.js (Mac OS)
+### Node.js (macOS)
 
 This is how to install node on Mac OS using [homebrew](http://brew.sh/). For other operating systems, please refer to the [Node.js download page](https://nodejs.org/en/download/).
 
@@ -174,13 +167,13 @@ brew update
 brew install node
 ```
 
-### MongoDB (Mac OS)
+### MongoDB (macOS)
 
-This is the installation guide to get a local development installation on Mac OS using [homebrew](http://brew.sh/). For other operating systems, please refer to the [MongoDB Getting Started Guide](https://docs.mongodb.com/getting-started/shell/).
+This is the installation guide to get a local development installation on macOS using [homebrew](http://brew.sh/). For other operating systems, please refer to the [MongoDB Installation Tutorials](https://www.mongodb.com/docs/v6.0/installation/#mongodb-installation-tutorials).
 
 ```shell
 brew update
-brew install mongodb
+brew install mongodb-community@6.0
 mongod --config /usr/local/etc/mongod.conf
 ```
 
@@ -195,7 +188,7 @@ Now you can use the `mongo` CLI client to create a new test database. The userna
 ```shell
 mongo
 use keyserver-test
-db.createUser({ user:"keyserver-user", pwd:"trfepCpjhVrqgpXFWsEF", roles:[{ role:"readWrite", db:"keyserver-test" }] })
+db.createUser({ user:"keyserver-user", pwd:"your_mongo_db_pwd", roles:[{ role:"readWrite", db:"keyserver-test" }] })
 ```
 
 ### Dependencies
@@ -206,47 +199,58 @@ npm install
 
 ## Configuration
 
-Configuration settings may be provided as environment variables. The files in the config directory read the environment variables and define configuration values for settings with no corresponding environment variable. Warning: Default settings are only provided for a small minority of settings in these files (as most of them are very individual like host/user/password)!
-
-If settings are configured in multiple places, the priority ranking is as follows (individually for each setting):
-1. Environment variable
-2. config/production.js or config/development.js (depending on NODE_ENV)
-3. config/default.js
+Configuration settings may be provided as environment variables. The file config/config.js reads the environment variables and defines configuration values for settings with no corresponding environment variable. Warning: Default settings are only provided for a small minority of settings in these files (as most of them are very individual like host/user/password)!
 
 ### Development
 
-If you don't use environment variables to configure settings, create `config/development.js` and use `config/default.js` as a template. Creating `development.js` instead of just editing `config/default.js` is recommended to prevent accidental commits of locally used settings.
+If you don't use environment variables to configure settings, you can alternatively create a .env file for example with the following content:
+
+```
+PORT=3000
+CORS_HEADER=true
+HTTP_SECURITY_HEADER=true
+CSP_HEADER=true
+LOG_LEVEL=info
+MONGO_URI=127.0.0.1:27017/keyserver-test
+MONGO_USER=keyserver-user
+MONGO_PASS=your_mongo_db_pwd
+SMTP_HOST=sabic.uberspace.de
+SMTP_PORT=465
+SMTP_TLS=true
+SMTP_STARTTLS=false
+SMTP_PGP=true
+SMTP_USER=info@your-key-server.net
+SMTP_PASS=your_smtp_pwd
+SENDER_NAME=My Key Server Demo
+SENDER_EMAIL=info@your-key-server.net
+```
 
 ### Production
 
 For production use, settings configuration with environment variables is recommended as `NODE_ENV=production` is REQUIRED to be set as environment variable to instruct node.js to adapt e.g. logging to production use.
-
-*Other settings you may also configure within `config/production.js` and use `config/default.js` as a template; but ensure then the environment variable `NODE_ENV=production` or `production.js` will not be read!*
 
 ### Settings
 
 Available settings with its environment-variable-names, possible/example values and meaning (if not self-explainable). Defaults **bold**:
 
 * NODE_ENV=development|production
-  (no default + needs to be set as environment variable!)
-* LOG_LEVEL=**silly**|error|warn|info|debug
+  (no default, needs to be set as environment variable)
+* LOG_LEVEL=debug|**info**|notice|warning|err|crit|alert|emerg
+* SERVER_HOST=**localhost**
 * PORT=**8888**
   (application server port)
-* HTTPS_UPGRADE=true
-  (upgrade HTTP requests to HTTPS and use [HSTS](https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security))
-* HTTPS_KEY_PIN=base64_encoded_sha256
-  (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
-* HTTPS_KEY_PIN_BACKUP=base64_encoded_sha256
-  (optional, see [HPKP](https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning))
-* MONGO_URI=127.0.0.1:27017/test_db
-* MONGO_USER=db_user
-* MONGO_PASS=db_password
-* SMTP_HOST=127.0.0.1
+* CORS_HEADER=true [CORS headers](https://hapi.dev/api#-routeoptionscors)
+* HTTP_SECURITY_HEADER=true [security headers](https://hapi.dev/api#-routeoptionssecurity)
+* CSP_HEADER=true (add Content-Security-Policy as in src/lib/csp.js)
+* MONGO_URI=127.0.0.1:27017/keyserver
+* MONGO_USER=keyserver-user
+* MONGO_PASS=your_mongo_db_pwd
+* SMTP_HOST=smpt.your-email-provider.com
 * SMTP_PORT=465
 * SMTP_TLS=true
 * SMTP_STARTTLS=true
 * SMTP_PGP=true
-  (encrypt verification message with public key (allows to verify presence + usability of private key at owner of the mail-address))
+  (encrypt verification message with public key (allows to verify presence + usability of private key at owner of the email address))
 * SMTP_USER=smtp_user
 * SMTP_PASS=smtp_pass
 * SENDER_NAME="OpenPGP Key Server"
@@ -256,9 +260,9 @@ Available settings with its environment-variable-names, possible/example values 
 
 ### Notes on SMTP
 
-The key server uses [nodemailer](https://nodemailer.com) to send out emails upon public key upload to verify email address ownership. To test this feature locally, configure `SMTP_USER` and `SMTP_PASS` settings to your Gmail test account. Make sure that `SMTP_USER` and `SENDER_EMAIL` match. Otherwise the Gmail SMTP server will block any emails you try to send. Also, make sure to enable `Allow less secure apps` in the [Gmail security settings](https://myaccount.google.com/security#connectedapps). You can read more on this in the [Nodemailer documentation](https://nodemailer.com/using-gmail/).
+The key server uses [nodemailer](https://nodemailer.com) to send out emails upon public key upload to verify email address ownership. To test this feature locally, configure `SMTP_USER` and `SMTP_PASS` settings to your email test account. Make sure that `SMTP_USER` and `SENDER_EMAIL` match.
 
-For production you should use a service like [Amazon SES](https://aws.amazon.com/ses/), [Mailgun](https://www.mailgun.com/) or [Sendgrid](https://sendgrid.com/solutions/transactional-email/). Nodemailer supports all of these out of the box.
+For production you should use a service like [Amazon SES](https://aws.amazon.com/ses/), [Mailgun](https://www.mailgun.com/) or [Sendgrid](https://sendgrid.com/use-cases/transactional-email/). Nodemailer supports all of these out of the box.
 
 ## Run tests
 
@@ -272,9 +276,6 @@ npm test
 npm start
 ```
 
-
-
-
 # License
 
 AGPL v3.0
@@ -287,6 +288,5 @@ Among others, this project relies on the following open source libraries:
 
 * [OpenPGP.js](https://openpgpjs.org/)
 * [Nodemailer](https://nodemailer.com/)
-* [addressparser](https://github.com/nodemailer/addressparser)
-* [koa](http://koajs.com/)
+* [hapi](https://hapi.dev/)
 * [mongodb](https://mongodb.github.io/node-mongodb-native/)

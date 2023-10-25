@@ -11,7 +11,7 @@ exports.plugin = {
     server.ext('onPreResponse', async (request, h) => {
       const {response} = request;
       if (!response.isBoom) {
-        response.header('Content-Security-Policy', "default-src 'self'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'");
+        response.header('Content-Security-Policy', "default-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; form-action 'self'; base-uri 'self';");
       }
       return h.continue;
     });

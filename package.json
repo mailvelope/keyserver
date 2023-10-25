@@ -1,47 +1,47 @@
 {
   "name": "mailvelope-keyserver",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/mailvelope/keyserver.git"
   },
   "engines": {
-    "node": ">=10",
-    "npm": ">=6"
+    "node": ">=18",
+    "npm": ">=9"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "node src",
     "test": "npm run test:lint && npm run test:unit && npm run test:integration",
-    "test:lint": "eslint --ignore-pattern \"**/*.min.js\" config src test *.js",
-    "test:unit": "mocha --config test/.mocharc.js ./test/unit/",
-    "test:integration": "mocha --config test/.mocharc.js ./test/integration",
+    "test:lint": "eslint --ignore-pattern \"**/*.min.js\" config src test",
+    "test:unit": "mocha --require ./test/setup.js --recursive ./test/unit",
+    "test:integration": "mocha --exit --require ./test/setup.js --recursive ./test/integration",
     "release": "npm run release:install && npm run release:archive",
     "release:install": "rm -rf node_modules/ && npm ci --production",
     "release:archive": "zip -rq release.zip package.json package-lock.json node_modules/ *.js src/ config/ locales/"
   },
   "dependencies": {
-    "co-body": "6.1.0",
-    "config": "3.3.6",
-    "koa": "2.13.1",
-    "koa-ejs": "4.3.0",
-    "koa-locales": "1.12.0",
-    "koa-router": "10.0.0",
-    "koa-static": "5.0.0",
-    "mongodb": "3.6.6",
-    "nodemailer": "6.6.0",
-    "openpgp": "4.5.5",
-    "winston": "3.3.3",
-    "winston-papertrail": "1.0.5"
+    "@hapi/boom": "^10.0.1",
+    "@hapi/hapi": "^21.3.2",
+    "@hapi/inert": "^7.1.0",
+    "@hapi/vision": "^7.0.3",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "hapi-i18n": "^3.0.1",
+    "mongodb": "^6.2.0",
+    "nodemailer": "^6.9.7",
+    "openpgp": "^5.11.0",
+    "winston": "^3.3.3",
+    "winston-syslog": "^2.4.4"
   },
   "devDependencies": {
     "bootstrap": "^3.4.1",
-    "chai": "^4.3.4",
+    "chai": "^4.3.10",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^7.26.0",
-    "jquery": "^3.6.0",
-    "mocha": "^8.4.0",
-    "sinon": "^10.0.0",
-    "supertest": "^6.1.3"
+    "eslint": "^8.52.0",
+    "jquery": "^3.7.1",
+    "mocha": "^10.0.2",
+    "sinon": "^17.0.1",
+    "supertest": "^6.3.3"
   }
 }

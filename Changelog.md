@@ -1,6 +1,14 @@
 Mailvelope Key Server Changelog
 ===============================
 
+v4.0.0
+-------
+__Nov 3, 2023__
+  * Migrate from koa to hapi and major refactoring
+  * Upgrade OpenPGP.js to v5
+  * Load configuration from .env file
+  * Update dependencies
+
 v3.0.0
 -------
 __Mar 4, 2019__
