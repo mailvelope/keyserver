@@ -51,6 +51,12 @@ The HKP APIs are not documented here. Please refer to the [HKP specification](ht
 #### Accepted `options` parameters
 * mr
 
+#### Usage example with GnuPG
+
+```
+gpg --keyserver hkps://keys.mailvelope.com --search  info@mailvelope.com
+```
+
 ## REST API
 
 ### Lookup a key
