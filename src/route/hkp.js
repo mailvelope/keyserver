@@ -78,28 +78,45 @@ class HKP {
   /**
    * Parse the query string for a lookup request and set a corresponding
    * error code if the requests is not supported or invalid.
-   * @param {Object} request - hapi request object
-   * @param {Object} h - hapi response toolkit
+   * @param {Object} query - hapi request query object
    * @return {Object} - query parameters or undefined for an invalid request
    */
-  parseQueryString(request) {
+  parseQueryString({query}) {
     const params = {
-      op: request.query.op, // operation ... only 'get' is supported
-      mr: request.query.options === 'mr' // machine readable
+      op: query.op, // operation ... only 'get' is supported
+      mr: query.options === 'mr' // machine readable
     };
-    if (this.checkId(request.query.search)) {
-      const id = request.query.search.replace(/^0x/, '');
-      params.keyId = util.isKeyId(id) ? id : undefined;
-      params.fingerprint = util.isFingerPrint(id) ? id : undefined;
-    } else if (util.isEmail(request.query.search)) {
-      params.email = request.query.search;
-    }
     if (!['get', 'index', 'vindex'].includes(params.op)) {
       throw Boom.notImplemented('Method not implemented');
-    } else if (!params.keyId && !params.fingerprint && !params.email) {
+    }
+    this.parseSearch(query.search, params);
+    if (!params.keyId && !params.fingerprint && !params.email) {
       throw Boom.badRequest('Invalid search parameter');
     }
     return params;
+  }
+
+  /**
+   * Parse the search parameter
+   * @param  {String} search Query parameter search
+   * @param  {Object} params Map with results
+   */
+  parseSearch(search, params) {
+    if (!search || !util.isString(search)) {
+      return;
+    }
+    if (this.checkId(search)) {
+      const id = search.replace(/^0x/, '');
+      params.keyId = util.isKeyId(id) ? id : undefined;
+      params.fingerprint = util.isFingerPrint(id) ? id : undefined;
+      return;
+    }
+    if (search.startsWith('<') && search.endsWith('>')) {
+      search = search.slice(1, -1);
+    }
+    if (util.isEmail(search)) {
+      params.email = search;
+    }
   }
 
   /**
@@ -109,9 +126,6 @@ class HKP {
    * @return {Boolean} - if the key id is valid
    */
   checkId(id) {
-    if (!util.isString(id)) {
-      return false;
-    }
     return /^0x[a-fA-F0-9]{16,40}$/.test(id);
   }
 }

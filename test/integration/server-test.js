@@ -315,11 +315,18 @@ describe('Key Server Integration Tests', function() {
           .end(done);
         });
 
+        it('should support email address wrapped in angle-brackets', done => {
+          request(app.info.uri)
+          .get(`/pks/lookup?op=get&search=<${primaryEmail}>`)
+          .expect(200)
+          .end(done);
+        });
+
         it('should return 200 for "mr" option', done => {
           request(app.info.uri)
           .get(`/pks/lookup?op=get&options=mr&search=${primaryEmail}`)
           .expect('Content-Type', 'application/pgp-keys; charset=utf-8')
-          .expect('Content-Disposition', 'attachment; filename=openpgpkey.asc')
+          .expect('Content-Disposition', 'attachment; filename=openpgp-key.asc')
           .expect(200)
           .end(done);
         });
@@ -342,6 +349,13 @@ describe('Key Server Integration Tests', function() {
         it('should return 400 for invalid email', done => {
           request(app.info.uri)
           .get('/pks/lookup?op=get&search=a@bco')
+          .expect(400)
+          .end(done);
+        });
+
+        it('should return 400 for search with empty angle-brackets', done => {
+          request(app.info.uri)
+          .get('/pks/lookup?op=get&search=<>')
           .expect(400)
           .end(done);
         });
