@@ -301,9 +301,30 @@ describe('Key Server Integration Tests', function() {
           .end(done);
         });
 
+        it('should return 200 for key id without 0x prefix', done => {
+          request(app.info.uri)
+          .get(`/pks/lookup?op=get&search=${emailParams.keyId}`)
+          .expect(200)
+          .end(done);
+        });
+
         it('should return 200 for fingerprint', done => {
           request(app.info.uri)
           .get(`/pks/lookup?op=get&search=0x${fingerprint}`)
+          .expect(200)
+          .end(done);
+        });
+
+        it('should return 200 for fingerprint without 0x prefix', done => {
+          request(app.info.uri)
+          .get(`/pks/lookup?op=get&search=${fingerprint}`)
+          .expect(200)
+          .end(done);
+        });
+
+        it('should return 200 for fingerprint with whitespaces', done => {
+          request(app.info.uri)
+          .get(`/pks/lookup?op=get&search=${fingerprint.match(/.{1,4}/g).join(' ')}`)
           .expect(200)
           .end(done);
         });
@@ -374,13 +395,6 @@ describe('Key Server Integration Tests', function() {
           .end(done);
         });
 
-        it('should return 400 for a invalid key id format', done => {
-          request(app.info.uri)
-          .get('/pks/lookup?op=get&search=4c03a47362c5b4cc')
-          .expect(400)
-          .end(done);
-        });
-
         it('should return 404 for unkown key id', done => {
           request(app.info.uri)
           .get('/pks/lookup?op=get&search=0xDBC0B3D92A1B86E9')
@@ -391,6 +405,13 @@ describe('Key Server Integration Tests', function() {
         it('should return 400 for short key id', done => {
           request(app.info.uri)
           .get('/pks/lookup?op=get&search=0x2A1B86E9')
+          .expect(400)
+          .end(done);
+        });
+
+        it('should return 400 for a short key id without 0x prefix', done => {
+          request(app.info.uri)
+          .get('/pks/lookup?op=get&search=2a1b86e9')
           .expect(400)
           .end(done);
         });

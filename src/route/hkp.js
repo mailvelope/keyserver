@@ -105,6 +105,7 @@ class HKP {
     if (!search || !util.isString(search)) {
       return;
     }
+    search = search.replaceAll(/\s/g, '');
     if (this.checkId(search)) {
       const id = search.replace(/^0x/, '');
       params.keyId = util.isKeyId(id) ? id : undefined;
@@ -126,7 +127,7 @@ class HKP {
    * @return {Boolean} - if the key id is valid
    */
   checkId(id) {
-    return /^0x[a-fA-F0-9]{16,40}$/.test(id);
+    return /^(?:0x)?[a-fA-F0-9]{16,40}$/.test(id);
   }
 }
 
