@@ -33,7 +33,7 @@ class REST {
     }
     const origin = util.origin(request);
     await this._publicKey.put({emails, publicKeyArmored, origin, i18n: request.i18n});
-    return h.response('Upload successful. Check your inbox to verify your email address.').code(201);
+    return h.response('Upload successful. Check your inbox to verify your email address.').code(200);
   }
 
   /**
@@ -85,7 +85,7 @@ class REST {
       throw Boom.badRequest('Invalid parameter keyId or email');
     }
     await this._publicKey.requestRemove({keyId, email, origin, i18n: request.i18n});
-    return h.response('Check your inbox to verify the removal of your email address.').code(202);
+    return h.response('Check your inbox to verify the removal of your email address.').code(200);
   }
 
   /**

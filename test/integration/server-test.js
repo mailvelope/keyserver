@@ -56,7 +56,7 @@ describe('Key Server Integration Tests', function() {
     await app.stop();
   });
 
-  describe('REST api', () => {
+  describe('REST API', () => {
     describe('POST /api/v1/key', () => {
       it('should return 400 for an invalid pgp key', done => {
         request(app.info.uri)
@@ -66,7 +66,7 @@ describe('Key Server Integration Tests', function() {
         .end(done);
       });
 
-      it('should return 201', done => {
+      it('should return 200', done => {
         request(app.info.uri)
         .post('/api/v1/key')
         .send({publicKeyArmored})
@@ -83,7 +83,7 @@ describe('Key Server Integration Tests', function() {
         request(app.info.uri)
         .post('/api/v1/key')
         .send({publicKeyArmored})
-        .expect(201)
+        .expect(200)
         .end(done);
       });
 
@@ -114,7 +114,7 @@ describe('Key Server Integration Tests', function() {
         request(app.info.uri)
         .post('/api/v1/key')
         .send({publicKeyArmored})
-        .expect(201)
+        .expect(200)
         .end(done);
       });
 
@@ -157,7 +157,7 @@ describe('Key Server Integration Tests', function() {
 
         it('should return 400 for short key id', done => {
           request(app.info.uri)
-          .get('/api/v1/key?keyId=0123456789ABCDE')
+          .get('/api/v1/key?keyId=01234567')
           .expect(400)
           .end(done);
         });
@@ -176,21 +176,21 @@ describe('Key Server Integration Tests', function() {
         request(app.info.uri)
         .post('/api/v1/key')
         .send({publicKeyArmored})
-        .expect(201)
+        .expect(200)
         .end(done);
       });
 
-      it('should return 202 for key id', done => {
+      it('should return 200 for key id', done => {
         request(app.info.uri)
         .del(`/api/v1/key?keyId=${emailParams.keyId}`)
-        .expect(202)
+        .expect(200)
         .end(done);
       });
 
-      it('should return 202 for email address', done => {
+      it('should return 200 for email address', done => {
         request(app.info.uri)
         .del(`/api/v1/key?email=${primaryEmail}`)
-        .expect(202)
+        .expect(200)
         .end(done);
       });
 
@@ -214,11 +214,11 @@ describe('Key Server Integration Tests', function() {
         request(app.info.uri)
         .post('/api/v1/key')
         .send({publicKeyArmored})
-        .expect(201)
+        .expect(200)
         .end(() => {
           request(app.info.uri)
           .del(`/api/v1/key?keyId=${emailParams.keyId}`)
-          .expect(202)
+          .expect(200)
           .end(done);
         });
       });
@@ -246,7 +246,7 @@ describe('Key Server Integration Tests', function() {
     });
   });
 
-  describe('HKP api', () => {
+  describe('HKP API', () => {
     describe('POST /pks/add', () => {
       it('should return 400 for an invalid body', done => {
         request(app.info.uri)
@@ -257,12 +257,12 @@ describe('Key Server Integration Tests', function() {
         .end(done);
       });
 
-      it('should return 201 for a valid PGP key', done => {
+      it('should return 200 for a valid PGP key', done => {
         request(app.info.uri)
         .post('/pks/add')
         .type('form')
         .send(`keytext=${encodeURIComponent(publicKeyArmored)}`)
-        .expect(201)
+        .expect(200)
         .end(done);
       });
     });
@@ -273,7 +273,7 @@ describe('Key Server Integration Tests', function() {
         .post('/pks/add')
         .type('form')
         .send(`keytext=${encodeURIComponent(publicKeyArmored)}`)
-        .expect(201)
+        .expect(200)
         .end(done);
       });
 
