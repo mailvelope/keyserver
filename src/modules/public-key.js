@@ -28,7 +28,8 @@ const tpl = require('../lib/templates');
  *   uploaded: Sat Oct 17 2015 12:17:03 GMT+0200 (CEST), // time of key upload as JavaScript Date
  *   algorithm: 'rsa_encrypt_sign', // primary key alogrithm
  *   keySize: 4096, // key length in bits
- *   publicKeyArmored: '-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----'
+ *   publicKeyArmored: '-----BEGIN PGP PUBLIC KEY BLOCK----- ... -----END PGP PUBLIC KEY BLOCK-----',
+ *   verifyUntil: Mon Nov 16 2015 12:17:03 GMT+0200 (CEST) // verification deadline
  * }
  */
 const DB_TYPE = 'publickey';
@@ -50,6 +51,11 @@ class PublicKey {
     this._email = email;
   }
 
+  async init() {
+    // create time to live (TTL) index to purge unverified keys
+    await this._mongo.createIndexes([{key: {verifyUntil: 1}, expireAfterSeconds: 1}], DB_TYPE);
+  }
+
   /**
    * Persist a new public key
    * @param {Array} emails              (optional) The emails to upload/update
@@ -60,8 +66,6 @@ class PublicKey {
    */
   async put({emails = [], publicKeyArmored, origin, i18n}) {
     emails = emails.map(util.normalizeEmail);
-    // lazily purge old/unverified keys on every key upload
-    await this._purgeOldUnverified();
     // parse key block
     const key = await this._pgp.parseKey(publicKeyArmored);
     // if emails array is empty, all userIds of the key will be submitted
@@ -88,26 +92,15 @@ class PublicKey {
       await this._addKeyArmored(key.userIds, key.publicKeyArmored);
       // new key, set armored to null
       key.publicKeyArmored = null;
+      // set verifyUntil date to purgeTimeInDays in the future
+      const verifyUntil = new Date(key.uploaded);
+      verifyUntil.setDate(key.uploaded.getDate() + config.publicKey.purgeTimeInDays);
+      key.verifyUntil = verifyUntil;
     }
     // send mails to verify user ids
     await this._sendVerifyEmail(key, origin, i18n);
     // store key in database
     await this._persistKey(key);
-  }
-
-  /**
-   * Delete all keys where no user id has been verified after x days.
-   * @return {Promise}
-   */
-  async _purgeOldUnverified() {
-    // create date in the past to compare with
-    const xDaysAgo = new Date();
-    xDaysAgo.setDate(xDaysAgo.getDate() - config.publicKey.purgeTimeInDays);
-    // remove unverified keys older than x days (or no 'uploaded' attribute)
-    return this._mongo.remove({
-      'userIds.verified': {$ne: true},
-      uploaded: {$lt: xDaysAgo}
-    }, DB_TYPE);
   }
 
   /**
@@ -211,7 +204,8 @@ class PublicKey {
       publicKeyArmored,
       'userIds.$.verified': true,
       'userIds.$.nonce': null,
-      'userIds.$.publicKeyArmored': null
+      'userIds.$.publicKeyArmored': null,
+      verifyUntil: null
     }, DB_TYPE);
     return {email};
   }

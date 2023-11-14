@@ -36,6 +36,18 @@ class Mongo {
   }
 
   /**
+   * Create the database indexes
+   * @param  {Array<Object>} indexSpecs The index specification
+   * @param  {String} type The collection to use e.g. 'publickey'
+   * @param  {Object} [options] create index options
+   * @yield {String}         The operation result
+   */
+  async createIndexes(indexSpecs, type, options) {
+    const col = this._db.collection(type);
+    return col.createIndexes(indexSpecs, options);
+  }
+
+  /**
    * Inserts a single document.
    * @param {Object} document   Inserts a single document
    * @param {String} type       The collection to use e.g. 'publickey'

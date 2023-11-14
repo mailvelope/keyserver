@@ -189,12 +189,30 @@ Now the mongo daemon should be running in the background. To have mongo start au
 brew services start mongodb
 ```
 
-Now you can use the `mongo` CLI client to create a new test database. The username and password used here match the ones in the `config/development.js` file. **Be sure to change them for production use**:
+Now you can use the `mongo` CLI client to create a new test database. The username and password used here match the ones in the `.env` file. **Be sure to change them for production use**:
 
 ```shell
 mongo
 use keyserver-test
 db.createUser({ user:"keyserver-user", pwd:"your_mongo_db_pwd", roles:[{ role:"readWrite", db:"keyserver-test" }] })
+```
+
+#### Purge unverfied keys with TTL (time to live) indexes
+
+Unverified keys are automatically purged after `PUBLIC_KEY_PURGE_TIME` days. The MongoDB TTLMonitor thread that is used for this purpose, runs by default every 60 seconds. To change this interval to a more appropriate value run the following admin command in the mongo shell:
+
+```
+db.adminCommand({setParameter:1, ttlMonitorSleepSecs: 86400}) // 1 day
+```
+
+#### Recommended indexes
+
+To improve query performance the following indexes are recommended:
+
+```
+db.publickey.createIndex({"userIds.email" : 1, "userIds.verified" : 1}) // query by email
+db.publickey.createIndex({"keyId" : 1, "userIds.verified" : 1}) // query by keyID
+db.publickey.createIndex({"fingerprint" : 1, "userIds.verified" : 1}) // query by fingerprint
 ```
 
 ### Dependencies

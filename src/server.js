@@ -30,11 +30,13 @@ const init = async (conf = config) => {
   });
   // modules
   const mongo = new Mongo();
-  const email = new Email();
-  const pgp = new PGP();
-  server.app.publicKey = new PublicKey(pgp, mongo, email);
-  email.init(conf.email);
   await mongo.init(conf.mongo);
+  const email = new Email();
+  email.init(conf.email);
+  const pgp = new PGP();
+  const publicKey = new PublicKey(pgp, mongo, email);
+  await publicKey.init();
+  server.app.publicKey = publicKey;
   // views
   await server.register(Vision);
   server.views({

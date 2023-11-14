@@ -67,6 +67,7 @@ describe('Public Key Integration Tests', function() {
     });
     pgp = new PGP();
     publicKey = new PublicKey(pgp, mongo, email);
+    await publicKey.init();
   });
 
   afterEach(() => {
@@ -100,44 +101,40 @@ describe('Public Key Integration Tests', function() {
     });
   });
 
-  describe('_purgeOldUnverified', () => {
-    let key;
-
-    beforeEach(async () => {
-      key = await pgp.parseKey(publicKeyArmored);
+  describe('Set verifyUntil date', () => {
+    it('should set verifyUntil date for new unverified key', async () => {
+      await publicKey.put({emails: [], publicKeyArmored, origin, i18n});
+      const gotten = await mongo.get({keyId: mailsSent[0].params.keyId}, DB_TYPE);
+      const verifyUntil = new Date(gotten.uploaded);
+      verifyUntil.setDate(gotten.uploaded.getDate() + config.publicKey.purgeTimeInDays);
+      expect(gotten.verifyUntil).to.eql(verifyUntil);
     });
 
-    it('should work for no keys', async () => {
-      const r = await publicKey._purgeOldUnverified();
-      expect(r.deletedCount).to.equal(0);
+    it('Update of unverified key should replace key and set new verifyUntil date', async () => {
+      await publicKey.put({emails: [], publicKeyArmored, origin, i18n});
+      // update entry with same key
+      await publicKey.put({emails: [], publicKeyArmored, origin, i18n});
+      const gotten = await mongo.get({keyId: mailsSent[0].params.keyId}, DB_TYPE);
+      const verifyUntil = new Date(gotten.uploaded);
+      verifyUntil.setDate(gotten.uploaded.getDate() + config.publicKey.purgeTimeInDays);
+      expect(gotten.verifyUntil).to.eql(verifyUntil);
     });
 
-    it('should not remove a current unverified key', async () => {
-      await publicKey._persistKey(key);
-      const r = await publicKey._purgeOldUnverified();
-      expect(r.deletedCount).to.equal(0);
+    it('Verify should set the verifyUntil date to null', async () => {
+      await publicKey.put({emails: [], publicKeyArmored, origin, i18n});
+      const emailParams = mailsSent[0].params;
+      await publicKey.verify(emailParams);
+      const gotten = await mongo.get({keyId: emailParams.keyId}, DB_TYPE);
+      expect(gotten.verifyUntil).to.be.null;
     });
 
-    it('should not remove a current verified key', async () => {
-      key.userIds[0].verified = true;
-      await publicKey._persistKey(key);
-      const r = await publicKey._purgeOldUnverified();
-      expect(r.deletedCount).to.equal(0);
-    });
-
-    it('should not remove an old verified key', async () => {
-      key.uploaded.setDate(key.uploaded.getDate() - 31);
-      key.userIds[0].verified = true;
-      await publicKey._persistKey(key);
-      const r = await publicKey._purgeOldUnverified();
-      expect(r.deletedCount).to.equal(0);
-    });
-
-    it('should remove an old unverified key', async () => {
-      key.uploaded.setDate(key.uploaded.getDate() - 31);
-      await publicKey._persistKey(key);
-      const r = await publicKey._purgeOldUnverified();
-      expect(r.deletedCount).to.equal(1);
+    it('Reupload of verified key should delete the verifyUntil field', async () => {
+      await publicKey.put({emails: [], publicKeyArmored, origin, i18n});
+      const emailParams = mailsSent[0].params;
+      await publicKey.verify(emailParams);
+      await publicKey.put({emails: [], publicKeyArmored, origin, i18n});
+      const gotten = await mongo.get({keyId: emailParams.keyId}, DB_TYPE);
+      expect(gotten.verifyUntil).to.be.undefined;
     });
   });
 
