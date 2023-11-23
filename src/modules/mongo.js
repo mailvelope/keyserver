@@ -14,10 +14,10 @@ const MongoClient = require('mongodb').MongoClient;
 class Mongo {
   /**
    * Initializes the database client by connecting to the MongoDB.
-   * @param {String} uri    The mongodb uri
-   * @param {String} user   The databse user
-   * @param {String} pass   The database user's password
-   * @yield {undefined}
+   * @param  {String} uri          The mongodb uri
+   * @param  {String} user         The databse user
+   * @param  {String} pass         The database user's password
+   * @return {Promise<undefined>}
    */
   async init({uri, user, pass}) {
     log.info('Connecting to MongoDB ...');
@@ -29,7 +29,7 @@ class Mongo {
 
   /**
    * Cleanup by closing the connection to the database.
-   * @yield {undefined}
+   * @return {Promise<undefined>}
    */
   disconnect() {
     return this._client.close();
@@ -37,10 +37,10 @@ class Mongo {
 
   /**
    * Create the database indexes
-   * @param  {Array<Object>} indexSpecs The index specification
-   * @param  {String} type The collection to use e.g. 'publickey'
-   * @param  {Object} [options] create index options
-   * @yield {String}         The operation result
+   * @param  {Array<Object>}     indexSpecs The index specification
+   * @param  {String} type       The collection to use e.g. 'publickey'
+   * @param  {Object} [options]  create index options
+   * @return {Promise<String>}   The operation result
    */
   async createIndexes(indexSpecs, type, options) {
     const col = this._db.collection(type);
@@ -49,9 +49,9 @@ class Mongo {
 
   /**
    * Inserts a single document.
-   * @param {Object} document   Inserts a single document
-   * @param {String} type       The collection to use e.g. 'publickey'
-   * @yield {Object}            The operation result
+   * @param  {Object} document   Inserts a single document
+   * @param  {String} type       The collection to use e.g. 'publickey'
+   * @return {Promise<Object>}   The operation result
    */
   create(document, type) {
     const col = this._db.collection(type);
@@ -60,9 +60,9 @@ class Mongo {
 
   /**
    * Inserts a list of documents.
-   * @param {Array}  documents   Inserts a list of documents
-   * @param {String} type        The collection to use e.g. 'publickey'
-   * @yield {Object}             The operation result
+   * @param  {Array}  documents  Inserts a list of documents
+   * @param  {String} type       The collection to use e.g. 'publickey'
+   * @return {Promise<Object>}   The operation result
    */
   batch(documents, type) {
     const col = this._db.collection(type);
@@ -71,10 +71,10 @@ class Mongo {
 
   /**
    * Update a single document.
-   * @param {Object} query   The query e.g. { _id:'0' }
-   * @param {Object} diff    The attributes to change/set e.g. { foo:'bar' }
-   * @param {String} type    The collection to use e.g. 'publickey'
-   * @yield {Object}         The operation result
+   * @param  {Object} query     The query e.g. { _id:'0' }
+   * @param  {Object} diff      The attributes to change/set e.g. { foo:'bar' }
+   * @param  {String} type      The collection to use e.g. 'publickey'
+   * @return {Promise<Object>}  The operation result
    */
   update(query, diff, type) {
     const col = this._db.collection(type);
@@ -83,9 +83,9 @@ class Mongo {
 
   /**
    * Read a single document.
-   * @param {Object} query   The query e.g. { _id:'0' }
-   * @param {String} type    The collection to use e.g. 'publickey'
-   * @yield {Object}         The document object
+   * @param  {Object} query     The query e.g. { _id:'0' }
+   * @param  {String} type      The collection to use e.g. 'publickey'
+   * @return {Promise<Object>}  The document object
    */
   get(query, type) {
     const col = this._db.collection(type);
@@ -94,9 +94,9 @@ class Mongo {
 
   /**
    * Read multiple documents at once.
-   * @param {Object} query   The query e.g. { foo:'bar' }
-   * @param {String} type    The collection to use e.g. 'publickey'
-   * @yield {Array}          An array of document objects
+   * @param  {Object} query    The query e.g. { foo:'bar' }
+   * @param  {String} type     The collection to use e.g. 'publickey'
+   * @return {Promise<Array>}  An array of document objects
    */
   list(query, type) {
     const col = this._db.collection(type);
@@ -105,9 +105,9 @@ class Mongo {
 
   /**
    * Delete all documents matching a query.
-   * @param {Object} query   The query e.g. { _id:'0' }
-   * @param {String} type    The collection to use e.g. 'publickey'
-   * @yield {Object}         The operation result
+   * @param  {Object} query     The query e.g. { _id:'0' }
+   * @param  {String} type      The collection to use e.g. 'publickey'
+   * @return {Promise<Object>}  The operation result
    */
   remove(query, type) {
     const col = this._db.collection(type);
@@ -116,8 +116,8 @@ class Mongo {
 
   /**
    * Clear all documents of a collection.
-   * @param {String} type   The collection to use e.g. 'publickey'
-   * @yield {Object}        The operation result
+   * @param  {String} type      The collection to use e.g. 'publickey'
+   * @return {Promise<Object>}  The operation result
    */
   clear(type) {
     const col = this._db.collection(type);

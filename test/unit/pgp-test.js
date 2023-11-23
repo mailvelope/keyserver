@@ -30,13 +30,13 @@ describe('PGP Unit Tests', () => {
   });
 
   describe('parseKey', () => {
-    it('should should throw error on key parsing', async () => {
+    it('should throw error on key parsing', async () => {
       sandbox.stub(openpgp, 'readKey').throws(new Error('readKey: test error'));
       await expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/Error reading PGP key. readKey: test error/);
       expect(log.error.calledOnce).to.be.true;
     });
 
-    it('should should throw error when primaryKey not verfied', () => {
+    it('should throw error when primaryKey not verfied', () => {
       sandbox.stub(openpgp, 'readKey').returns({
         isPrivate() { return false; },
         armor() { return 'ABC'; },

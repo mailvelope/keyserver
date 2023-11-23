@@ -23,8 +23,8 @@ class PGP {
 
   /**
    * Parse an ascii armored pgp key block and get its parameters.
-   * @param  {String} publicKeyArmored   ascii armored pgp key block
-   * @return {Object}                    public key document to persist
+   * @param  {String} publicKeyArmored  ascii armored pgp key block
+   * @return {Promise<Object>}          public key document to persist
    */
   async parseKey(publicKeyArmored) {
     let key;
@@ -43,7 +43,7 @@ class PGP {
     // accept keys valid 24h in the future
     verifyDate.setUTCDate(verifyDate.getUTCDate() + 1);
     await this.verifyKey(key, verifyDate);
-    // check for at least one valid user id
+    // check for at least one valid user ID
     const userIds = await this.parseUserIds(key, verifyDate);
     if (!userIds.length) {
       log.error('Invalid PGP key: no valid user IDs with email address found\n%s', publicKeyArmored);
@@ -66,10 +66,10 @@ class PGP {
 
   /**
    * Verify key. At least one valid user ID and signing or encryption key is required.
-   * @param  {openpgp.PublicKey} key
-   * @param  {Date} date The verification date
-   * @throws {Error} If key verification failed
-   * @async
+   * @param  {PublicKey} key
+   * @param  {Date} date           The verification date
+   * @return {Promise<undefined>}
+   * @throws {Error}               If key verification failed
    */
   async verifyKey(key, verifyDate = new Date()) {
     try {
@@ -98,9 +98,9 @@ class PGP {
 
   /**
    * Parse user IDs and return the ones that are valid or revoked and contain an email address
-   * @param  {openpgp.PublicKey} key
-   * @param {Date} verifyDate Verify user IDs at this point in time
-   * @return {Array}         An array of user ID objects
+   * @param  {PublicKey} key
+   * @param  {Date} verifyDate  Verify user IDs at this point in time
+   * @return {Promise<Array>}   An array of user ID objects
    */
   async parseUserIds(key, verifyDate = new Date()) {
     const result = [];
@@ -135,9 +135,9 @@ class PGP {
 
   /**
    * Remove user IDs from armored key block which are not in array of user IDs
-   * @param  {Array} userIds  user IDs to be kept
-   * @param  {String} armoredKey armored key block to be filtered
-   * @return {String}         filtered amored key block
+   * @param  {Array} userIds      user IDs to be kept
+   * @param  {String} armoredKey  armored key block to be filtered
+   * @return {Promise<String>}    filtered amored key block
    */
   async filterKeyByUserIds(userIds, armoredKey) {
     const emails = userIds.map(({email}) => email);
@@ -154,9 +154,9 @@ class PGP {
 
   /**
    * Merge (update) armored key blocks
-   * @param  {String} srcArmored source amored key block
-   * @param  {String} dstArmored destination armored key block
-   * @return {String}            merged armored key block
+   * @param  {String} srcArmored  source amored key block
+   * @param  {String} dstArmored  destination armored key block
+   * @return {Promise<String>}    merged armored key block
    */
   async updateKey(srcArmored, dstArmored) {
     let srcKey;
@@ -179,9 +179,9 @@ class PGP {
 
   /**
    * Remove user ID from armored key block
-   * @param  {String} email            email of user ID to be removed
-   * @param  {String} armoredKey amored key block to be filtered
-   * @return {String}                  filtered armored key block
+   * @param  {String} email       email of user ID to be removed
+   * @param  {String} armoredKey  amored key block to be filtered
+   * @return {Promise<String>}    filtered armored key block
    */
   async removeUserId(email, armoredKey) {
     let key;

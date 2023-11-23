@@ -14,7 +14,7 @@ const tpl = require('../lib/templates');
  * Database documents have the format:
  * {
  *   _id: ObjectId, // a randomly generated MongoDB document ID
- *   keyId: 'b8e4105cc9dedc77', // the 16 char key id in lowercase hex
+ *   keyId: 'b8e4105cc9dedc77', // the 16 char key ID in lowercase hex
  *   fingerprint: 'e3317db04d3958fd5f662c37b8e4105cc9dedc77', // the 40 char key fingerprint in lowercase hex
  *   userIds: [
  *     {
@@ -41,9 +41,9 @@ const {KEY_STATUS} = util;
 class PublicKey {
   /**
    * Create an instance of the service
-   * @param {Object} pgp       An instance of the OpenPGP.js wrapper
-   * @param {Object} mongo     An instance of the MongoDB client
-   * @param {Object} email     An instance of the Email Sender
+   * @param {Object} pgp    An instance of the OpenPGP.js wrapper
+   * @param {Object} mongo  An instance of the MongoDB client
+   * @param {Object} email  An instance of the Email Sender
    */
   constructor(pgp, mongo, email) {
     this._pgp = pgp;
@@ -58,11 +58,11 @@ class PublicKey {
 
   /**
    * Persist a new public key
-   * @param {Array} emails              (optional) The emails to upload/update
-   * @param {String} publicKeyArmored   The ascii armored pgp key block
-   * @param {Object} origin             Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
-   * @param {Object} i18n               i18n object
-   * @return {Promise}
+   * @param  {Array} emails             (optional) The emails to upload/update
+   * @param  {String} publicKeyArmored  The ascii armored pgp key block
+   * @param  {Object} origin            Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
+   * @param  {Object} i18n              i18n object
+   * @return {Promise<undefined>}
    */
   async put({emails = [], publicKeyArmored, origin, i18n}) {
     emails = emails.map(util.normalizeEmail);
@@ -76,7 +76,7 @@ class PublicKey {
         throw Boom.badRequest('Provided email address does not match a valid user ID of the key');
       }
     }
-    // check for existing verified key with same id
+    // check for existing verified key with same ID
     const verified = await this.getVerified({keyId: key.keyId});
     if (verified) {
       key.userIds = await this._mergeUsers(verified.userIds, key.userIds, key.publicKeyArmored);
@@ -97,7 +97,7 @@ class PublicKey {
       verifyUntil.setDate(key.uploaded.getDate() + config.publicKey.purgeTimeInDays);
       key.verifyUntil = verifyUntil;
     }
-    // send mails to verify user ids
+    // send mails to verify user IDs
     await this._sendVerifyEmail(key, origin, i18n);
     // store key in database
     await this._persistKey(key);
@@ -105,10 +105,10 @@ class PublicKey {
 
   /**
    * Merge existing and new user IDs
-   * @param  {Array} existingUsers     source user IDs
-   * @param  {Array} newUsers          new user IDs
-   * @param  {String} publicKeyArmored armored key block of new user IDs
-   * @return {Array}                   merged user IDs
+   * @param  {Array} existingUsers      source user IDs
+   * @param  {Array} newUsers           new user IDs
+   * @param  {String} publicKeyArmored  armored key block of new user IDs
+   * @return {Promise<Array>}           merged user IDs
    */
   async _mergeUsers(existingUsers, newUsers, publicKeyArmored) {
     const result = [];
@@ -125,9 +125,9 @@ class PublicKey {
 
   /**
    * Create amored key block which contains the corresponding user ID only and add it to the user ID object
-   * @param {Array} userIds           user IDs to be extended
-   * @param {String} PublicKeyArmored armored key block to be filtered
-   * @return {Promise}
+   * @param  {Array} userIds            user IDs to be extended
+   * @param  {String} publicKeyArmored  armored key block to be filtered
+   * @return {Promise<undefined>}
    */
   async _addKeyArmored(userIds, publicKeyArmored) {
     for (const userId of userIds) {
@@ -141,12 +141,12 @@ class PublicKey {
   }
 
   /**
-   * Send verification emails to the public keys user ids for verification.
+   * Send verification emails to the public keys user IDs for verification.
    * If a primary email address is provided only one email will be sent.
-   * @param {Array}  userIds            user id documents containg the verification nonces
-   * @param {Object} origin             the server's origin (required for email links)
-   * @param {Object} i18n               i18n object
-   * @return {Promise}
+   * @param  {Array} userIds      user ID documents containg the verification nonces
+   * @param  {Object} origin      the server's origin (required for email links)
+   * @param  {Object} i18n        i18n object
+   * @return {Promise<undefined}
    */
   async _sendVerifyEmail({userIds, keyId}, origin, i18n) {
     for (const userId of userIds) {
@@ -159,9 +159,9 @@ class PublicKey {
   }
 
   /**
-   * Persist the public key and its user ids in the database.
-   * @param {Object} key   public key parameters
-   * @return {Promise}
+   * Persist the public key and its user IDs in the database.
+   * @param  {Object} key          public key parameters
+   * @return {Promise<undefined>}
    */
   async _persistKey(key) {
     // delete old/unverified key
@@ -181,10 +181,10 @@ class PublicKey {
   }
 
   /**
-   * Verify a user id by proving knowledge of the nonce.
-   * @param {string} keyId   Correspronding public key id
-   * @param {string} nonce   The verification nonce proving email address ownership
-   * @return {Promise}       The email that has been verified
+   * Verify a user ID by proving knowledge of the nonce.
+   * @param  {String} keyId     Correspronding public key ID
+   * @param  {String} nonce     The verification nonce proving email address ownership
+   * @return {Promise<Object>}  The email that has been verified
    */
   async verify({keyId, nonce}) {
     // look for verification nonce in database
@@ -199,7 +199,7 @@ class PublicKey {
     if (key.publicKeyArmored) {
       publicKeyArmored = await this._pgp.updateKey(key.publicKeyArmored, publicKeyArmored);
     }
-    // flag the user id as verified
+    // flag the user ID as verified
     await this._mongo.update(query, {
       publicKeyArmored,
       'userIds.$.verified': true,
@@ -215,7 +215,7 @@ class PublicKey {
    * @param  {String} options.keyId   source key ID
    * @param  {Array} options.userIds  user IDs of source key
    * @param  {Array} nonce            relevant nonce
-   * @return {Promise}
+   * @return {Promise<undefined>}
    */
   async _removeKeysWithSameEmail({keyId, userIds}, nonce) {
     return this._mongo.remove({
@@ -225,13 +225,13 @@ class PublicKey {
   }
 
   /**
-   * Check if a verified key already exists either by fingerprint, 16 char key id,
+   * Check if a verified key already exists either by fingerprint, 16 char key ID,
    * or email address. There can only be one verified user ID for an email address
    * at any given time.
-   * @param {Array}  userIds       A list of user ids to check
-   * @param {string} fingerprint   The public key fingerprint
-   * @param {string} keyId         (optional) The public key id
-   * @return {Object}               The verified key document
+   * @param  {Array} userIds       A list of user IDs to check
+   * @param  {String} fingerprint  The public key fingerprint
+   * @param  {String} keyId        (optional) The public key ID
+   * @return {Promise<Object>}     The verified key document
    */
   async getVerified({userIds, fingerprint, keyId}) {
     let queries = [];
@@ -242,14 +242,14 @@ class PublicKey {
         'userIds.verified': true
       });
     }
-    // query by key id (to prevent key id collision)
+    // query by key ID (to prevent key ID collision)
     if (keyId) {
       queries.push({
         keyId: keyId.toLowerCase(),
         'userIds.verified': true
       });
     }
-    // query by user id
+    // query by user ID
     if (userIds) {
       queries = queries.concat(userIds.map(uid => ({
         userIds: {
@@ -264,13 +264,13 @@ class PublicKey {
   }
 
   /**
-   * Fetch a verified public key from the database. Either the key id or the
+   * Fetch a verified public key from the database. Either the key ID or the
    * email address muss be provided.
-   * @param {string} fingerprint   (optional) The public key fingerprint
-   * @param {string} keyId         (optional) The public key id
-   * @param {String} email         (optional) The user's email address
-   * @param {Object} i18n          i18n object
-   * @return {Object}               The public key document
+   * @param  {String} fingerprint  (optional) The public key fingerprint
+   * @param  {String} keyId        (optional) The public key ID
+   * @param  {String} email        (optional) The user's email address
+   * @param  {Object} i18n         i18n object
+   * @return {Promise<Object>}     The public key document
    */
   async get({fingerprint, keyId, email, i18n}) {
     // look for verified key
@@ -290,18 +290,18 @@ class PublicKey {
   }
 
   /**
-   * Request removal of the public key by flagging all user ids and sending
+   * Request removal of the public key by flagging all user IDs and sending
    * a verification email to the primary email address. Only one email
-   * needs to sent to a single user id to authenticate removal of all user ids
-   * that belong the a certain key id.
-   * @param {String} keyId    (optional) The public key id
-   * @param {String} email    (optional) The user's email address
-   * @param {Object} origin   Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
-   * @param {Object} i18n     i18n object
-   * @return {Promise}
+   * needs to sent to a single user ID to authenticate removal of all user IDs
+   * that belong the a certain key ID.
+   * @param  {String} keyId        (optional) The public key ID
+   * @param  {String} email        (optional) The user's email address
+   * @param  {Object} origin       Required for links to the keyserver e.g. { protocol:'https', host:'openpgpkeys@example.com' }
+   * @param  {Object} i18n         i18n object
+   * @return {Promise<undefined>}
    */
   async requestRemove({keyId, email, origin, i18n}) {
-    // flag user ids for removal
+    // flag user IDs for removal
     const key = await this._flagForRemove(keyId, email);
     if (!key) {
       throw Boom.notFound('User ID not found');
@@ -315,10 +315,10 @@ class PublicKey {
 
   /**
    * Flag all user IDs of a key for removal by generating a new nonce and
-   * saving it. Either a key id or email address must be provided
-   * @param {String} keyId   (optional) The public key id
-   * @param {String} email   (optional) The user's email address
-   * @return {Array}          A list of user ids with nonces
+   * saving it. Either a key ID or email address must be provided
+   * @param  {String} keyId    (optional) The public key ID
+   * @param  {String} email    (optional) The user's email address
+   * @return {Promise<Array>}  A list of user IDs with nonces
    */
   async _flagForRemove(keyId, email) {
     email = util.normalizeEmail(email);
@@ -327,7 +327,7 @@ class PublicKey {
     if (!key) {
       return;
     }
-    // flag only the provided user id
+    // flag only the provided user ID
     if (email) {
       const nonce = util.random();
       await this._mongo.update(query, {'userIds.$.nonce': nonce}, DB_TYPE);
@@ -335,7 +335,7 @@ class PublicKey {
       uid.nonce = nonce;
       return {userIds: [uid], keyId: key.keyId};
     }
-    // flag all key user ids
+    // flag all key user IDs
     if (keyId) {
       for (const uid of key.userIds) {
         const nonce = util.random();
@@ -347,11 +347,11 @@ class PublicKey {
   }
 
   /**
-   * Verify the removal of the user's key id by proving knowledge of the nonce.
-   * Also deletes all user id documents of that key id.
-   * @param {string} keyId   public key id
-   * @param {string} nonce   The verification nonce proving email address ownership
-   * @return {Promise}
+   * Verify the removal of the user's key ID by proving knowledge of the nonce.
+   * Also deletes all user ID documents of that key ID.
+   * @param  {String} keyId        public key ID
+   * @param  {String} nonce        The verification nonce proving email address ownership
+   * @return {Promise<undefined>}
    */
   async verifyRemove({keyId, nonce}) {
     // check if key exists in database
