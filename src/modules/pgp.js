@@ -16,7 +16,8 @@ const {KEY_STATUS} = util;
  * A simple wrapper around OpenPGP.js
  */
 class PGP {
-  constructor() {
+  constructor(purify) {
+    this.purify = purify;
     openpgp.config.showVersion = false;
     openpgp.config.showComment = false;
   }
@@ -32,17 +33,20 @@ class PGP {
       key = await openpgp.readKey({armoredKey: publicKeyArmored});
     } catch (e) {
       log.error('Error reading PGP key\n%s\n%s', e, publicKeyArmored);
-      throw Boom.badRequest(`Error reading PGP key. ${e.message}`);
+      throw Boom.badRequest(`Error reading PGP key: ${e.message}`);
     }
     if (key.isPrivate()) {
       log.error('Attempted private key upload');
       throw Boom.badRequest('Error uploading private key. Please keep your private key secret and never upload it to key servers. Only public keys accepted.');
     }
+    await this.purify.purifyKey(key);
     // verify key
-    const verifyDate = new Date();
-    // accept keys valid 24h in the future
-    verifyDate.setUTCDate(verifyDate.getUTCDate() + 1);
-    await this.verifyKey(key, verifyDate);
+    const verifyDate = util.getTomorrow();
+    const keyStatus = await this.verifyKey(key, verifyDate);
+    if (keyStatus === KEY_STATUS.invalid) {
+      log.error('Invalid PGP key: primary key verification failed\n%s', key.armor());
+      throw Boom.badRequest('Invalid PGP key. Verification of the primary key failed.');
+    }
     // check for at least one valid user ID
     const userIds = await this.parseUserIds(key, verifyDate);
     if (!userIds.length) {
@@ -51,6 +55,7 @@ class PGP {
     }
     // get algorithm details from primary key
     const keyInfo = key.getAlgorithmInfo();
+    this.purify.checkMaxKeySize(key);
     // public key document that is stored in the database
     return {
       keyId: key.getKeyID().toHex(),
@@ -65,34 +70,25 @@ class PGP {
   }
 
   /**
-   * Verify key. At least one valid user ID and signing or encryption key is required.
+   * Verify key
    * @param  {PublicKey} key
-   * @param  {Date} date           The verification date
-   * @return {Promise<undefined>}
-   * @throws {Error}               If key verification failed
+   * @param  {Date} verifyDate     The verification date
+   * @return {Promise<Number>}     The KEY_STATUS
    */
   async verifyKey(key, verifyDate = new Date()) {
     try {
       await key.verifyPrimaryKey(verifyDate);
+      return KEY_STATUS.valid;
     } catch (e) {
-      log.error('Invalid PGP key: primary key verification failed\n%s\n%s', e, key.armor());
-      throw Boom.badRequest(`Invalid PGP key. Key verification failed: ${e.message}`);
-    }
-    let signingKeyError;
-    let encryptionKeyError;
-    try {
-      await key.getSigningKey(null, verifyDate);
-    } catch (e) {
-      signingKeyError = e;
-    }
-    try {
-      await key.getEncryptionKey(null, verifyDate);
-    } catch (e) {
-      encryptionKeyError = e;
-    }
-    if (signingKeyError && encryptionKeyError) {
-      log.error('Invalid PGP key: no valid encryption or signing key found\n%s\n%s\n%s', encryptionKeyError, signingKeyError, key.armor());
-      throw Boom.badRequest(`Invalid PGP key. No valid encryption or signing key found: ${signingKeyError.message}`);
+      switch (e.message) {
+        case 'Primary key is revoked':
+        case 'Primary user is revoked':
+          return KEY_STATUS.revoked;
+        case 'Primary key is expired':
+          return KEY_STATUS.expired;
+        default:
+          return KEY_STATUS.invalid;
+      }
     }
   }
 
@@ -127,6 +123,10 @@ class PGP {
       switch (e.message) {
         case 'Self-certification is revoked':
           return KEY_STATUS.revoked;
+        case 'No self-certifications found':
+          return user.revocationSignatures.length ? KEY_STATUS.revoked : KEY_STATUS.no_self_cert;
+        case 'Self-certification is invalid: Signature is expired':
+          return KEY_STATUS.expired;
         default:
           return KEY_STATUS.invalid;
       }
@@ -135,18 +135,27 @@ class PGP {
 
   /**
    * Remove user IDs from armored key block which are not in array of user IDs
-   * @param  {Array} userIds      user IDs to be kept
-   * @param  {String} armoredKey  armored key block to be filtered
-   * @return {Promise<String>}    filtered amored key block
+   * @param  {Array} userIds                user IDs to be kept
+   * @param  {String} armoredKey            armored key block to be filtered
+   * @param  {Boolean} verifyEncryptionKey  verify that key has encryption capabilities
+   * @return {Promise<String>}              filtered amored key block
    */
-  async filterKeyByUserIds(userIds, armoredKey) {
+  async filterKeyByUserIds(userIds, armoredKey, verifyEncryptionKey) {
     const emails = userIds.map(({email}) => email);
     let key;
     try {
       key = await openpgp.readKey({armoredKey});
     } catch (e) {
       log.error('Failed to parse PGP key in filterKeyByUserIds\n%s\n%s', e, armoredKey);
-      throw Boom.badImplementation('Failed to parse PGP key');
+      throw Boom.badImplementation(`Failed to read PGP key: ${e.message}`);
+    }
+    try {
+      if (verifyEncryptionKey) {
+        await key.getEncryptionKey(null, util.getTomorrow());
+      }
+    } catch (e) {
+      log.error('Invalid PGP key: no valid encryption key found\n%s\n%s', e, armoredKey);
+      throw Boom.badRequest(`Invalid PGP key. No valid encryption key found: ${e.message}`);
     }
     key.users = key.users.filter(({userID}) => userID && emails.includes(util.normalizeEmail(userID.email)));
     return key.armor();
@@ -164,16 +173,18 @@ class PGP {
       srcKey = await openpgp.readKey({armoredKey: srcArmored});
     } catch (e) {
       log.error('Failed to parse source PGP key for update\n%s\n%s', e, srcArmored);
-      throw Boom.badImplementation('Failed to parse PGP key');
+      throw Boom.badImplementation(`Failed to read PGP key: ${e.message}`);
     }
     let dstKey;
     try {
       dstKey = await openpgp.readKey({armoredKey: dstArmored});
     } catch (e) {
       log.error('Failed to parse destination PGP key for update\n%s\n%s', e, dstArmored);
-      throw Boom.badImplementation('Failed to parse PGP key');
+      throw Boom.badImplementation(`Failed to read PGP key: ${e.message}`);
     }
     const updatedKey = await dstKey.update(srcKey);
+    this.purify.limitNumOfCertificates(updatedKey);
+    this.purify.checkMaxKeySize(updatedKey);
     return updatedKey.armor();
   }
 
@@ -189,7 +200,7 @@ class PGP {
       key = await openpgp.readKey({armoredKey});
     } catch (e) {
       log.error('Failed to parse PGP key in removeUserId\n%s\n%s', e, armoredKey);
-      throw Boom.badImplementation('Failed to parse PGP key');
+      throw Boom.badImplementation(`Failed to read PGP key: ${e.message}`);
     }
     key.users = key.users.filter(({userID}) => userID && util.normalizeEmail(userID.email) !== email);
     return key.armor();

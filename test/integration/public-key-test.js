@@ -5,8 +5,11 @@ const Email = require('../../src/modules/email');
 const log = require('../../src/lib/log');
 const Mongo = require('../../src/modules/mongo');
 const nodemailer = require('nodemailer');
+const openpgp = require('openpgp');
+const util = require('../../src/lib/util');
 const PGP = require('../../src/modules/pgp');
 const PublicKey = require('../../src/modules/public-key');
+const PurifyKey = require('../../src/modules/purify-key');
 const templates = require('../../src/lib/templates');
 
 describe('Public Key Integration Tests', function() {
@@ -17,6 +20,7 @@ describe('Public Key Integration Tests', function() {
   let email;
   let mongo;
   let pgp;
+  let purify;
   let sendEmailStub;
   let publicKeyArmored;
   let publicKeyArmored2;
@@ -65,7 +69,8 @@ describe('Public Key Integration Tests', function() {
       auth: {user: 'user', pass: 'pass'},
       sender: {name: 'Foo Bar', emails: 'foo@bar.com'}
     });
-    pgp = new PGP();
+    purify = new PurifyKey(conf.purify);
+    pgp = new PGP(purify);
     publicKey = new PublicKey(pgp, mongo, email);
     await publicKey.init();
   });
@@ -98,6 +103,17 @@ describe('Public Key Integration Tests', function() {
       await publicKey.verify(mailsSent[1].params);
       await publicKey.put({emails: [], publicKeyArmored: publicKeyArmored2, origin, i18n});
       expect(mailsSent.length).to.equal(5);
+    });
+
+    it('should work for key generated 1d in the future', async () => {
+      const tomorrow = util.getTomorrow();
+      const {publicKey: pubKey} = await openpgp.generateKey({
+        userIDs: [{name: 'Demo', email: 'demo@mailvelope.com'}],
+        passphrase: '1234',
+        date: tomorrow
+      });
+      await publicKey.put({emails: [], publicKeyArmored: pubKey, origin, i18n});
+      expect(mailsSent.length).to.equal(1);
     });
   });
 

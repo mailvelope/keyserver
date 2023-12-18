@@ -15,6 +15,7 @@ const i18n = require('hapi-i18n');
 
 const Mongo = require('./modules/mongo');
 const Email = require('./modules/email');
+const PurifyKey = require('./modules/purify-key');
 const PGP = require('./modules/pgp');
 const PublicKey = require('./modules/public-key');
 
@@ -33,7 +34,8 @@ const init = async (conf = config) => {
   await mongo.init(conf.mongo);
   const email = new Email();
   email.init(conf.email);
-  const pgp = new PGP();
+  const purify = new PurifyKey(conf.purify);
+  const pgp = new PGP(purify);
   const publicKey = new PublicKey(pgp, mongo, email);
   await publicKey.init();
   server.app.publicKey = publicKey;

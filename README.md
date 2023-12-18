@@ -155,6 +155,35 @@ DELETE /api/v1/key?keyId=b8e4105cc9dedc77 OR ?email=user@example.com
 GET /api/v1/key?op=verifyRemove&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
 ```
 
+## Abuse resistant key server
+
+The key server implements mechanisms described in the draft [Abuse-Resistant OpenPGP Keystores](https://datatracker.ietf.org/doc/html/draft-dkg-openpgp-abuse-resistant-keystore-06) to mitigate various attacks related to flooding the key server with bogus keys or certificates. The filtering of keys can be customized with [environment variables](#settings).
+
+In detail the following key components are filtered out:
+
+* user attribute packets
+* third-party certificates
+* certificates exceeding 8383 bytes
+* certificates that cannot be verified with primary key
+* unhashed subpackets except: issuer, issuerFingerprint, embeddedSignature
+* unhashed subpackets of embedded signatures
+* user IDs without email address
+* user IDs exceeding 1024 bytes
+* user IDs that have no self certificate or revocation signature
+* subkeys exceeding 8383 bytes
+* above 5 revocation signatures. Hardest, earliest revocations are kept.
+* superseded certificates. Newest 5 are kept.
+
+A key is rejected if one of the following is detected:
+
+* primary key packet exceeding 8383 bytes
+* primary key packet is not version 4
+* key without user ID
+* key with more than 20 email addresses
+* key with more than 20 subkeys
+* key size exceeding 32768 bytes
+* new uploaded key is not valid 24h in the future
+
 # Language & DB
 
 The server is written is in JavaScript ES2020 and runs on [Node.js](https://nodejs.org/) v18+.
@@ -166,7 +195,7 @@ It uses [MongoDB](https://www.mongodb.com/) v6.0+ as its database.
 
 ### Node.js (macOS)
 
-This is how to install node on Mac OS using [homebrew](http://brew.sh/). For other operating systems, please refer to the [Node.js download page](https://nodejs.org/en/download/).
+This is how to install node on Mac OS using [homebrew](https://brew.sh/). For other operating systems, please refer to the [Node.js download page](https://nodejs.org/en/download/).
 
 ```shell
 brew update
@@ -175,7 +204,7 @@ brew install node
 
 ### MongoDB (macOS)
 
-This is the installation guide to get a local development installation on macOS using [homebrew](http://brew.sh/). For other operating systems, please refer to the [MongoDB Installation Tutorials](https://www.mongodb.com/docs/v6.0/installation/#mongodb-installation-tutorials).
+This is the installation guide to get a local development installation on macOS using [homebrew](https://brew.sh/). For other operating systems, please refer to the [MongoDB Installation Tutorials](https://www.mongodb.com/docs/v6.0/installation/#mongodb-installation-tutorials).
 
 ```shell
 brew update
@@ -273,14 +302,24 @@ Available settings with its environment-variable-names, possible/example values 
 * SMTP_PORT=465
 * SMTP_TLS=true
 * SMTP_STARTTLS=true
-* SMTP_PGP=true
+* SMTP_PGP=**true**
   (encrypt verification message with public key (allows to verify presence + usability of private key at owner of the email address))
 * SMTP_USER=smtp_user
 * SMTP_PASS=smtp_pass
 * SENDER_NAME="OpenPGP Key Server"
-* SENDER_EMAIL=noreply@example.com
-* PUBLIC_KEY_PURGE_TIME=**30**
+* SENDER_EMAIL=noreply@your-key-server.net
+* PUBLIC_KEY_PURGE_TIME=**14**
   (number of days after which uploaded keys are deleted if they have not been verified)
+
+The following variables are available to customize the filtering behavior as outlined in [Abuse resistant key server](#abuse-resistant-key-server):
+
+* PURIFY_KEY=**true** (main switch to enable filtering of keys)
+* MAX_NUM_USER_EMAIL=**20** (max. number of email addresses per key)
+* MAX_NUM_SUBKEY=**20** (max. number of subkeys per key)
+* MAX_NUM_CERT=**5** (max. number of superseding certificates)
+* MAX_SIZE_USERID=**1024**
+* MAX_SIZE_PACKET=**8383**
+* MAX_SIZE_KEY=**32768**
 
 ### Notes on SMTP
 

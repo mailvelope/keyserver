@@ -131,7 +131,7 @@ class PublicKey {
    */
   async _addKeyArmored(userIds, publicKeyArmored) {
     for (const userId of userIds) {
-      userId.publicKeyArmored = await this._pgp.filterKeyByUserIds([userId], publicKeyArmored);
+      userId.publicKeyArmored = await this._pgp.filterKeyByUserIds([userId], publicKeyArmored, util.isTrue(config.email.pgp));
       userId.notify = true;
     }
   }
@@ -150,7 +150,7 @@ class PublicKey {
    */
   async _sendVerifyEmail({userIds, keyId}, origin, i18n) {
     for (const userId of userIds) {
-      if (userId.notify && userId.notify === true) {
+      if (userId.notify === true) {
         // generate nonce for verification
         userId.nonce = util.random();
         await this._email.send({template: tpl.verifyKey, userId, keyId, origin, publicKeyArmored: userId.publicKeyArmored, i18n});

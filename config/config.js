@@ -32,7 +32,7 @@ module.exports = {
     port: process.env.SMTP_PORT,
     tls: process.env.SMTP_TLS,
     starttls: process.env.SMTP_STARTTLS,
-    pgp: process.env.SMTP_PGP,
+    pgp: process.env.SMTP_PGP ?? true,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
@@ -44,7 +44,17 @@ module.exports = {
   },
 
   publicKey: {
-    purgeTimeInDays: process.env.PUBLIC_KEY_PURGE_TIME || 30
+    purgeTimeInDays: process.env.PUBLIC_KEY_PURGE_TIME || 14
+  },
+
+  purify: {
+    purifyKey: process.env.PURIFY_KEY ?? true,
+    maxNumUserEmail: process.env.MAX_NUM_USER_EMAIL || 20,
+    maxNumSubkey: process.env.MAX_NUM_SUBKEY || 20,
+    maxNumCert: process.env.MAX_NUM_CERT || 5,
+    maxSizeUserID: process.env.MAX_SIZE_USERID || 1024,
+    maxSizePacket: process.env.MAX_SIZE_PACKET || 8383,
+    maxSizeKey: process.env.MAX_SIZE_KEY || 32768
   }
 
 };

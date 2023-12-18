@@ -141,10 +141,36 @@ exports.url = function(origin, resource) {
   return `${origin.protocol}://${origin.host}${resource || ''}`;
 };
 
+/**
+ * Validity status of a key
+ * @type {Object}
+ */
 exports.KEY_STATUS = {
   invalid: 0,
   expired: 1,
   revoked: 2,
   valid: 3,
   no_self_cert: 4
+};
+
+/**
+ * Asynchronous wrapper for Array.prototype.filter()
+ * @param  {Array} array
+ * @param  {Function} asyncFilterFn
+ * @return {Promise<Array>}
+ */
+exports.filterAsync = async function(array, asyncFilterFn) {
+  const promises = array.map(async item => await asyncFilterFn(item) && item);
+  const result = await Promise.all(promises);
+  return result.filter(item => item);
+};
+
+/**
+ * Return Date one day in the future
+ * @return {Date}
+ */
+exports.getTomorrow = function() {
+  const now = new Date();
+  now.setDate(now.getDate() + 1);
+  return now;
 };

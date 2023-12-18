@@ -79,16 +79,12 @@ class Email {
       log.error('Failed to parse PGP key in _pgpEncrypt\n%s\n%s', e, publicKeyArmored);
       throw Boom.badImplementation('Failed to parse PGP key');
     }
-    const now = new Date();
-    const keyCreationDate = key.getCreationTime();
-    // set message creation date if key has been created with future creation date
-    const msgCreationDate = keyCreationDate > now ? keyCreationDate : now;
     try {
-      const message = await openpgp.createMessage({text: plaintext, date: msgCreationDate});
+      const message = await openpgp.createMessage({text: plaintext});
       const ciphertext = await openpgp.encrypt({
         message,
         encryptionKeys: key,
-        date: msgCreationDate
+        date: util.getTomorrow()
       });
       return ciphertext;
     } catch (error) {
