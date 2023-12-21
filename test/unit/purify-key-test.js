@@ -249,6 +249,47 @@ describe('Purify Key Unit Tests', () => {
     });
   });
 
+  describe('parseUserID', () => {
+    it('should parse a userID with ,', async () => {
+      const userID = {userID: 'Demo, Mailvelope <demo@mailvelope.com>'};
+      const {name, email} = purify.parseUserID(userID);
+      expect(name).to.equal('Demo, Mailvelope');
+      expect(email).to.equal('demo@mailvelope.com');
+    });
+
+    it('should do nothing if no email address', async () => {
+      const userID = {userID: '!#&'};
+      const {name, email} = purify.parseUserID(userID);
+      expect(name).to.not.exist;
+      expect(email).to.not.exist;
+    });
+
+    it('should do nothing if invalid email address', async () => {
+      const userID = {userID: 'demo@mailvelope'};
+      const {name, email} = purify.parseUserID(userID);
+      expect(name).to.not.exist;
+      expect(email).to.not.exist;
+    });
+
+    it('should return {} if userID undefined', async () => {
+      const result = purify.parseUserID();
+      expect(result).to.eql({});
+    });
+
+    it('should return email address if existent and normalize', async () => {
+      const userID = {userID: 'Demo@mailvelope.com', email: 'Demo@mailvelope.com'};
+      const {email} = purify.parseUserID(userID);
+      expect(email).to.equal('demo@mailvelope.com');
+    });
+
+    it('should return name if existent', async () => {
+      const userID = {name: 'Demo'};
+      const {name, email} = purify.parseUserID(userID);
+      expect(name).to.equal('Demo');
+      expect(email).to.not.exist;
+    });
+  });
+
   describe('checkSubkeys', () => {
     beforeEach(async () => {
       key6 = await readKey({armoredKey: key6Armored});

@@ -102,12 +102,12 @@ class PGP {
     const result = [];
     for (const user of key.users) {
       const userStatus = await this.verifyUser(user, verifyDate);
-      const email = user.userID?.email;
+      const {email, name} = this.purify.parseUserID(user.userID);
       if (userStatus !== KEY_STATUS.invalid && email) {
         result.push({
           status: userStatus,
-          name: user.userID.name,
-          email: util.normalizeEmail(email),
+          name,
+          email,
           verified: false
         });
       }
@@ -157,7 +157,7 @@ class PGP {
       log.error('Invalid PGP key: no valid encryption key found\n%s\n%s', e, armoredKey);
       throw Boom.badRequest(`Invalid PGP key. No valid encryption key found: ${e.message}`);
     }
-    key.users = key.users.filter(({userID}) => userID && emails.includes(util.normalizeEmail(userID.email)));
+    key.users = key.users.filter(({userID}) => emails.includes(this.purify.parseUserID(userID).email));
     return key.armor();
   }
 
@@ -202,7 +202,7 @@ class PGP {
       log.error('Failed to parse PGP key in removeUserId\n%s\n%s', e, armoredKey);
       throw Boom.badImplementation(`Failed to read PGP key: ${e.message}`);
     }
-    key.users = key.users.filter(({userID}) => userID && util.normalizeEmail(userID.email) !== email);
+    key.users = key.users.filter(({userID}) => this.purify.parseUserID(userID).email !== email);
     return key.armor();
   }
 }

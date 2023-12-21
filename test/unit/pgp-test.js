@@ -106,6 +106,17 @@ describe('PGP Unit Tests', () => {
       expect(params.keySize).to.equal(4096);
       expect(params.publicKeyArmored).to.include('PGP PUBLIC KEY');
     });
+
+    it('should be able to parse key with user ID with ,', async () => {
+      const {publicKey} = await openpgp.generateKey({
+        userIDs: [{name: 'Demo, Mailvelope', email: 'demo@mailvelope.com'}],
+        passphrase: '1234'
+      });
+      const params = await pgp.parseKey(publicKey);
+      expect(params.userIds).to.have.lengthOf(1);
+      expect(params.userIds[0].name).to.equal('Demo, Mailvelope');
+      expect(params.userIds[0].email).to.equal('demo@mailvelope.com');
+    });
   });
 
   describe('verifyKey', () => {
@@ -215,8 +226,17 @@ describe('PGP Unit Tests', () => {
 
     it('should return no user id if no email address', async () => {
       key.users[0].userID.email = '';
+      expect(key.users[0].userID.name).to.exist;
       const parsed = await pgp.parseUserIds(key);
       expect(parsed.length).to.equal(0);
+    });
+
+    it('should re-parse user ID if no email address and no name', async () => {
+      key.users[0].userID.email = '';
+      key.users[0].userID.name = '';
+      const parsed = await pgp.parseUserIds(key);
+      expect(parsed[0].name).to.equal('safewithme testuser');
+      expect(parsed[0].email).to.equal('safewithme.testuser@gmail.com');
     });
   });
 
@@ -295,7 +315,7 @@ describe('PGP Unit Tests', () => {
       const reduced = await pgp.removeUserId(email, key3Armored);
       const reducedKey = await openpgp.readKey({armoredKey: reduced});
       expect(reducedKey.users.length).to.equal(3);
-      expect(reducedKey.users.includes(({userId}) => userId.email === email)).to.be.false;
+      expect(reducedKey.users.find(({userID}) => userID.email === email)).to.be.undefined;
     });
 
     it('should not remove user attributes', async () => {
@@ -304,7 +324,8 @@ describe('PGP Unit Tests', () => {
       expect(key.users.length).to.equal(2);
       const reduced = await pgp.removeUserId(email, key5Armored);
       const reducedKey = await openpgp.readKey({armoredKey: reduced});
-      expect(reducedKey.users.length).to.equal(0);
+      expect(reducedKey.users.length).to.equal(1);
+      expect(reducedKey.users[0].userAttribute).to.exist;
     });
   });
 });

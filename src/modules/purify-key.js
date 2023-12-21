@@ -8,6 +8,8 @@
 const Boom = require('@hapi/boom');
 const {filterAsync} = require('../lib/util');
 const {enums} = require('openpgp');
+const goog = require('../lib/closure-library/closure/goog/emailaddress');
+const util = require('../lib/util');
 
 /**
  * Purify keys to avoid malicious abuse of key server following techniques from:
@@ -63,7 +65,7 @@ class PurifyKey {
 
   async checkUsers(key) {
     // filter out user attribute packets and user IDs without email address
-    key.users = key.users.filter(user => user.userID?.email);
+    key.users = key.users.filter(user => this.parseUserID(user.userID).email);
     if (!key.users.length) {
       throw Boom.badRequest('Require at least one user ID with email address.');
     }
@@ -90,6 +92,33 @@ class PurifyKey {
     if (key.users.length > this.conf.maxNumUserEmail) {
       throw Boom.badRequest(`Number of user IDs with email address exceeds allowed max. of ${this.conf.maxNumUserEmail}`);
     }
+  }
+
+  /**
+   * Additional user ID parsing in case OpenPGP.js email-addresses parser fails
+   * @param  {UserIDPacket} userID
+   * @return {Object<name, email>}
+   */
+  parseUserID(userID) {
+    if (!userID) {
+      return {};
+    }
+    if (userID.name || userID.email) {
+      return {
+        name: userID.name,
+        email: util.normalizeEmail(userID.email)
+      };
+    }
+    try {
+      const emailAddress = goog.format.EmailAddress.parse(userID.userID);
+      if (emailAddress.isValid()) {
+        return {
+          name: emailAddress.getName(),
+          email: util.normalizeEmail(emailAddress.getAddress())
+        };
+      }
+    } catch (e) {}
+    return {};
   }
 
   async checkSubkeys(key) {
