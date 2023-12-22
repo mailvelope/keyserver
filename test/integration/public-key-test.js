@@ -460,5 +460,39 @@ describe('Public Key Integration Tests', function() {
         expect(e.output.statusCode).to.equal(404);
       }
     });
+
+    it('should reset verifyUntil date if only verified user ID removed', async () => {
+      await publicKey.verify(mailsSent[0].params);
+      const key = await mongo.get({keyId}, DB_TYPE);
+      expect(key.userIds[0].verified).to.be.true;
+      expect(key.userIds).to.have.lengthOf(4);
+      expect(key.verifyUntil).to.be.null;
+      expect(key.publicKeyArmored).to.exist;
+      await publicKey.requestRemove({keyId, email: key.userIds[0].email, origin, i18n});
+      await publicKey.verifyRemove(mailsSent[4].params);
+      const modifiedKey = await mongo.get({keyId}, DB_TYPE);
+      expect(modifiedKey.userIds).to.have.lengthOf(3);
+      const verifyUntil = new Date(key.uploaded);
+      verifyUntil.setDate(key.uploaded.getDate() + config.publicKey.purgeTimeInDays);
+      expect(modifiedKey.verifyUntil).to.eql(verifyUntil);
+      expect(modifiedKey.publicKeyArmored).to.be.null;
+    });
+
+    it('should not reset verifyUntil date if at least one verified user ID remain', async () => {
+      await publicKey.verify(mailsSent[0].params);
+      await publicKey.verify(mailsSent[1].params);
+      const key = await mongo.get({keyId}, DB_TYPE);
+      expect(key.userIds[0].verified).to.be.true;
+      expect(key.userIds[1].verified).to.be.true;
+      expect(key.userIds).to.have.lengthOf(4);
+      expect(key.verifyUntil).to.be.null;
+      expect(key.publicKeyArmored).to.exist;
+      await publicKey.requestRemove({keyId, email: key.userIds[0].email, origin, i18n});
+      await publicKey.verifyRemove(mailsSent[4].params);
+      const modifiedKey = await mongo.get({keyId}, DB_TYPE);
+      expect(modifiedKey.userIds).to.have.lengthOf(3);
+      expect(modifiedKey.verifyUntil).to.be.null;
+      expect(modifiedKey.publicKeyArmored).to.exist;
+    });
   });
 });

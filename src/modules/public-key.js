@@ -92,10 +92,7 @@ class PublicKey {
       await this._addKeyArmored(key.userIds, key.publicKeyArmored);
       // new key, set armored to null
       key.publicKeyArmored = null;
-      // set verifyUntil date to purgeTimeInDays in the future
-      const verifyUntil = new Date(key.uploaded);
-      verifyUntil.setDate(key.uploaded.getDate() + config.publicKey.purgeTimeInDays);
-      key.verifyUntil = verifyUntil;
+      this.setVerifyUntil(key);
     }
     // send mails to verify user IDs
     await this._sendVerifyEmail(key, origin, i18n);
@@ -138,6 +135,16 @@ class PublicKey {
 
   _includeEmail(users, user) {
     return users.find(({email}) => email === user.email);
+  }
+
+  /**
+   * Set verifyUntil date to purgeTimeInDays in the future
+   * @param {Object} key  public key parameters
+   */
+  setVerifyUntil(key) {
+    const verifyUntil = new Date(key.uploaded);
+    verifyUntil.setDate(key.uploaded.getDate() + config.publicKey.purgeTimeInDays);
+    key.verifyUntil = verifyUntil;
   }
 
   /**
@@ -372,6 +379,7 @@ class PublicKey {
         flagged.publicKeyArmored = await this._pgp.removeUserId(rmUserId.email, flagged.publicKeyArmored);
       } else {
         flagged.publicKeyArmored = null;
+        this.setVerifyUntil(flagged);
       }
     }
     flagged.userIds.splice(rmIdx, 1);
