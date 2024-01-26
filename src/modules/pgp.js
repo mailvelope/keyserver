@@ -28,13 +28,7 @@ class PGP {
    * @return {Promise<Object>}          public key document to persist
    */
   async parseKey(publicKeyArmored) {
-    let key;
-    try {
-      key = await openpgp.readKey({armoredKey: publicKeyArmored});
-    } catch (e) {
-      log.error('Error reading PGP key\n%s\n%s', e, publicKeyArmored);
-      throw Boom.badRequest(`Error reading PGP key: ${e.message}`);
-    }
+    const key = await this.readKey(publicKeyArmored);
     if (key.isPrivate()) {
       log.error('Attempted private key upload');
       throw Boom.badRequest('Error uploading private key. Please keep your private key secret and never upload it to key servers. Only public keys accepted.');
@@ -142,13 +136,7 @@ class PGP {
    */
   async filterKeyByUserIds(userIds, armoredKey, verifyEncryptionKey) {
     const emails = userIds.map(({email}) => email);
-    let key;
-    try {
-      key = await openpgp.readKey({armoredKey});
-    } catch (e) {
-      log.error('Failed to parse PGP key in filterKeyByUserIds\n%s\n%s', e, armoredKey);
-      throw Boom.badImplementation(`Failed to read PGP key: ${e.message}`);
-    }
+    const key = await this.readKey(armoredKey);
     try {
       if (verifyEncryptionKey) {
         await key.getEncryptionKey(null, util.getTomorrow());
@@ -168,20 +156,8 @@ class PGP {
    * @return {Promise<String>}    merged armored key block
    */
   async updateKey(srcArmored, dstArmored) {
-    let srcKey;
-    try {
-      srcKey = await openpgp.readKey({armoredKey: srcArmored});
-    } catch (e) {
-      log.error('Failed to parse source PGP key for update\n%s\n%s', e, srcArmored);
-      throw Boom.badImplementation(`Failed to read PGP key: ${e.message}`);
-    }
-    let dstKey;
-    try {
-      dstKey = await openpgp.readKey({armoredKey: dstArmored});
-    } catch (e) {
-      log.error('Failed to parse destination PGP key for update\n%s\n%s', e, dstArmored);
-      throw Boom.badImplementation(`Failed to read PGP key: ${e.message}`);
-    }
+    const srcKey = await this.readKey(srcArmored);
+    const dstKey = await this.readKey(dstArmored);
     const updatedKey = await dstKey.update(srcKey);
     this.purify.limitNumOfCertificates(updatedKey);
     this.purify.checkMaxKeySize(updatedKey);
@@ -195,15 +171,22 @@ class PGP {
    * @return {Promise<String>}    filtered armored key block
    */
   async removeUserId(email, armoredKey) {
-    let key;
-    try {
-      key = await openpgp.readKey({armoredKey});
-    } catch (e) {
-      log.error('Failed to parse PGP key in removeUserId\n%s\n%s', e, armoredKey);
-      throw Boom.badImplementation(`Failed to read PGP key: ${e.message}`);
-    }
+    const key = await this.readKey(armoredKey);
     key.users = key.users.filter(({userID}) => this.purify.parseUserID(userID).email !== email);
     return key.armor();
+  }
+
+  async readKey(armoredKey) {
+    if (!/-----BEGIN\sPGP\sPUBLIC\sKEY\sBLOCK-----/.test(armoredKey)) {
+      log.error('No armored PGP key\n%s', armoredKey);
+      throw Boom.badRequest('Malformed PGP key. Keys need to start with an armor header line: -----BEGIN PGP PUBLIC KEY BLOCK-----');
+    }
+    try {
+      return await openpgp.readKey({armoredKey});
+    } catch (e) {
+      log.error('Failed to parse PGP key\n%s\n%s', e, armoredKey);
+      throw Boom.badRequest(`Failed to read PGP key: ${e.message}`);
+    }
   }
 }
 

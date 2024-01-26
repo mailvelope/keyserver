@@ -38,8 +38,8 @@ describe('PGP Unit Tests', () => {
 
   describe('parseKey', () => {
     it('should throw error on failed key parsing', async () => {
-      sandbox.stub(openpgp, 'readKey').throws(new Error('readKey: test error'));
-      await expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/Error reading PGP key. readKey: test error/);
+      sandbox.stub(openpgp, 'readKey').throws(new Error('test error'));
+      await expect(pgp.parseKey(key3Armored)).to.eventually.be.rejectedWith(/Failed to read PGP key: test error/);
       expect(log.error.calledOnce).to.be.true;
     });
 

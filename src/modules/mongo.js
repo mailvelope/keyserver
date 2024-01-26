@@ -93,6 +93,17 @@ class Mongo {
   }
 
   /**
+   * Count documents.
+   * @param  {Object} query     The query e.g. { _id:'0' }
+   * @param  {String} type      The collection to use e.g. 'publickey'
+   * @return {Promise<Number>}  The number of found documents
+   */
+  count(query, type) {
+    const col = this._db.collection(type);
+    return col.count(query);
+  }
+
+  /**
    * Read multiple documents at once.
    * @param  {Object} query    The query e.g. { foo:'bar' }
    * @param  {String} type     The collection to use e.g. 'publickey'

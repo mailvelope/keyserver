@@ -15,7 +15,6 @@ const templates = require('../../src/lib/templates');
 describe('Public Key Integration Tests', function() {
   this.timeout(20000);
 
-  const sandbox = sinon.createSandbox();
   let publicKey;
   let email;
   let mongo;
@@ -38,7 +37,6 @@ describe('Public Key Integration Tests', function() {
   before(async () => {
     publicKeyArmored = require('fs').readFileSync(`${__dirname}/../fixtures/key3.asc`, 'utf8');
     publicKeyArmored2 = require('fs').readFileSync(`${__dirname}/../fixtures/key4.asc`, 'utf8');
-    sinon.stub(log, 'info');
     mongo = new Mongo();
     conf.mongo.uri = `${config.mongo.uri}-int`;
     await mongo.init(conf.mongo);
@@ -46,6 +44,7 @@ describe('Public Key Integration Tests', function() {
 
   beforeEach(async () => {
     await mongo.clear(DB_TYPE);
+    sinon.stub(log);
     mailsSent = [];
     const paramMatcher = sinon.match(params => {
       mailsSent[mailsSent.length] = {params};
@@ -53,14 +52,14 @@ describe('Public Key Integration Tests', function() {
       expect(params.keyId).to.exist;
       return true;
     });
-    sandbox.spy(templates, 'verifyKey').withArgs(paramMatcher);
-    sandbox.spy(templates, 'verifyRemove').withArgs(paramMatcher);
+    sinon.spy(templates, 'verifyKey').withArgs(paramMatcher);
+    sinon.spy(templates, 'verifyRemove').withArgs(paramMatcher);
     sendEmailStub = sinon.stub().returns(Promise.resolve({response: '250'}));
     sendEmailStub.withArgs(sinon.match(sendOptions => {
       mailsSent[mailsSent.length - 1].to = sendOptions.to.address;
       return true;
     }));
-    sandbox.stub(nodemailer, 'createTransport').returns({
+    sinon.stub(nodemailer, 'createTransport').returns({
       sendMail: sendEmailStub
     });
     email = new Email(nodemailer);
@@ -76,13 +75,12 @@ describe('Public Key Integration Tests', function() {
   });
 
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   after(async () => {
     await mongo.clear(DB_TYPE);
     await mongo.disconnect();
-    log.info.restore();
   });
 
   describe('put', () => {
@@ -493,6 +491,40 @@ describe('Public Key Integration Tests', function() {
       expect(modifiedKey.userIds).to.have.lengthOf(3);
       expect(modifiedKey.verifyUntil).to.be.null;
       expect(modifiedKey.publicKeyArmored).to.exist;
+    });
+  });
+
+  describe('checkCollision', () => {
+    it('should throw error if key exists with same key ID but different fingerprint', async () => {
+      await publicKey.put({emails: [], publicKeyArmored, origin, i18n});
+      sinon.stub(pgp, 'parseKey').returns(Promise.resolve({keyId: mailsSent[0].params.keyId, fingerprint: '123', publicKeyArmored}));
+      await expect(publicKey.put({emails: [], publicKeyArmored, origin, i18n})).to.eventually.be.rejectedWith('Key ID collision error: a key ID of this key already exists on the server.');
+    });
+
+    it('should throw error if key exists that has same primary key fingerprint as a subkey fingerprint of a new key', async () => {
+      await publicKey.put({emails: [], publicKeyArmored, origin, i18n});
+      sinon.stub(pgp, 'readKey').returns(Promise.resolve({
+        subkeys: [{
+          getFingerprint: () => '04062c70b446e33016e219a74001a127a90de8e1',
+          getKeyID: () => ({
+            toHex: () => '123'
+          })
+        }]
+      }));
+      await expect(publicKey.checkCollision({})).to.eventually.be.rejectedWith('Key ID collision error: a key ID of this key already exists on the server.');
+    });
+
+    it('should throw error if key exists that has same primary key ID as a subkey ID of a new key', async () => {
+      await publicKey.put({emails: [], publicKeyArmored, origin, i18n});
+      sinon.stub(pgp, 'readKey').returns(Promise.resolve({
+        subkeys: [{
+          getFingerprint: () => '123',
+          getKeyID: () => ({
+            toHex: () => '4001a127a90de8e1'
+          })
+        }]
+      }));
+      await expect(publicKey.checkCollision({})).to.eventually.be.rejectedWith('Key ID collision error: a key ID of this key already exists on the server.');
     });
   });
 });

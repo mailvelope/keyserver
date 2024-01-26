@@ -9,6 +9,7 @@ const Boom = require('@hapi/boom');
 const config = require('../../config/config');
 const util = require('../lib/util');
 const tpl = require('../lib/templates');
+const log = require('../lib/log');
 
 /**
  * Database documents have the format:
@@ -76,6 +77,7 @@ class PublicKey {
         throw Boom.badRequest('Provided email address does not match a valid user ID of the key');
       }
     }
+    await this.checkCollision(key);
     // check for existing verified key with same ID
     const verified = await this.getVerified({keyId: key.keyId});
     if (verified) {
@@ -385,6 +387,26 @@ class PublicKey {
     flagged.userIds.splice(rmIdx, 1);
     await this._mongo.update({keyId}, flagged, DB_TYPE);
     return rmUserId;
+  }
+
+  /**
+   * Check collision of key ID with existing keys on the server
+   * @param  {Object} key  Public key parameters
+   * @throws {Error}       The key failed the collision check
+   */
+  async checkCollision(key) {
+    const queries = [];
+    queries.push({keyId: key.keyId, fingerprint: {$ne: key.fingerprint}});
+    const newKey = await this._pgp.readKey(key.publicKeyArmored);
+    for (const subkey of newKey.subkeys) {
+      queries.push({fingerprint: subkey.getFingerprint()});
+      queries.push({keyId: subkey.getKeyID().toHex()});
+    }
+    const found = await this._mongo.count({$or: queries}, DB_TYPE);
+    if (found) {
+      log.error('Key ID collision: \n%s\n%s', key.fingerprint, key.publicKeyArmored);
+      throw Boom.badRequest('Key ID collision error: a key ID of this key already exists on the server.');
+    }
   }
 }
 
