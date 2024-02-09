@@ -20,7 +20,8 @@
     "test:integration": "mocha --exit --require ./test/setup.js --recursive ./test/integration",
     "release": "npm run release:install && npm run release:archive",
     "release:install": "rm -rf node_modules/ && npm ci --production",
-    "release:archive": "zip -rq release.zip package.json package-lock.json node_modules/ *.js src/ config/ locales/"
+    "release:archive": "zip -rq release.zip package.json package-lock.json node_modules/ *.js src/ config/ locales/",
+    "clean": "node src/tools/clean"
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",

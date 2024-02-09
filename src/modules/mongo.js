@@ -6,7 +6,7 @@
 'use strict';
 
 const log = require('../lib/log');
-const MongoClient = require('mongodb').MongoClient;
+const {MongoClient} = require('mongodb');
 
 /**
  * A simple wrapper around the official MongoDB client.
@@ -22,8 +22,9 @@ class Mongo {
   async init({uri, user, pass}) {
     log.info('Connecting to MongoDB ...');
     const url = `mongodb://${user}:${pass}@${uri}`;
-    this._client = await MongoClient.connect(url);
+    this._client = new MongoClient(url);
     this._client.on('commandFailed', event => log.error('MongoDB command failed\n%s', event));
+    await this._client.connect();
     this._db = this._client.db();
   }
 
@@ -133,6 +134,29 @@ class Mongo {
   clear(type) {
     const col = this._db.collection(type);
     return col.deleteMany({});
+  }
+
+  /**
+   * Aggregate documents from a collection
+   * @param  {Array} pipeline                 The aggregation pipeline
+   * @param  {String} type                    The collection to use e.g. 'publickey'
+   * @return {Promise<AggregationCursor<T>>}  The operation result
+   */
+  aggregate(pipeline, type) {
+    const col = this._db.collection(type);
+    return col.aggregate(pipeline);
+  }
+
+  /**
+   * Replace one document
+   * @param  {Object} filter       The filter used to select the document to replace
+   * @param  {Object} replacement  The Document that replaces the matching document
+   * @param  {String} type         The collection to use e.g. 'publickey'
+   * @return {Promise<Document>}
+   */
+  replace(filter, replacement, type) {
+    const col = this._db.collection(type);
+    return col.replaceOne(filter, replacement);
   }
 }
 
