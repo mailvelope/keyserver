@@ -286,12 +286,10 @@ For production use, settings configuration with environment variables is recomme
 
 Available settings with its environment-variable-names, possible/example values and meaning (if not self-explainable). Defaults **bold**:
 
-* NODE_ENV=development|production
-  (no default, needs to be set as environment variable)
+* NODE_ENV=development|production (no default, needs to be set as environment variable)
 * LOG_LEVEL=debug|**info**|notice|warning|err|crit|alert|emerg
 * SERVER_HOST=**localhost**
-* PORT=**8888**
-  (application server port)
+* PORT=**8888** (application server port)
 * CORS_HEADER=true [CORS headers](https://hapi.dev/api#-routeoptionscors)
 * HTTP_SECURITY_HEADER=true [security headers](https://hapi.dev/api#-routeoptionssecurity)
 * CSP_HEADER=true (add Content-Security-Policy as in src/lib/csp.js)
@@ -302,14 +300,13 @@ Available settings with its environment-variable-names, possible/example values 
 * SMTP_PORT=465
 * SMTP_TLS=true
 * SMTP_STARTTLS=true
-* SMTP_PGP=**true**
-  (encrypt verification message with public key (allows to verify presence + usability of private key at owner of the email address))
+* SMTP_PGP=**true** (encrypt verification message with public key (allows to verify presence + usability of private key at owner of the email address))
 * SMTP_USER=smtp_user
 * SMTP_PASS=smtp_pass
 * SENDER_NAME="OpenPGP Key Server"
 * SENDER_EMAIL=noreply@your-key-server.net
-* PUBLIC_KEY_PURGE_TIME=**14**
-  (number of days after which uploaded keys are deleted if they have not been verified)
+* PUBLIC_KEY_PURGE_TIME=**14** (number of days after which uploaded keys are deleted if they have not been verified)
+* UPLOAD_RATE_LIMIT=**10** (key upload rate limit per email address in the PUBLIC_KEY_PURGE_TIME period)
 
 The following variables are available to customize the filtering behavior as outlined in [Abuse resistant key server](#abuse-resistant-key-server):
 

@@ -44,7 +44,8 @@ module.exports = {
   },
 
   publicKey: {
-    purgeTimeInDays: process.env.PUBLIC_KEY_PURGE_TIME || 14
+    purgeTimeInDays: process.env.PUBLIC_KEY_PURGE_TIME || 14,
+    uploadRateLimit: process.env.UPLOAD_RATE_LIMIT || 10
   },
 
   purify: {

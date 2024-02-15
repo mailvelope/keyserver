@@ -77,6 +77,7 @@ class PublicKey {
         throw Boom.badRequest('Provided email address does not match a valid user ID of the key');
       }
     }
+    await this.enforceRateLimit(key);
     await this.checkCollision(key);
     // check for existing verified key with same ID
     const verified = await this.getVerified({keyId: key.keyId});
@@ -406,6 +407,23 @@ class PublicKey {
     if (found) {
       log.error('Key ID collision: \n%s\n%s', key.fingerprint, key.publicKeyArmored);
       throw Boom.badRequest('Key ID collision error: a key ID of this key already exists on the server.');
+    }
+  }
+
+  /**
+   * Enforce a rate limit on how many upload operation are allowed per user ID
+   * @param  {Object} key  Public key parameters
+   * @throws {Error}       The key exceeds the rate limit
+   */
+  async enforceRateLimit(key) {
+    const queries = [];
+    for (const userId of key.userIds) {
+      queries.push({'userIds.email': userId.email});
+    }
+    const found = await this._mongo.count({$or: queries}, DB_TYPE);
+    if (found > config.publicKey.uploadRateLimit) {
+      log.error('Too many requests: \n%s\n%s', key.userIds.map(userId => userId.email), key.publicKeyArmored);
+      throw Boom.tooManyRequests('Too many requests for this email address. Upload temporarily blocked.');
     }
   }
 }
