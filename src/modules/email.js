@@ -54,7 +54,7 @@ class Email {
       i18n
     });
     if (this._usePGPEncryption && publicKeyArmored) {
-      compiled.text = await this._pgpEncrypt(compiled.text, publicKeyArmored);
+      compiled.text = await this._pgpEncrypt(compiled.text, publicKeyArmored, i18n);
     }
     const sendOptions = {
       from: {name: this._sender.name, address: this._sender.email},
@@ -71,7 +71,7 @@ class Email {
    * @param  {String} publicKeyArmored  the recipient's public key
    * @return {Promise<String>}          the encrypted PGP message block
    */
-  async _pgpEncrypt(plaintext, publicKeyArmored) {
+  async _pgpEncrypt(plaintext, publicKeyArmored, i18n) {
     let key;
     try {
       key = await openpgp.readKey({armoredKey: publicKeyArmored});
@@ -84,7 +84,8 @@ class Email {
       const ciphertext = await openpgp.encrypt({
         message,
         encryptionKeys: key,
-        date: util.getTomorrow()
+        date: util.getTomorrow(),
+        config: {showComment: true, commentString: `*** ${i18n.__('verify_key_comment')} ***`}
       });
       return ciphertext;
     } catch (error) {
