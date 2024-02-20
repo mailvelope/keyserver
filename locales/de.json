@@ -1,10 +1,11 @@
 {
   "key_not_found": "Schlüssel nicht gefunden",
+  "removal_success": "E-Mail Adresse {{email}} aus dem Schlüssel Verzeichnis entfernt",
+  "verify_key_comment": "Mit Mailvelope/PGP entschlüsseln und dann den Link klicken",
   "verify_key_subject": "Bestätigen Sie Ihre E-Mail-Adresse",
   "verify_key_text": "Hallo {name},\n\nbitte bestätigen Sie Ihre E-Mail-Adresse {email}.\nKlicken Sie hierzu auf den folgenden Link:\n\n{link}\n\nNach der Bestätigung Ihrer E-Mail-Adresse ist ihr öffentlicher Schlüssel in unserem Schlüssel Verzeichnis verfügbar.\n\nWeitere Informationen finden Sie unter {host}.\n\nIhr Mailvelope Team",
-  "verify_success_header": "E-Mail Adresse {{email}} erfolgreich verifiziert",
-  "verify_success_link": "Ihr öffentlicher OpenPGP Schlüssel ist ab jetzt unter folgendem Link verfügbar:",
   "verify_removal_subject": "Entfernen Ihres Schlüssels bestätigen",
   "verify_removal_text": "Hallo {name},\n\nbitte bestätigen Sie das Entfernen Ihrer E-Mail-Adresse {email} von unserem Key Server ({host}).\nKlicken Sie hierzu auf den folgenden Link:\n\n{link}\n\nIhr Mailvelope Team",
-  "removal_success": "E-Mail Adresse {{email}} aus dem Schlüssel Verzeichnis entfernt"
+  "verify_success_header": "E-Mail Adresse {{email}} erfolgreich verifiziert",
+  "verify_success_link": "Ihr öffentlicher OpenPGP Schlüssel ist ab jetzt unter folgendem Link verfügbar:"
 }
