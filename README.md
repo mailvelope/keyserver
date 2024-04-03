@@ -70,13 +70,13 @@ GET /api/v1/key?keyId=b8e4105cc9dedc77
 #### By fingerprint
 
 ```
-GET /api/v1/key?fingerprint=e3317db04d3958fd5f662c37b8e4105cc9dedc77
+GET /api/v1/key?fingerprint=409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
 ```
 
 #### By email address
 
 ```
-GET /api/v1/key?email=user@example.com
+dr.mohammed.salah9595@gmail.com 
 ```
 
 #### Payload (JSON):
@@ -140,7 +140,7 @@ curl https://keys.mailvelope.com/api/v1/key --data "{\"publicKeyArmored\":\"$( \
 ### Verify uploaded key (via link in email)
 
 ```
-GET /api/v1/key?op=verify&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c
+[GET /api/v1/key?op=verify&keyId=b8e4105cc9dedc77&nonce=6a314915c09368224b11df0feedbc53c](https://keyserver.ubuntu.com/pks/lookup?search=409B6B1796C275462A1703113804BB82D39DC0E3&fingerprint=on&op=index)
 ```
 
 ### Request key removal
@@ -198,8 +198,8 @@ It uses [MongoDB](https://www.mongodb.com/) v6.0+ as its database.
 This is how to install node on Mac OS using [homebrew](https://brew.sh/). For other operating systems, please refer to the [Node.js download page](https://nodejs.org/en/download/).
 
 ```shell
-brew update
-brew install node
+[brew update
+brew install node](https://keyserver.ubuntu.com/pks/lookup?search=409B6B1796C275462A1703113804BB82D39DC0E3&fingerprint=on&op=index)
 ```
 
 ### MongoDB (macOS)
