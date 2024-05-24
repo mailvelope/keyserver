@@ -345,7 +345,19 @@ class PublicKey {
     // flag only the provided user id
     if (email) {
       const nonce = util.random();
-      await this._mongo.update(query, {'userIds.$.nonce': nonce}, DB_TYPE);
+      const flaggedUserIds = key.userIds.map(uid => {
+        if (uid.email === email) {
+          return {
+            nonce: nonce,
+            verified: uid.verified,
+            publicKeyArmored: uid.publicKeyArmored,
+            name: uid.name,
+            email: uid.email
+          }
+        }
+        return uid;
+      });
+      await this._mongo.update({'_id':key['_id']}, {userIds: flaggedUserIds}, DB_TYPE);
       const uid = key.userIds.find(u => u.email === email);
       uid.nonce = nonce;
       return {userIds: [uid], keyId: key.keyId};
