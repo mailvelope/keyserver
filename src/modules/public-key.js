@@ -268,11 +268,10 @@ class PublicKey {
     // query by user id
     if (userIds) {
       queries = queries.concat(userIds.map(uid => ({
-        userIds: {
-          $elemMatch: {
-            'email': util.normalizeEmail(uid.email),
-            'verified': true
-          }
+        'userIds.email': {
+            $eq: util.normalizeEmail(uid.email)},
+        'userIds.verified': {
+            $eq: true
         }
       })));
     }
