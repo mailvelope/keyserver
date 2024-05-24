@@ -1,3 +1,8 @@
+Note
+====
+
+This repo is a soft fork of https://github.com/mailvelope/keyserver/ which adds patches for compatibility with FerretDB (https://www.ferretdb.com/). Once FerretDB catches up with missing MogoDB features, this repo will become obsolete. This branch is deployed on https://keys.puri.sm
+
 Mailvelope Keyserver
 ====================
 
