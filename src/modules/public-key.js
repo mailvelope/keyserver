@@ -207,11 +207,21 @@ class PublicKey {
       publicKeyArmored = await this._pgp.updateKey(key.publicKeyArmored, publicKeyArmored);
     }
     // flag the user id as verified
-    await this._mongo.update(query, {
+    const updatedUserIds = key.userIds.map(uid => {
+      if (uid.nonce === nonce) {
+        return {
+          verified: true,
+          nonce: null,
+          publicKeyArmored: null,
+          name: uid.name,
+          email: uid.email
+        };
+      }
+      return uid;
+    });
+    await this._mongo.update({'_id': key['_id']}, {
       publicKeyArmored,
-      'userIds.$.verified': true,
-      'userIds.$.nonce': null,
-      'userIds.$.publicKeyArmored': null
+      userIds: updatedUserIds
     }, DB_TYPE);
     return {email};
   }
