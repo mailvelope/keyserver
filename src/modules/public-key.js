@@ -162,6 +162,8 @@ class PublicKey {
       if (userId.notify === true) {
         // generate nonce for verification
         userId.nonce = util.random();
+        // generate wkd hash
+        userId.wkdhash = await util.genWKDHash(userId.email);
         await this._email.send({template: tpl.verifyKey, userId, keyId, origin, publicKeyArmored: userId.publicKeyArmored, i18n});
       }
     }
