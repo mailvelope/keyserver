@@ -46,7 +46,7 @@ class HKP {
     const params = this.parseQueryString(request);
     const key = await this._publicKey.get({...params, i18n: request.i18n});
     if (params.op === 'get') {
-      if (params.mr) {
+      if (params.mr || params.wkd) {
         return h.response(key.publicKeyArmored)
         .header('Content-Type', 'application/pgp-keys; charset=utf-8')
         .header('Content-Disposition', 'attachment; filename=openpgp-key.asc');
@@ -84,7 +84,8 @@ class HKP {
   parseQueryString({query}) {
     const params = {
       op: query.op, // operation ... only 'get' is supported
-      mr: query.options === 'mr' // machine readable
+      mr: query.options === 'mr', // machine readable
+      wkd: query.options === 'wkd' // wkd hash
     };
     if (!['get', 'index', 'vindex'].includes(params.op)) {
       throw Boom.notImplemented('Method not implemented');
