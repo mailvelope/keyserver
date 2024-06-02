@@ -1,6 +1,25 @@
 /**
  * Copyright (C) 2020 Mailvelope GmbH
  * Licensed under the GNU Affero General Public License version 3
+ *
+ * genWKDHash and encodeZBase32 are based on wkd-client node module,
+ * which is WKD client implementation in javascript
+ * Copyright (C) 2018 Wiktor Kwapisiewicz
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ * USA
  */
 
 'use strict';
@@ -86,6 +105,47 @@ exports.normalizeEmail = function(email) {
   }
   return email;
 };
+
+exports.genWKDHash = function(email) {
+ return new Promise((resolve, reject) => {
+    const [localPart, domain] = email.split('@');
+    const localPartHashed = crypto.createHash('sha1')
+      .update(localPart.toLowerCase())
+      .digest();
+    const localPartBase32 = encodeZBase32(localPartHashed);
+    const wkdhash = localPartBase32 + '@' + domain;
+    resolve(wkdhash);
+  });
+}
+
+function encodeZBase32(data) {
+  if (data.length === 0) {
+    return "";
+  }
+  const ALPHABET = "ybndrfg8ejkmcpqxot1uwisza345h769";
+  const SHIFT = 5;
+  const MASK = 31;
+  let buffer = data[0];
+  let index = 1;
+  let bitsLeft = 8;
+  let result = '';
+  while (bitsLeft > 0 || index < data.length) {
+    if (bitsLeft < SHIFT) {
+      if (index < data.length) {
+        buffer <<= 8;
+        buffer |= data[index++] & 0xff;
+        bitsLeft += 8;
+      } else {
+        const pad = SHIFT - bitsLeft;
+        buffer <<= pad;
+        bitsLeft += pad;
+      }
+    }
+    bitsLeft -= SHIFT;
+    result += ALPHABET[MASK & (buffer >> bitsLeft)];
+  }
+  return result;
+}
 
 /**
  * Generate a cryptographically secure random hex string. If no length is
