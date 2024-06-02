@@ -89,7 +89,14 @@ class HKP {
     if (!['get', 'index', 'vindex'].includes(params.op)) {
       throw Boom.notImplemented('Method not implemented');
     }
-    this.parseSearch(query.search, params);
+    let searchString = query.search;
+/**
+ * Search string for Web Key Directory lookups is l
+ */
+    if (query.l) {
+      searchString = query.l;
+    }
+    this.parseSearch(searchString, params);
     if (!params.keyId && !params.fingerprint && !params.email) {
       throw Boom.badRequest('Invalid search parameter');
     }
