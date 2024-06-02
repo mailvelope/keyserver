@@ -46,7 +46,29 @@ class HKP {
     const params = this.parseQueryString(request);
     const key = await this._publicKey.get({...params, i18n: request.i18n});
     if (params.op === 'get') {
-      if (params.mr || params.wkd) {
+      if (params.wkd) {
+       const fs = require('fs');
+       const publicKeyArmoredFile = '/tmp/' + key.fingerprint + '.asc';
+       const publicKeyBinaryFile = '/tmp/' + key.fingerprint + '.asc.gpg';
+       if (!fs.existsSync(publicKeyArmoredFile)) {
+               try {
+                       fs.writeFileSync(publicKeyArmoredFile, key.publicKeyArmored);
+               } catch (err) {
+                       console.error(err);
+               }
+       }
+       if (!fs.existsSync(publicKeyBinaryFile)) {
+               const {execSync} = require('child_process');
+               let output = execSync('gpg --dearmor ' + publicKeyArmoredFile);
+       }
+       try {
+               const publicKeyBinary = fs.readFileSync(publicKeyBinaryFile);
+               return h.response(publicKeyBinary)
+        .header('Content-Type', 'application/octet-stream');
+               } catch (err) {
+                 console.error(err);
+               }
+      } else if (params.mr) {
         return h.response(key.publicKeyArmored)
         .header('Content-Type', 'application/pgp-keys; charset=utf-8')
         .header('Content-Disposition', 'attachment; filename=openpgp-key.asc');
