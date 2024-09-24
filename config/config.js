@@ -1,6 +1,7 @@
 'use strict';
 
 require('dotenv').config();
+const util = require('../src/lib/util');
 
 module.exports = {
 
@@ -10,15 +11,15 @@ module.exports = {
 
   syslog: {
     host: process.env.SYSLOG_HOST,
-    port: process.env.SYSLOG_PORT
+    port: util.parseNumber(process.env.SYSLOG_PORT)
   },
 
   server: {
-    port: process.env.PORT || 8888,
+    port: util.parseNumber(process.env.PORT) ?? 8888,
     host: process.env.SERVER_HOST || 'localhost',
-    cors: process.env.CORS_HEADER,
-    security: process.env.HTTP_SECURITY_HEADER,
-    csp: process.env.CSP_HEADER
+    cors: util.isTrue(process.env.CORS_HEADER),
+    security: util.isTrue(process.env.HTTP_SECURITY_HEADER),
+    csp: util.isTrue(process.env.CSP_HEADER)
   },
 
   mongo: {
@@ -29,10 +30,10 @@ module.exports = {
 
   email: {
     host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    tls: process.env.SMTP_TLS,
-    starttls: process.env.SMTP_STARTTLS,
-    pgp: process.env.SMTP_PGP ?? true,
+    port: util.parseNumber(process.env.SMTP_PORT),
+    tls: util.isTrue(process.env.SMTP_TLS ?? true),
+    starttls: util.isTrue(process.env.SMTP_STARTTLS ?? true),
+    pgp: util.isTrue(process.env.SMTP_PGP ?? true),
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
@@ -44,18 +45,18 @@ module.exports = {
   },
 
   publicKey: {
-    purgeTimeInDays: process.env.PUBLIC_KEY_PURGE_TIME || 14,
-    uploadRateLimit: process.env.UPLOAD_RATE_LIMIT || 10
+    purgeTimeInDays: util.parseNumber(process.env.PUBLIC_KEY_PURGE_TIME) ?? 14,
+    uploadRateLimit: util.parseNumber(process.env.UPLOAD_RATE_LIMIT)
   },
 
   purify: {
-    purifyKey: process.env.PURIFY_KEY ?? true,
-    maxNumUserEmail: process.env.MAX_NUM_USER_EMAIL || 20,
-    maxNumSubkey: process.env.MAX_NUM_SUBKEY || 20,
-    maxNumCert: process.env.MAX_NUM_CERT || 5,
-    maxSizeUserID: process.env.MAX_SIZE_USERID || 1024,
-    maxSizePacket: process.env.MAX_SIZE_PACKET || 8383,
-    maxSizeKey: process.env.MAX_SIZE_KEY || 32768
+    purifyKey: util.isTrue(process.env.PURIFY_KEY ?? true),
+    maxNumUserEmail: util.parseNumber(process.env.MAX_NUM_USER_EMAIL) ?? 20,
+    maxNumSubkey: util.parseNumber(process.env.MAX_NUM_SUBKEY) ?? 20,
+    maxNumCert: util.parseNumber(process.env.MAX_NUM_CERT) ?? 5,
+    maxSizeUserID: util.parseNumber(process.env.MAX_SIZE_USERID) ?? 1024,
+    maxSizePacket: util.parseNumber(process.env.MAX_SIZE_PACKET) ?? 8383,
+    maxSizeKey: util.parseNumber(process.env.MAX_SIZE_KEY) ?? 32768
   }
 
 };

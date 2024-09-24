@@ -17,6 +17,16 @@ exports.isString = function(data) {
 };
 
 /**
+ * Parse string into number
+ * @param  {String} number
+ * @return {Number|undefined}
+ */
+exports.parseNumber = function(number) {
+  const integer = parseInt(number);
+  return isNaN(integer) ? undefined : integer;
+};
+
+/**
  * Cast string to a boolean value
  * @param  {}  data    The input to be checked
  * @return {boolean}   If data is true

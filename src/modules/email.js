@@ -30,8 +30,8 @@ class Email {
       host,
       port,
       auth,
-      secure: (tls !== undefined) ? util.isTrue(tls) : true,
-      requireTLS: (starttls !== undefined) ? util.isTrue(starttls) : true,
+      secure: tls,
+      requireTLS: starttls
     });
     this._usePGPEncryption = util.isTrue(pgp);
     this._sender = sender;

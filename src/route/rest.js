@@ -110,8 +110,8 @@ exports.plugin = {
 
     const routeOptions = {
       bind: rest,
-      cors: options.server.cors === 'true',
-      security: options.server.security === 'true',
+      cors: options.server.cors,
+      security: options.server.security,
       ext: {
         onPreResponse: {
           method({response}, h) {

@@ -131,7 +131,7 @@ class PublicKey {
    */
   async _addKeyArmored(userIds, publicKeyArmored) {
     for (const userId of userIds) {
-      userId.publicKeyArmored = await this._pgp.filterKeyByUserIds([userId], publicKeyArmored, util.isTrue(config.email.pgp));
+      userId.publicKeyArmored = await this._pgp.filterKeyByUserIds([userId], publicKeyArmored, config.email.pgp);
       userId.notify = true;
     }
   }
@@ -417,6 +417,9 @@ class PublicKey {
    */
   async enforceRateLimit(key) {
     const queries = [];
+    if (!config.publicKey.uploadRateLimit) {
+      return;
+    }
     for (const userId of key.userIds) {
       queries.push({'userIds.email': userId.email});
     }
