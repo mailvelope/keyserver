@@ -190,7 +190,7 @@ The server is written is in JavaScript ES2020 and runs on [Node.js](https://node
 
 It uses [MongoDB](https://www.mongodb.com/) v6.0+ as its database.
 
-Note: You may also use [FerretDB](https://ferretdb.com), which aims to provide a Free Software replacement for MongoDB. But you will need to use ferretdb-compat branch since FerretDB is currently missing some features required by Mailvelope Keyserver.
+Note: You may also use [FerretDB](https://ferretdb.com) 2.0+, which aims to provide a Free Software replacement for MongoDB. But you will need to use [an older version of Mailvelope Key Server](https://github.com/mailvelope/keyserver/tree/c7ffbefa744473be06500e722dc1c9327a130cd5) since FerretDB [TTL indexes are not fully MongoDB compatible](https://github.com/FerretDB/FerretDB/issues/4960) yet.
 
 # Getting started
 ## Installation
