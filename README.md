@@ -19,7 +19,7 @@ This requires more trust to be placed in the service provider that hosts a key s
 
 ## Standardization and (De)centralization
 
-The idea is that an identity provider such as an email provider can host their own key directory under a common `openpgpkeys` subdomain. An OpenPGP supporting user agent should attempt to lookup keys under the user's domain e.g. `https://openpgpkeys.example.com` for `user@example.com` first. User agents can host their own fallback key server as well, in case a mail provider does not provide its own key directory.
+The idea is that an identity provider such as an email provider can host their own key directory under a common `openpgpkey` subdomain. An OpenPGP supporting user agent should attempt to lookup keys under the user's domain e.g. `https://openpgpkey.example.com` for `user@example.com` first. User agents can host their own fallback key server as well, in case a mail provider does not provide its own key directory.
 
 # Demo
 
