@@ -50,13 +50,38 @@ The HKP APIs are not documented here. Please refer to the [HKP specification](ht
 
 #### Accepted `options` parameters
 * mr
+* wkd
 
+### Web Key Directory support
+
+Web Key Directory support can be enabled by adding a rewrite rule to web server
+configured as a reverse proxy.
+
+Example configuration for caddy webserver (for example.com domain),
+
+```
+openpgpkey.example.com {
+	header /.well-known/openpgpkey/puri.sm/policy Content-Type text/plain
+        respond /.well-known/openpgpkey/puri.sm/policy `protocol-version 5`
+        route /.well-known/openpgpkey/example.com/hu/* {
+                rewrite * /pks/lookup?op=get&{query}%40example.com&options=mr
+                reverse_proxy localhost:3000
+        }
+}
+
+openpgpkey.example.com DNS records should be pointing to the mailvelope
+keyserver instance.
+```
 #### Usage example with GnuPG
 
 ```
 gpg --keyserver hkps://keys.mailvelope.com --search  info@mailvelope.com
 ```
 
+If Web Key Directory is enabled,
+```
+gpg --locate-keys  info@mailvelope.com
+```
 ## REST API
 
 ### Lookup a key
