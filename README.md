@@ -188,9 +188,7 @@ A key is rejected if one of the following is detected:
 
 The server is written is in JavaScript ES2020 and runs on [Node.js](https://nodejs.org/) v18+.
 
-It uses [MongoDB](https://www.mongodb.com/) v6.0+ as its database.
-
-Note: You may also use [FerretDB](https://ferretdb.com) 2.0+, which aims to provide a Free Software replacement for MongoDB. But you will need to use [an older version of Mailvelope Key Server](https://github.com/mailvelope/keyserver/tree/c7ffbefa744473be06500e722dc1c9327a130cd5) since FerretDB [TTL indexes are not fully MongoDB compatible](https://github.com/FerretDB/FerretDB/issues/4960) yet.
+It uses [MongoDB](https://www.mongodb.com/) v6.0+ or [FerretDB](https://ferretdb.com) 2.0+ (Free Software replacement for MongoDB) as its database.
 
 # Getting started
 ## Installation
@@ -227,6 +225,10 @@ mongosh
 use keyserver-test
 db.createUser({ user:"keyserver-user", pwd:"your_mongo_db_pwd", roles:[{ role:"readWrite", db:"keyserver-test" }] })
 ```
+
+## FerrerDB
+
+You can find [instructions to install FerretDB on their website](https://docs.ferretdb.io/installation/ferretdb/).
 
 #### Purge unverfied keys with TTL (time to live) indexes
 
