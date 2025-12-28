@@ -1,0 +1,35 @@
+---
+services:
+  mongodb:
+    image: mongo:7
+    restart: always
+    volumes:
+      - ./data/db:/data/db
+      - ./config/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - backend
+    env_file: .env
+    security_opt:
+      - apparmor=unconfined
+
+  keyserver:
+    image: ghcr.io/plantroon/keyserver:latest
+    restart: always
+    depends_on:
+      - mongodb
+    networks:
+      - traefik-proxy
+      - backend
+    env_file: .env
+    security_opt:
+      - apparmor=unconfined
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keyserver.rule=Host(`keyserver.example.com`)"
+      - "traefik.http.routers.keyserver.entrypoints=websecure"
+      - "traefik.http.routers.keyserver.tls.certresolver=acme-le"
+      - "traefik.http.services.keyserver.loadbalancer.server.port=3000"
+
+networks:
+  backend:
+  traefik-proxy:
