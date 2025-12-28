@@ -342,6 +342,19 @@ The key server uses [nodemailer](https://nodemailer.com) to send out emails upon
 
 For production you should use a service like [Amazon SES](https://aws.amazon.com/ses/), [Mailgun](https://www.mailgun.com/) or [Sendgrid](https://sendgrid.com/use-cases/transactional-email/). Nodemailer supports all of these out of the box.
 
+### Docker compose
+
+Docker images are built from this repository and available at ghcr. You can use the sample docker-compose.yml - review it and populate an .env file with the required [settings](#Settings) before running the server. To create the database automatically, the following parameters are needed in .env file:
+
+```
+MONGO_URI=mongodb:27017/keyserver_db
+MONGO_USER=keyserver
+MONGO_PASS=somepassword
+MONGO_INITDB_DATABASE=keyserver_db
+```
+
+The sample docker-compose.yml also contains common traefik settings, but you may need to adjust them for your own reverse proxy.
+
 ## Run tests
 
 ```shell
