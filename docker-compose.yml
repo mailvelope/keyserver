@@ -13,7 +13,7 @@ services:
       - apparmor=unconfined
 
   keyserver:
-    image: ghcr.io/plantroon/keyserver:latest
+    image: ghcr.io/mailvelope/keyserver:latest
     restart: always
     depends_on:
       - mongodb
