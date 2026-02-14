@@ -18,8 +18,9 @@ class HKP {
    * Create an instance of the HKP server
    * @param  {Object} publicKey - an instance of the public key service
    */
-  constructor(publicKey) {
+  constructor(publicKey, baseUrl) {
     this._publicKey = publicKey;
+    this._baseUrl = baseUrl;
   }
 
   /**
@@ -32,7 +33,7 @@ class HKP {
     if (!publicKeyArmored) {
       return Boom.badRequest('No key found');
     }
-    const origin = util.origin(request);
+    const origin = util.origin(this._baseUrl);
     await this._publicKey.put({publicKeyArmored, origin, i18n: request.i18n});
     return h.response('Upload successful. Check your inbox to verify your email address.').code(200);
   }
@@ -134,7 +135,7 @@ class HKP {
 exports.plugin = {
   name: 'HKP',
   async register(server, options) {
-    const hkp = new HKP(server.app.publicKey);
+    const hkp = new HKP(server.app.publicKey, options.server.baseUrl);
 
     const routeOptions = {
       bind: hkp,

@@ -22,6 +22,7 @@ describe('Key Server Integration Tests', function() {
   const primaryEmail = 'demo@mailvelope.com';
   const fingerprint = '90507FB229658F71F3DE96A84C03A47362C5B4CC';
   const conf = structuredClone(config);
+  conf.server.baseUrl = conf.server.baseUrl || `http://localhost:${conf.server.port}`;
 
   before(async () => {
     sandbox.stub(log);

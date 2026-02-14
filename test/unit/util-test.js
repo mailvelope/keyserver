@@ -123,7 +123,13 @@ describe('Util Unit Tests', () => {
 
   describe('origin', () => {
     it('should work', () => {
-      expect(util.origin({info: {host: 'h'}, server: {info: {protocol: 'https'}}, headers: {}})).to.exist;
+      const origin = util.origin('https://keys.example.com');
+      expect(origin).to.deep.equal({protocol: 'https', host: 'keys.example.com'});
+    });
+
+    it('should work with port', () => {
+      const origin = util.origin('http://localhost:8888');
+      expect(origin).to.deep.equal({protocol: 'http', host: 'localhost:8888'});
     });
   });
 

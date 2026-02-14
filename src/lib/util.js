@@ -108,36 +108,16 @@ exports.random = function(bytes = 16) {
 };
 
 /**
- * Check if the user is connecting over a plaintext http connection.
- * This can be used as an indicator to upgrade their connection to https.
- * @param  {Object} request - hapi request object
- * @return {boolean}      If http is used
+ * Get the server's own origin host and protocol from the configured BASE_URL.
+ * Required for sending verification links via email.
+ * @param  {string} baseUrl   The server's base URL (e.g. 'https://keys.example.com')
+ * @return {Object}           The server origin with protocol and host
  */
-exports.checkHTTP = function(request) {
-  return request.server.info.protocol === 'http' && request.headers['x-forwarded-proto'] === 'http';
-};
-
-/**
- * Check if the user is connecting over a https connection.
- * @param  {Object} request - hapi request object
- * @return {boolean}      If https is used
- */
-exports.checkHTTPS = function(request) {
-  return request.server.info.protocol === 'https' || request.headers['x-forwarded-proto'] === 'https';
-};
-
-/**
- * Get the server's own origin host and protocol. Required for sending
- * verification links via email. If the PORT environmane variable
- * is set, we assume the protocol to be 'https', since the AWS loadbalancer
- * speaks 'https' externally but 'http' between the LB and the server.
- * @param  {Object} request - hapi request object
- * @return {Object}       The server origin
- */
-exports.origin = function(request) {
+exports.origin = function(baseUrl) {
+  const {protocol, host} = new URL(baseUrl);
   return {
-    protocol: this.checkHTTPS(request) ? 'https' : request.server.info.protocol,
-    host: request.info.host
+    protocol: protocol.replace(':', ''),
+    host
   };
 };
 

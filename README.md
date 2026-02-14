@@ -262,6 +262,7 @@ If you don't use environment variables to configure settings, you can alternativ
 
 ```
 PORT=3000
+BASE_URL=http://localhost:3000
 CORS_HEADER=true
 HTTP_SECURITY_HEADER=true
 CSP_HEADER=true
@@ -304,6 +305,7 @@ Available settings with its environment-variable-names, possible/example values 
 * LOG_LEVEL=debug|**info**|notice|warning|err|crit|alert|emerg
 * SERVER_HOST=**localhost**
 * PORT=**8888** (application server port)
+* BASE_URL=http://localhost:8888 (public-facing base URL)
 * CORS_HEADER=true [CORS headers](https://hapi.dev/api#-routeoptionscors)
 * HTTP_SECURITY_HEADER=true [security headers](https://hapi.dev/api#-routeoptionssecurity)
 * CSP_HEADER=true (add Content-Security-Policy as in src/lib/csp.js)

@@ -17,8 +17,9 @@ class REST {
    * @param  {Object} publicKey   An instance of the public key service
    * @param  {Object} userId      An instance of the user id service
    */
-  constructor(publicKey) {
+  constructor(publicKey, baseUrl) {
     this._publicKey = publicKey;
+    this._baseUrl = baseUrl;
   }
 
   /**
@@ -31,7 +32,7 @@ class REST {
     if (!publicKeyArmored) {
       return Boom.badRequest('No public armored key found');
     }
-    const origin = util.origin(request);
+    const origin = util.origin(this._baseUrl);
     await this._publicKey.put({emails, publicKeyArmored, origin, i18n: request.i18n});
     return h.response('Upload successful. Check your inbox to verify your email address.').code(200);
   }
@@ -69,7 +70,7 @@ class REST {
     }
     const {email} = await this._publicKey.verify({keyId, nonce});
     // create link for sharing
-    const link = util.url(util.origin(request), `/pks/lookup?op=get&search=${email}`);
+    const link = util.url(util.origin(this._baseUrl), `/pks/lookup?op=get&search=${email}`);
     return h.view('verify-success', {email, link});
   }
 
@@ -80,7 +81,7 @@ class REST {
    */
   async remove(request, h) {
     const {keyId, email} = request.query;
-    const origin  = util.origin(request);
+    const origin  = util.origin(this._baseUrl);
     if (!util.isKeyId(keyId) && !util.isEmail(email)) {
       throw Boom.badRequest('Invalid parameter keyId or email');
     }
@@ -106,7 +107,7 @@ class REST {
 exports.plugin = {
   name: 'REST',
   async register(server, options) {
-    const rest = new REST(server.app.publicKey);
+    const rest = new REST(server.app.publicKey, options.server.baseUrl);
 
     const routeOptions = {
       bind: rest,

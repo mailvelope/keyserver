@@ -25,6 +25,9 @@ const WWW = require('./route/www');
 const CSP = require('./lib/csp');
 
 const init = async (conf = config) => {
+  if (!conf.server.baseUrl) {
+    throw new Error('BASE_URL environment variable is required');
+  }
   const server = Hapi.server({
     port: conf.server.port,
     host: conf.server.host,

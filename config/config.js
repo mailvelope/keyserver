@@ -17,6 +17,7 @@ module.exports = {
   server: {
     port: util.parseNumber(process.env.PORT) ?? 8888,
     host: process.env.SERVER_HOST || 'localhost',
+    baseUrl: process.env.BASE_URL,
     cors: util.isTrue(process.env.CORS_HEADER),
     security: util.isTrue(process.env.HTTP_SECURITY_HEADER),
     csp: util.isTrue(process.env.CSP_HEADER)
