@@ -1,6 +1,6 @@
 {
   "name": "mailvelope-keyserver",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
@@ -25,28 +25,28 @@
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
-    "@hapi/hapi": "^21.3.10",
+    "@hapi/hapi": "^21.4.4",
     "@hapi/inert": "^7.1.0",
     "@hapi/vision": "^7.0.3",
-    "dotenv": "^16.4.5",
+    "dotenv": "^17.3.1",
     "ejs": "^3.1.10",
     "hapi-i18n": "^3.0.1",
-    "mongodb": "^6.9.0",
-    "nodemailer": "^6.9.15",
-    "openpgp": "^5.11.2",
-    "winston": "^3.14.2",
+    "mongodb": "^6.21.0",
+    "nodemailer": "^8.0.1",
+    "openpgp": "^5.11.3",
+    "winston": "^3.19.0",
     "winston-syslog": "^2.7.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.11.1",
+    "@eslint/js": "^9.39.2",
     "bootstrap": "^3.4.1",
-    "chai": "^5.1.1",
-    "chai-as-promised": "^8.0.0",
-    "eslint": "^9.11.1",
-    "globals": "^15.9.0",
+    "chai": "^6.2.2",
+    "chai-as-promised": "^8.0.2",
+    "eslint": "^9.39.2",
+    "globals": "^17.3.0",
     "jquery": "^3.7.1",
-    "mocha": "^10.7.3",
-    "sinon": "^19.0.2",
-    "supertest": "^7.0.0"
+    "mocha": "^11.7.5",
+    "sinon": "^21.0.1",
+    "supertest": "^7.2.2"
   }
 }
