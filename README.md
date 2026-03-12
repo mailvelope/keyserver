@@ -344,9 +344,10 @@ For production you should use a service like [Amazon SES](https://aws.amazon.com
 
 ### Docker compose
 
-Docker images are built from this repository and available at ghcr. You can use the sample docker-compose.yml - review it and populate an .env file with the required [settings](#Settings) before running the server. To create the database automatically, the following parameters are needed in .env file:
+Docker images are built from this repository and available at ghcr. You can use the sample docker-compose.yml - review it and populate an .env file with the required [settings](#Settings) before running the server. `BASE_URL` must be set to the public-facing URL of your key server. To create the database automatically, the following parameters are needed in .env file:
 
 ```
+BASE_URL=https://keyserver.example.com
 MONGO_URI=mongodb:27017/keyserver_db
 MONGO_USER=keyserver
 MONGO_PASS=somepassword

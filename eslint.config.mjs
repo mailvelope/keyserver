@@ -1,7 +1,9 @@
 import globals from "globals";
 import js from "@eslint/js";
 
-export default [js.configs.recommended, {
+export default [{
+    ignores: ["config/mongo-init.js"]
+}, js.configs.recommended, {
     files: ["**/*.js"],
     languageOptions: {
         globals: {
