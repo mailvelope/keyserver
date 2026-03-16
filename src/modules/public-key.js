@@ -163,6 +163,8 @@ class PublicKey {
       if (userId.notify === true) {
         // generate nonce for verification
         userId.nonce = util.random();
+        // generate wkd hash
+        userId.wkdhash = await util.genWKDHash(userId.email);
         await this._email.send({template: tpl.verifyKey, userId, keyId, origin, publicKeyArmored: userId.publicKeyArmored, i18n});
       }
     }
@@ -243,7 +245,7 @@ class PublicKey {
    * @param  {String} keyId        (optional) The public key ID
    * @return {Promise<Object>}     The verified key document
    */
-  async getVerified({userIds, fingerprint, keyId}) {
+  async getVerified({userIds, fingerprint, keyId, wkd}) {
     let queries = [];
     // query by fingerprint
     if (fingerprint) {
@@ -259,8 +261,19 @@ class PublicKey {
         'userIds.verified': true
       });
     }
-    // query by user ID
-    if (userIds) {
+    // query by wkd hash
+    if (userIds && wkd) {
+      queries = queries.concat(userIds.map(uid => ({
+        userIds: {
+          $elemMatch: {
+            'wkdhash': uid.email,
+            'verified': true
+          }
+        }
+      })));
+    }
+    // query by user id
+    if (userIds && !wkd) {
       queries = queries.concat(userIds.map(uid => ({
         userIds: {
           $elemMatch: {
@@ -282,10 +295,10 @@ class PublicKey {
    * @param  {Object} i18n         i18n object
    * @return {Promise<Object>}     The public key document
    */
-  async get({fingerprint, keyId, email, i18n}) {
+  async get({fingerprint, keyId, email, wkd, i18n}) {
     // look for verified key
     const userIds = email ? [{email}] : undefined;
-    const key = await this.getVerified({keyId, fingerprint, userIds});
+    const key = await this.getVerified({keyId, fingerprint, userIds, wkd});
     if (!key) {
       throw Boom.notFound(i18n.__('key_not_found'));
     }
